@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -53,7 +54,6 @@ export default function DashboardContent() {
 
   return (
     <div className="flex flex-col h-screen bg-[#F0F2F5] overflow-hidden">
-      {/* Scrollable Content */}
       <main className="flex-1 overflow-y-auto pb-28 pt-4">
         <div className="max-w-[500px] mx-auto px-4 space-y-6">
           
@@ -209,7 +209,6 @@ export default function DashboardContent() {
         </div>
       </main>
 
-      {/* Modern Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white h-24 px-6 flex items-center justify-between z-[100] nav-shadow rounded-t-[35px]">
         <button onClick={() => setActiveTab("home")} className={`flex flex-col items-center gap-1.5 transition-all ${activeTab === "home" ? "text-primary scale-110" : "text-gray-300"}`}>
           <Home className={`w-6 h-6 ${activeTab === "home" ? "fill-primary/10" : ""}`} />
