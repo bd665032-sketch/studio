@@ -45,16 +45,17 @@ export default function DashboardContent() {
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    // Simulated weather auto-update
-    const weatherTimer = setInterval(() => {
-      const baseTemp = 30;
-      const randomVar = Math.floor(Math.random() * 5);
-      setWeather(prev => ({ ...prev, temp: baseTemp + randomVar }));
-    }, 60000);
-    return () => {
-      clearInterval(timer);
-      clearInterval(weatherTimer);
-    };
+    
+    // Auto-location Weather Simulation
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition((position) => {
+        // In a real app, you'd fetch from OpenWeatherMap here
+        // For now, we simulate a premium live feel
+        setWeather(prev => ({ ...prev, temp: 30 + Math.floor(Math.random() * 5) }));
+      });
+    }
+
+    return () => clearInterval(timer);
   }, []);
 
   const filteredTransactions = transactions.filter(t => {
@@ -103,47 +104,31 @@ export default function DashboardContent() {
                   <div className="text-right">
                     <p className="text-[14px] font-black uppercase text-white/80">{currentTime.toLocaleDateString('en-US', { weekday: 'long' })}</p>
                     <p className="text-[24px] font-black text-[#D4AF37] leading-none mt-1">{currentTime.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</p>
-                    <p className="text-[10px] font-bold text-white/40 mt-1">{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</p>
-                  </div>
-                </div>
-                <div className="mt-6 pt-5 border-t border-white/10 flex items-center justify-between">
-                  <div className="flex flex-col">
-                    <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">Air Quality Index</span>
-                    <span className="text-[12px] font-black text-green-400">EXCELLENT • 42 AQI</span>
-                  </div>
-                  <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/5">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                    <span className="text-[10px] font-black uppercase tracking-wider">Live Updates</span>
+                    <p className="text-[10px] font-bold text-white/40 mt-1">{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Islamic Important Dates (Corrected & Extended) */}
+              {/* Islamic Important Dates (Hajj 2026, Ramadan 2027/2028) */}
               <div className="luxury-card p-5 border-l-[6px] border-[#D4AF37] bg-white shadow-lg space-y-4">
                 <div className="flex items-center justify-between px-1">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-[#1E40AF]" />
-                    <h3 className="text-[12px] font-black text-[#1E3A8A] uppercase tracking-widest">Islamic Events (2026-2028)</h3>
+                    <h3 className="text-[12px] font-black text-[#1E3A8A] uppercase tracking-widest">Islamic Events</h3>
                   </div>
-                  <div className="text-[9px] font-black text-[#D4AF37] uppercase">Lunar Calendar</div>
+                  <div className="text-[9px] font-black text-[#D4AF37] uppercase">Upcoming</div>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   <div className="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100 shadow-sm">
-                    <div className="w-4 h-4 bg-[#D4AF37] rounded-full mx-auto mb-2 flex items-center justify-center text-[7px] text-white font-black">H</div>
                     <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Hajj 2026</p>
                     <p className="text-[11px] font-black text-[#1E40AF]">May 24</p>
                   </div>
                   <div className="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100 shadow-sm">
-                    <Moon className="w-4 h-4 text-[#1E40AF] mx-auto mb-2" />
-                    <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Ramadan 2027</p>
+                    <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Ramadan 27</p>
                     <p className="text-[11px] font-black text-[#1E40AF]">March 09</p>
                   </div>
                   <div className="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100 shadow-sm">
-                    <Moon className="w-4 h-4 text-purple-600 mx-auto mb-2" />
-                    <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Ramadan 2028</p>
+                    <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Ramadan 28</p>
                     <p className="text-[11px] font-black text-[#1E40AF]">Feb 26</p>
                   </div>
                 </div>
@@ -151,19 +136,6 @@ export default function DashboardContent() {
 
               {/* Collection Portfolio Card */}
               <div className="luxury-card p-7 relative overflow-hidden text-white border-none bg-gradient-to-r from-[#6366F1] to-[#3B82F6] shadow-2xl">
-                 <div className="absolute right-[-20px] top-[-20px] opacity-10">
-                    <Bell className="w-32 h-32 rotate-12" />
-                 </div>
-                 <div className="flex justify-between items-start mb-8 relative z-10">
-                    <div>
-                      <p className="text-white/60 text-[10px] font-black uppercase tracking-widest mb-1">Portfolio Summary</p>
-                      <h1 className="text-2xl font-black tracking-tight">Financial Overview</h1>
-                    </div>
-                    <div className="bg-white/20 p-3 rounded-2xl backdrop-blur-xl border border-white/30 shadow-lg">
-                      <Plus className="w-5 h-5 text-[#D4AF37]" />
-                    </div>
-                 </div>
-                 
                  <div className="flex justify-between items-end relative z-10">
                     <div className="space-y-1">
                       <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Total Collection</p>
@@ -190,7 +162,6 @@ export default function DashboardContent() {
                 </button>
               </div>
 
-              {/* Documents & PDF Export Section (Prioritized) */}
               <div className="space-y-4">
                 <button 
                   onClick={() => setActiveTab("settings")}
@@ -202,7 +173,7 @@ export default function DashboardContent() {
                     </div>
                     <div className="text-left">
                       <h3 className="text-[14px] font-black tracking-wide">Demand Letter Generator</h3>
-                      <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Official Foundation Files</p>
+                      <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Foundation Files</p>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-white/30" />
@@ -233,27 +204,21 @@ export default function DashboardContent() {
                 </div>
 
                 <div className="space-y-3">
-                  {filteredTransactions.length > 0 ? (
-                    filteredTransactions.map(t => (
-                      <div key={t.id} className="luxury-card p-5 flex items-center justify-between border-slate-50 hover:border-[#1E3A8A]/20 transition-all hover:translate-y-[-2px] hover:shadow-lg">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-[18px] bg-blue-50 flex items-center justify-center font-black text-[#1E3A8A] text-[14px] shadow-inner border border-blue-100">{t.n.charAt(0)}</div>
-                          <div>
-                            <p className="font-black text-slate-800 text-[14px]">{t.n}</p>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{t.d} • {t.c}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                          <p className="font-black text-[#1E3A8A] text-[15px]">৳{t.a.toLocaleString()}</p>
-                          <button onClick={() => { if(confirm('ডিলিট করতে চান?')) deleteTransaction(t.id); }} className="p-2 text-slate-200 hover:text-red-500 transition-colors"><Trash2 className="w-5 h-5" /></button>
+                  {filteredTransactions.map(t => (
+                    <div key={t.id} className="luxury-card p-5 flex items-center justify-between border-slate-50 hover:border-[#1E3A8A]/20 transition-all">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-[18px] bg-blue-50 flex items-center justify-center font-black text-[#1E3A8A] text-[14px] shadow-inner">{t.n.charAt(0)}</div>
+                        <div>
+                          <p className="font-black text-slate-800 text-[14px]">{t.n}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{t.d}</p>
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="text-center py-16 text-slate-400 font-black text-[11px] uppercase bg-white rounded-[32px] border-2 border-dashed border-slate-100">
-                      No matching records found for this period
+                      <div className="flex items-center gap-4">
+                        <p className="font-black text-[#1E3A8A] text-[15px]">৳{t.a.toLocaleString()}</p>
+                        <button onClick={() => { if(confirm('ডিলিট করতে চান?')) deleteTransaction(t.id); }} className="p-2 text-slate-200 hover:text-red-500 transition-colors"><Trash2 className="w-5 h-5" /></button>
+                      </div>
                     </div>
-                  )}
+                  ))}
                 </div>
               </div>
             </div>
@@ -261,10 +226,10 @@ export default function DashboardContent() {
 
           {activeTab === "members" && (
             <div className="animate-in fade-in slide-in-from-right-2 duration-300 space-y-5">
-               <div className="flex items-center gap-3"><Button variant="ghost" size="sm" onClick={() => setActiveTab("home")} className="p-0 h-10 w-10 rounded-full bg-white shadow-md border border-slate-50"><ChevronRight className="rotate-180 w-5 h-5" /></Button><h2 className="font-black text-[#1E3A8A] text-sm uppercase tracking-widest">Members Management</h2></div>
+               <div className="flex items-center gap-3"><Button variant="ghost" size="sm" onClick={() => setActiveTab("home")} className="p-0 h-10 w-10 rounded-full bg-white shadow-md"><ChevronRight className="rotate-180 w-5 h-5" /></Button><h2 className="font-black text-[#1E3A8A] text-sm uppercase tracking-widest">Members Management</h2></div>
                <div className="luxury-card p-7">
-                  <div className="flex gap-3 mb-8"><Input placeholder="Enter Member Name" value={newMember} onChange={e=>setNewMember(e.target.value)} className="h-14 border-slate-100 text-[14px] font-black shadow-inner" /><Button onClick={()=>{if(newMember)addMember(newMember);setNewMember("")}} className="bg-[#1E3A8A] hover:bg-[#1E40AF] h-14 px-8 rounded-2xl font-black text-xs shadow-lg">ADD</Button></div>
-                  <div className="space-y-3">{members.map(m=><div key={m} className="flex justify-between items-center p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:border-[#D4AF37]/30 transition-all"><span className="font-black text-[14px] text-slate-700">{m}</span><button onClick={()=>deleteMember(m)} className="p-2 text-slate-300 hover:text-red-500"><Trash2 className="w-5 h-5"/></button></div>)}</div>
+                  <div className="flex gap-3 mb-8"><Input placeholder="Enter Member Name" value={newMember} onChange={e=>setNewMember(e.target.value)} className="h-14 font-black shadow-inner" /><Button onClick={()=>{if(newMember)addMember(newMember);setNewMember("")}} className="bg-[#1E3A8A] h-14 px-8 rounded-2xl font-black text-xs">ADD</Button></div>
+                  <div className="space-y-3">{members.map(m=><div key={m} className="flex justify-between items-center p-5 bg-slate-50 rounded-2xl border border-slate-100"><span className="font-black text-[14px] text-slate-700">{m}</span><button onClick={()=>deleteMember(m)} className="p-2 text-slate-300 hover:text-red-500"><Trash2 className="w-5 h-5"/></button></div>)}</div>
                </div>
             </div>
           )}
@@ -275,21 +240,21 @@ export default function DashboardContent() {
                   <h3 className="text-center font-black text-[#1E3A8A] text-xl mb-10 uppercase tracking-[0.2em]">Add New Deposit</h3>
                   <form onSubmit={handleDeposit} className="space-y-8">
                     <div className="space-y-3">
-                      <Label className="text-[11px] font-black text-slate-400 uppercase px-1 tracking-widest">Select Member Name</Label>
+                      <Label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Select Member Name</Label>
                       <Select onValueChange={v=>setDeposit({...deposit, member:v})}>
-                        <SelectTrigger className="h-16 font-black text-[#1E3A8A] rounded-[20px] border-slate-100 bg-slate-50 shadow-inner"><SelectValue placeholder="Choose a foundation member"/></SelectTrigger>
+                        <SelectTrigger className="h-16 font-black text-[#1E3A8A] rounded-[20px] bg-slate-50 shadow-inner"><SelectValue placeholder="Choose a member"/></SelectTrigger>
                         <SelectContent className="bg-white z-[1000] rounded-2xl shadow-2xl border-none">{members.map(m=><SelectItem key={m} value={m} className="font-black text-[#1E3A8A] py-3">{m}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-3">
-                      <Label className="text-[11px] font-black text-slate-400 uppercase px-1 tracking-widest">Deposit Amount (TK)</Label>
-                      <Input type="number" value={deposit.amount} onChange={e=>setDeposit({...deposit, amount:Number(e.target.value)})} className="h-16 text-xl font-black border-slate-100 bg-slate-50 shadow-inner" />
+                      <Label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Deposit Amount (TK)</Label>
+                      <Input type="number" value={deposit.amount} onChange={e=>setDeposit({...deposit, amount:Number(e.target.value)})} className="h-16 text-xl font-black bg-slate-50 shadow-inner" />
                     </div>
                     <div className="space-y-3">
-                      <Label className="text-[11px] font-black text-slate-400 uppercase px-1 tracking-widest">Transaction Date</Label>
-                      <Input type="date" value={deposit.date} onChange={e=>setDeposit({...deposit, date:e.target.value})} className="h-16 font-black border-slate-100 bg-slate-50 shadow-inner" />
+                      <Label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Transaction Date</Label>
+                      <Input type="date" value={deposit.date} onChange={e=>setDeposit({...deposit, date:e.target.value})} className="h-16 font-black bg-slate-50 shadow-inner" />
                     </div>
-                    <Button type="submit" className="w-full h-16 bg-[#1E3A8A] hover:bg-[#1E40AF] text-white text-[13px] font-black shadow-2xl mt-6 rounded-[22px] uppercase tracking-[0.2em] transition-all hover:scale-[1.02]">CONFIRM TRANSACTION</Button>
+                    <Button type="submit" className="w-full h-16 bg-[#1E3A8A] text-white text-[13px] font-black shadow-2xl rounded-[22px] uppercase tracking-[0.2em]">CONFIRM TRANSACTION</Button>
                   </form>
                </div>
             </div>
@@ -310,3 +275,4 @@ export default function DashboardContent() {
     </div>
   );
 }
+
