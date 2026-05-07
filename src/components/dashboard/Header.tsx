@@ -32,7 +32,7 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
   };
 
   const handleBackup = async () => {
-    if (transactions.length === 0) {
+    if (!transactions || transactions.length === 0) {
       toast({ 
         variant: "destructive", 
         title: "ব্যাকআপ ডাটা নেই!", 
@@ -42,26 +42,31 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
     }
 
     setBackupLoading(true);
+    // আপনার দেওয়া Google Apps Script URL
     const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbx0V8EesGLJjp9xXVFi6Q_GQdjNzzH9TsmvXFtoD1Qk76x8Rl7kE7tyFRVmbVFWoRYXeA/exec";
 
-    // Prepare rows for the sheet
-    const rows = transactions.map(t => [t.n, t.d, t.a]);
-    const total = transactions.reduce((s, r) => s + r.a, 0);
-    
-    // Add summary rows
-    rows.push(["TOTAL COLLECTION", "", total]);
-    rows.push(["Backup Date", new Date().toLocaleString('bn-BD'), ""]);
-
-    const payload = { 
-        sheetName: "MinarGo_Data", 
-        headers: ["Member Name", "Date", "Amount (TK)"], 
-        rows: rows 
-    };
-
     try {
+      // লেনদেনের ডাটাগুলো রো (Row) আকারে সাজানো
+      const rows = transactions.map(t => [t.n, t.d, t.a]);
+      const total = transactions.reduce((s, r) => s + r.a, 0);
+      
+      // সামারি রো যুক্ত করা
+      rows.push(["TOTAL COLLECTION", "", total]);
+      rows.push(["Backup Date", new Date().toLocaleString('bn-BD'), ""]);
+
+      const payload = { 
+          sheetName: "MinarGo_Data", 
+          headers: ["Member Name", "Date", "Amount (TK)"], 
+          rows: rows 
+      };
+
+      // Fetch ব্যবহার করে ডাটা পাঠানো (no-cors মোড ব্যবহার করে যাতে ব্রাউজার ব্লক না করে)
       await fetch(GOOGLE_SHEETS_URL, { 
         method: "POST", 
         mode: "no-cors", 
+        headers: {
+          "Content-Type": "text/plain" 
+        },
         body: JSON.stringify(payload) 
       });
       
