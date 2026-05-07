@@ -24,12 +24,15 @@
   body {
     @apply bg-[#F0F2F5] text-foreground font-body antialiased;
     -webkit-tap-highlight-color: transparent;
+    background-image: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%),
+                      radial-gradient(at 100% 100%, rgba(30, 58, 138, 0.05) 0px, transparent 50%);
+    background-attachment: fixed;
   }
 }
 
 /* Luxury Glassmorphism Cards */
 .luxury-card {
-  @apply bg-white border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.05)] rounded-[32px] backdrop-blur-md;
+  @apply bg-white/90 border border-white/40 shadow-[0_12px_40px_rgba(0,0,0,0.06)] rounded-[32px] backdrop-blur-lg;
 }
 
 .gradient-banner {
@@ -43,7 +46,7 @@
 
 /* Slim Professional Bottom Nav */
 .nav-shadow {
-  @apply shadow-[0_-10px_50px_rgba(0,0,0,0.06)];
+  @apply shadow-[0_-15px_60px_rgba(0,0,0,0.08)];
 }
 
 .font-bengali {
@@ -52,13 +55,20 @@
 
 /* Native App Style Inputs */
 input, select, textarea {
-  @apply bg-slate-50 border-none text-[#1E3A8A] font-black !important;
+  @apply bg-slate-50/80 border-none text-[#1E3A8A] font-black !important;
   border-radius: 1.5rem !important;
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
 }
 
 input:focus, select:focus, textarea:focus {
   @apply ring-2 ring-primary/20 outline-none transition-all !important;
+}
+
+/* Disable interaction for the "N" dev indicator if present */
+[data-nextjs-toast], [data-nextjs-dev-indicator], .nextjs-dev-indicator {
+  display: none !important;
+  pointer-events: none !important;
+  opacity: 0 !important;
 }
 
 /* Professional Notification Popup */
