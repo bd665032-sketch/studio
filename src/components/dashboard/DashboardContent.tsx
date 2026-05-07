@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMinarData } from "@/hooks/use-minar-data";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,8 @@ import {
   ChevronRight,
   BookOpen,
   ClipboardList,
-  FileText
+  FileText,
+  Bell
 } from "lucide-react";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
 import DemandLetterGenerator from "./DemandLetterGenerator";
@@ -36,6 +37,51 @@ export default function DashboardContent() {
   const [newMember, setNewMember] = useState("");
   const [deposit, setDeposit] = useState({ member: "", amount: 5000, category: "প্রতি মাসের জমা", date: new Date().toISOString().split('T')[0] });
   const { toast } = useToast();
+  
+  // রিয়েল-টাইম নোটিফিকেশন ট্র্যাকিং
+  const prevTransactionsCount = useRef(transactions.length);
+  const isInitialLoad = useRef(true);
+
+  useEffect(() => {
+    // প্রথমবার লোড হওয়ার সময় নোটিফিকেশন বন্ধ রাখা
+    if (isInitialLoad.current && transactions.length > 0) {
+      isInitialLoad.current = false;
+      prevTransactionsCount.current = transactions.length;
+      return;
+    }
+
+    // যদি নতুন কোনো ট্রানজ্যাকশন যোগ হয়
+    if (!isInitialLoad.current && transactions.length > prevTransactionsCount.current) {
+      const latestTx = transactions[0]; // যেহেতু ডেসেন্ডিং অর্ডারে আছে, প্রথমটিই লেটেস্ট
+      
+      // সাউন্ড অ্যালার্ট (Beep Sound)
+      const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
+      audio.play().catch(e => console.log("Audio play failed", e));
+
+      // ফেসবুকের মতো নোটিফিকেশন
+      toast({
+        title: "🔔 নতুন জমা (New Deposit!)",
+        description: `${latestTx.n} জমা দিয়েছেন ৳${latestTx.a.toLocaleString()}`,
+        duration: 5000,
+      });
+
+      // ব্রাউজার পুশ নোটিফিকেশন (যদি পারমিশন থাকে)
+      if (Notification.permission === "granted") {
+        new Notification("Minar Go Foundation", {
+          body: `${latestTx.n} জমা দিয়েছেন ৳${latestTx.a.toLocaleString()}`,
+          icon: "/favicon.ico"
+        });
+      }
+    }
+    prevTransactionsCount.current = transactions.length;
+  }, [transactions, toast]);
+
+  // নোটিফিকেশন পারমিশন রিকোয়েস্ট
+  useEffect(() => {
+    if (Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, []);
 
   const filteredTransactions = transactions.filter(t => {
     if (selectedMonth === "All") return true;
@@ -73,8 +119,15 @@ export default function DashboardContent() {
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4">
               <div className="bg-white border border-slate-100 rounded-[24px] p-5 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-gold-gradient opacity-10 rounded-bl-[100px]"></div>
-                <p className="text-slate-400 text-[8px] font-black uppercase tracking-widest mb-1">Portfolio Summary</p>
-                <h1 className="text-lg font-black text-primary leading-tight">Collection Overview</h1>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="text-slate-400 text-[8px] font-black uppercase tracking-widest mb-1">Portfolio Summary</p>
+                    <h1 className="text-lg font-black text-primary leading-tight">Collection Overview</h1>
+                  </div>
+                  <div className="bg-primary/5 p-2 rounded-full">
+                    <Bell className="w-4 h-4 text-accent animate-pulse" />
+                  </div>
+                </div>
                 
                 <div className="grid grid-cols-2 gap-4 mt-5">
                   <div>
@@ -317,4 +370,3 @@ export default function DashboardContent() {
     </div>
   );
 }
-
