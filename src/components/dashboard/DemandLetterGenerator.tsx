@@ -23,6 +23,7 @@ export default function DemandLetterGenerator() {
     body: "",
     mobileNumber: "+8801725277089",
     emailAddress: "pranuae.farooq@gmail.com",
+    website: "https://1minargo7.atoms.world",
     language: "bn" as "en" | "bn",
   });
   
@@ -107,6 +108,30 @@ export default function DemandLetterGenerator() {
                   <SelectItem value="en">English</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <Label>মোবাইল নম্বর</Label>
+              <Input 
+                value={letterData.mobileNumber} 
+                onChange={(e) => setLetterData({...letterData, mobileNumber: e.target.value})} 
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>ইমেইল এড্রেস</Label>
+              <Input 
+                value={letterData.emailAddress} 
+                onChange={(e) => setLetterData({...letterData, emailAddress: e.target.value})} 
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>ওয়েবসাইট</Label>
+              <Input 
+                value={letterData.website} 
+                onChange={(e) => setLetterData({...letterData, website: e.target.value})} 
+              />
             </div>
           </div>
 
@@ -213,15 +238,15 @@ export default function DemandLetterGenerator() {
              <div className="flex items-center justify-center gap-6 text-sm text-gray-600 border-t border-gray-100 pt-6">
                <div className="flex items-center gap-1">
                  <Phone className="w-3 h-3 text-[#D4AF37]" />
-                 <span>+8801725277089</span>
+                 <span>{letterData.mobileNumber}</span>
                </div>
                <div className="flex items-center gap-1">
                  <Mail className="w-3 h-3 text-[#D4AF37]" />
-                 <span>pranuae.farooq@gmail.com</span>
+                 <span>{letterData.emailAddress}</span>
                </div>
                <div className="flex items-center gap-1">
                  <Globe className="w-3 h-3 text-[#D4AF37]" />
-                 <span>https://1minargo7.atoms.world</span>
+                 <span>{letterData.website}</span>
                </div>
              </div>
           </div>
