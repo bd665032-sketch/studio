@@ -36,8 +36,7 @@ export default function DocumentStorage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Check file size (localStorage is limited to ~5MB total)
-    if (file.size > 1024 * 1024 * 2) { // 2MB limit per file for localStorage safety
+    if (file.size > 1024 * 1024 * 2) { 
       toast({ variant: "destructive", title: "ফাইল অনেক বড়", description: "দয়া করে ২ এমবি-র কম সাইজের ছবি ব্যবহার করুন।" });
       return;
     }
@@ -59,12 +58,11 @@ export default function DocumentStorage() {
       toast({ title: "সফল হয়েছে", description: "ছবিটি গ্যালারিতে সেভ করা হয়েছে।" });
     };
     reader.readAsDataURL(file);
-    // Reset input
     e.target.value = '';
   };
 
   const deleteDoc = (id: string) => {
-    if (!confirm("আপনি কি এটি ডিলিট করতে চান?")) return;
+    if (typeof window !== 'undefined' && !window.confirm("আপনি কি এটি ডিলিট করতে চান?")) return;
     const updated = docs.filter(d => d.id !== id);
     setDocs(updated);
     localStorage.setItem("mg_docs", JSON.stringify(updated));
@@ -84,7 +82,7 @@ export default function DocumentStorage() {
     }
   };
 
-  if (!isClient) return null;
+  if (!isClient) return <div className="p-10 text-center text-muted-foreground">Loading Gallery...</div>;
 
   return (
     <Card className="bg-white border-none shadow-sm">
@@ -95,7 +93,6 @@ export default function DocumentStorage() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Simple Upload Area */}
         <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-primary/20 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer group">
           <div className="flex flex-col items-center justify-center pt-5 pb-6">
             <div className="p-3 bg-white rounded-full shadow-sm group-active:scale-95 transition-transform mb-2">
@@ -107,7 +104,6 @@ export default function DocumentStorage() {
           <input type="file" className="hidden" onChange={handleUpload} accept="image/*" />
         </label>
 
-        {/* View Area */}
         <div className="grid grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-1">
           {docs.length === 0 ? (
             <div className="col-span-2 text-center py-10 opacity-30">
@@ -123,7 +119,6 @@ export default function DocumentStorage() {
                   className="w-full h-full object-cover"
                 />
                 
-                {/* Actions Overlay */}
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                   <Button 
                     size="icon" 
@@ -143,7 +138,6 @@ export default function DocumentStorage() {
                   </Button>
                 </div>
                 
-                {/* Date Badge */}
                 <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] px-2 py-1">
                   {doc.date}
                 </div>
