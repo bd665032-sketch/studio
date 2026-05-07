@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /**
- * Global CSS Styles with Premium Royal Blue & Gold Theme
+ * Global CSS Styles with Premium Royal Blue, Purple & Gold Theme
  */
 
 @layer base {
@@ -12,7 +12,7 @@
     --foreground: 222 47% 11%;
     --primary: 221 83% 53%; /* Royal Blue */
     --accent: 45 93% 47%;   /* Luxury Gold */
-    --secondary: 210 40% 96%;
+    --secondary: 262 83% 58%; /* Light Purple / Indigo */
     --card: 0 0% 100%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
@@ -35,12 +35,17 @@
   @apply bg-white border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] rounded-[24px];
 }
 
-.blue-gradient {
-  background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+.blue-purple-gradient {
+  background: linear-gradient(135deg, #1E40AF 0%, #818CF8 100%);
 }
 
 .blue-gold-card {
   background: linear-gradient(135deg, #002366 0%, #1E40AF 100%);
+  border-left: 6px solid #D4AF37;
+}
+
+.purple-gold-card {
+  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
   border-left: 6px solid #D4AF37;
 }
 
