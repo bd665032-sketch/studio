@@ -54,17 +54,16 @@ export default function DemandLetterGenerator() {
     setExporting(true);
     
     try {
-      // Small delay to ensure any layout changes are settled
       await new Promise(resolve => setTimeout(resolve, 800));
       
       const element = printRef.current;
       const canvas = await html2canvas(element, {
-        scale: 3, // Higher scale for better PDF quality
+        scale: 3,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
-        windowWidth: 794, // Approx 210mm in pixels at 96dpi
-        windowHeight: 1123, // Approx 297mm in pixels at 96dpi
+        windowWidth: 794,
+        windowHeight: 1123,
       });
       
       const imgData = canvas.toDataURL("image/png");
@@ -113,7 +112,14 @@ export default function DemandLetterGenerator() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label>স্বাক্ষরকারীর নাম</Label>
+              <Input 
+                value={letterData.signerName} 
+                onChange={(e) => setLetterData({...letterData, signerName: e.target.value})} 
+              />
+            </div>
             <div className="space-y-1">
               <Label>মোবাইল নম্বর</Label>
               <Input 
@@ -121,6 +127,9 @@ export default function DemandLetterGenerator() {
                 onChange={(e) => setLetterData({...letterData, mobileNumber: e.target.value})} 
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>ইমেইল এড্রেস</Label>
               <Input 
@@ -166,17 +175,14 @@ export default function DemandLetterGenerator() {
         </CardContent>
       </Card>
 
-      {/* 100% IDENTICAL TEMPLATE FOR PDF GENERATION */}
       <div style={{ position: 'absolute', top: '-10000px', left: '-10000px', width: '210mm', minHeight: '297mm' }}>
         <div 
           ref={printRef}
           className="bg-white text-[#333] font-bengali relative flex flex-col"
           style={{ width: '210mm', minHeight: '297mm', padding: '10mm 15mm' }}
         >
-          {/* Top Blue Border Strip - Identical to Image */}
           <div className="absolute top-0 left-0 right-0 h-[6px] bg-[#002366]"></div>
 
-          {/* Professional Header Banner Box - Identical Proportions */}
           <div className="mt-8 mb-6 flex justify-center">
             <div className="bg-[#1a4b8c] text-white rounded-[15px] py-10 px-12 text-center shadow-md w-full max-w-[95%] flex flex-col items-center">
               <h1 className="text-[38px] font-extrabold mb-1 leading-tight tracking-wide drop-shadow-sm">মিনার গো প্রবাসী উন্নয়ন ফাউন্ডেশন</h1>
@@ -186,35 +192,29 @@ export default function DemandLetterGenerator() {
             </div>
           </div>
 
-          {/* Date Row - Right Aligned */}
           <div className="text-right mb-6">
             <p className="text-[18px] font-bold"><span className="text-gray-900">Date:</span> {letterData.letterDate}</p>
           </div>
 
-          {/* Recipient Row */}
           <div className="mb-2">
             <p className="text-[18px] font-bold">To:</p>
             <p className="text-[18px] font-medium leading-tight">{letterData.toCompany}</p>
           </div>
 
-          {/* Subject Row - Underlined */}
           <div className="mb-6">
             <p className="text-[18px] font-bold">
               Subject: <span className="underline underline-offset-4 decoration-[1.5px]">{letterData.subject}</span>
             </p>
           </div>
 
-          {/* Body Content Box - Beige Background Matching Original */}
           <div className="mb-10 bg-[#fdfaf5] p-10 rounded-[5px] text-justify text-[17.5px] leading-[1.85] whitespace-pre-wrap flex-1 border border-[#f5efdf]/50">
             {letterData.body}
           </div>
 
-          {/* Closing */}
           <div className="mb-16">
             <p className="text-[18px] font-medium">Sincerely,</p>
           </div>
 
-          {/* Two Signature Lines - Restored and Fixed Positioning */}
           <div className="flex justify-between mb-12 px-2 items-start">
             <div className="text-center w-[45%]">
                <div className="w-full border-t-[1.5px] border-gray-800 mb-2"></div>
@@ -230,7 +230,6 @@ export default function DemandLetterGenerator() {
             </div>
           </div>
 
-          {/* Contact Details Footer Bar - Identical Icons and Style */}
           <div className="flex items-center justify-center gap-6 text-[12px] font-bold mb-4 pt-4 border-t border-gray-100/50">
              <div className="flex items-center gap-1.5">
                <Phone className="w-3.5 h-3.5 text-[#ff1744]" fill="currentColor" />
@@ -246,21 +245,18 @@ export default function DemandLetterGenerator() {
              </div>
           </div>
 
-          {/* Green "Thank You" Highlight Bar - Identical to Image */}
           <div className="text-center mb-4 px-10">
             <div className="bg-[#e7f3ef] text-[#2d6a4f] py-2.5 w-full rounded-full text-[14px] font-bold border border-[#cde5dc] shadow-sm">
               Thank you for your cooperation.
             </div>
           </div>
 
-          {/* Copyright Notice - Center Bottom */}
           <div className="text-center pb-6">
             <p className="text-[11px] text-gray-400 font-bold uppercase tracking-[0.1em]">
               © Minar Go Expatriate Development Foundation
             </p>
           </div>
           
-          {/* Bottom Blue Border Strip */}
           <div className="absolute bottom-0 left-0 right-0 h-[6px] bg-[#002366]"></div>
         </div>
       </div>

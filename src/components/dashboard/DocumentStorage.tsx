@@ -62,10 +62,17 @@ export default function DocumentStorage() {
   };
 
   const deleteDoc = (id: string) => {
-    if (typeof window !== 'undefined' && !window.confirm("আপনি কি এটি ডিলিট করতে চান?")) return;
-    const updated = docs.filter(d => d.id !== id);
-    setDocs(updated);
-    localStorage.setItem("mg_docs", JSON.stringify(updated));
+    if (typeof window === 'undefined') return;
+    
+    // Non-blocking simple confirm
+    if (!window.confirm("আপনি কি এই ছবিটি ডিলিট করতে চান?")) return;
+
+    setDocs((prevDocs) => {
+      const updated = prevDocs.filter(d => d.id !== id);
+      localStorage.setItem("mg_docs", JSON.stringify(updated));
+      return updated;
+    });
+    
     toast({ title: "ডিলিট হয়েছে", description: "ছবিটি মুছে ফেলা হয়েছে।" });
   };
 
@@ -124,7 +131,7 @@ export default function DocumentStorage() {
                     size="icon" 
                     variant="secondary" 
                     className="h-8 w-8 rounded-full" 
-                    onClick={() => downloadDoc(doc)}
+                    onClick={(e) => { e.stopPropagation(); downloadDoc(doc); }}
                   >
                     <Download className="w-4 h-4" />
                   </Button>
@@ -132,7 +139,7 @@ export default function DocumentStorage() {
                     size="icon" 
                     variant="destructive" 
                     className="h-8 w-8 rounded-full" 
-                    onClick={() => deleteDoc(doc.id)}
+                    onClick={(e) => { e.stopPropagation(); deleteDoc(doc.id); }}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
