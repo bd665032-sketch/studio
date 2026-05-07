@@ -60,12 +60,16 @@ export default function DemandLetterGenerator() {
     setExporting(true);
     
     try {
+      // Small delay to ensure state is updated in the hidden div
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const element = printRef.current;
       const canvas = await html2canvas(element, {
-        scale: 4, // Higher scale for better text quality
+        scale: 3, // Balanced scale for quality vs size
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
+        windowWidth: 794, // A4 width in pixels at 96 DPI
       });
       
       const imgData = canvas.toDataURL("image/png");
@@ -185,15 +189,15 @@ export default function DemandLetterGenerator() {
         </CardContent>
       </Card>
 
-      {/* Hidden Template for PDF Generation */}
-      <div className="fixed left-[-9999px] top-0">
+      {/* Hidden Template for PDF Generation - Improved Container */}
+      <div style={{ position: 'absolute', top: '-10000px', left: '-10000px', overflow: 'hidden', height: 0 }}>
         <div 
           ref={printRef}
-          className="w-[210mm] bg-white text-[#333] font-bengali leading-relaxed relative flex flex-col"
-          style={{ minHeight: '297mm', padding: '15mm' }}
+          className="bg-white text-[#333] font-bengali leading-relaxed relative flex flex-col"
+          style={{ width: '210mm', minHeight: '297mm', padding: '15mm' }}
         >
           {/* Top Border Line */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-primary"></div>
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#002366]"></div>
 
           {/* Header Box - Blue Rounded */}
           <div className="mt-4 mb-10 flex justify-center">
@@ -234,38 +238,36 @@ export default function DemandLetterGenerator() {
             <p className="text-[20px] font-medium">Sincerely,</p>
           </div>
 
-          {/* Signature Lines - Two Columns */}
-          <div className="flex justify-between items-end mb-24 px-4">
-            <div className="w-[300px] text-center">
-              <div className="border-t-[1.5px] border-gray-900 mb-4 w-full"></div>
+          {/* Signature Lines - Two Columns - Fixed Visibility */}
+          <div className="flex justify-between items-end mb-24 px-4 w-full">
+            <div className="w-[300px] text-center border-t-[1.5px] border-gray-900 pt-4">
               <p className="font-bold text-[14px] uppercase leading-tight tracking-tight">Minar Go Expatriate Development Foundation</p>
             </div>
-            <div className="w-[300px] text-center">
-              <div className="border-t-[1.5px] border-gray-900 mb-4 w-full"></div>
+            <div className="w-[300px] text-center border-t-[1.5px] border-gray-900 pt-4">
               <p className="font-bold text-[14px] uppercase leading-tight tracking-tight">{letterData.toCompany}</p>
             </div>
           </div>
 
-          {/* Contact Information with Icons */}
-          <div className="border-t border-gray-100 pt-8 pb-4">
-             <div className="flex items-center justify-center gap-12 text-[15px] text-gray-800 font-bold">
-               <div className="flex items-center gap-2.5">
-                 <div className="p-1.5 bg-pink-100 rounded-full"><Phone className="w-4 h-4 text-pink-600 fill-pink-600" /></div>
+          {/* Contact Information - Fixed Visibility */}
+          <div className="border-t border-gray-200 pt-8 pb-4 mt-auto">
+             <div className="flex items-center justify-center gap-10 text-[16px] text-gray-800 font-bold">
+               <div className="flex items-center gap-2">
+                 <div className="p-1.5 bg-blue-50 rounded-full"><Phone className="w-4 h-4 text-[#002366]" /></div>
                  <span>{letterData.mobileNumber}</span>
                </div>
-               <div className="flex items-center gap-2.5">
-                 <div className="p-1.5 bg-purple-100 rounded-full"><Mail className="w-4 h-4 text-purple-600 fill-purple-600" /></div>
+               <div className="flex items-center gap-2">
+                 <div className="p-1.5 bg-blue-50 rounded-full"><Mail className="w-4 h-4 text-[#002366]" /></div>
                  <span>{letterData.emailAddress}</span>
                </div>
-               <div className="flex items-center gap-2.5">
-                 <div className="p-1.5 bg-blue-100 rounded-full"><Globe className="w-4 h-4 text-blue-600" /></div>
+               <div className="flex items-center gap-2">
+                 <div className="p-1.5 bg-blue-50 rounded-full"><Globe className="w-4 h-4 text-[#002366]" /></div>
                  <span>{letterData.website}</span>
                </div>
              </div>
           </div>
 
           {/* Bottom Green Strip */}
-          <div className="text-center mt-4">
+          <div className="text-center mt-6">
             <div className="bg-[#E7F3EF] text-[#2D6A4F] py-3.5 px-16 rounded-full inline-block text-[15px] font-extrabold border border-[#CDE5DC] shadow-sm">
               Thank you for your cooperation.
             </div>
@@ -273,7 +275,7 @@ export default function DemandLetterGenerator() {
           </div>
           
           {/* Bottom Border Line */}
-          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-primary"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-[#002366]"></div>
         </div>
       </div>
     </div>
