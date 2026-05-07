@@ -19,7 +19,8 @@ import {
   CloudSun,
   MapPin,
   Calendar,
-  Settings
+  Settings,
+  Share2
 } from "lucide-react";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
 import DemandLetterGenerator from "./DemandLetterGenerator";
@@ -57,6 +58,23 @@ export default function DashboardContent() {
     setDeposit({...deposit, member: "", amount: 5000, category: "প্রতি মাসের জমা", date: new Date().toISOString().split('T')[0]});
     setActiveTab("home");
     toast({ title: "সফল!", description: "ডিপোজিট সেভ হয়েছে।" });
+  };
+
+  const handleShareApp = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Minar Go Connect',
+          text: 'মিনার গো ফাউন্ডেশন এডমিন অ্যাপ। লিঙ্কটি ওপেন করে ফোনে এড করুন।',
+          url: window.location.href,
+        });
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        toast({ title: "লিঙ্ক কপি হয়েছে!", description: "এখন হোয়াটসঅ্যাপে পেস্ট করে পাঠান।" });
+      }
+    } catch (error) {
+      console.log('Sharing failed', error);
+    }
   };
 
   return (
@@ -151,6 +169,15 @@ export default function DashboardContent() {
                 >
                   <Download className="w-5 h-5" /> 
                   <span className="uppercase tracking-[0.2em]">Download Summary Report (PDF)</span>
+                </button>
+
+                {/* Share App Button */}
+                <button 
+                  className="w-full py-5 bg-gradient-to-r from-[#1E40AF] to-[#6366F1] text-white font-black text-[13px] rounded-[32px] flex items-center justify-center gap-3 shadow-xl active:scale-95 transition-all" 
+                  onClick={handleShareApp}
+                >
+                  <Share2 className="w-5 h-5" /> 
+                  <span className="uppercase tracking-[0.2em]">Share App with Foundation Members</span>
                 </button>
               </div>
 
