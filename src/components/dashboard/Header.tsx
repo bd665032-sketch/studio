@@ -11,7 +11,8 @@ import {
   Settings, 
   User as UserIcon,
   Check,
-  X
+  X,
+  ShieldCheck
 } from "lucide-react";
 import { useMinarData } from "@/hooks/use-minar-data";
 import { useToast } from "@/hooks/use-toast";
@@ -24,6 +25,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Header({ onLogout }: { onLogout: () => void }) {
   const [logo, setLogo] = useState<string | null>(null);
@@ -113,19 +115,27 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
   return (
     <header className="sticky top-0 z-50 w-full bg-primary text-white shadow-lg py-3 px-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        {/* Foundation Logo / Profile Section */}
+        {/* Profile / Logo Section with Settings Trigger */}
         <Dialog>
           <DialogTrigger asChild>
-            <div className="relative cursor-pointer group">
-              <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center overflow-hidden border-2 border-accent shadow-inner">
-                {logo ? (
-                  <img src={logo} alt="Logo" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-primary font-bold text-sm">MG</span>
-                )}
-                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                  <Settings className="w-4 h-4 text-white" />
+            <div className="relative cursor-pointer group flex items-center gap-3 bg-white/10 p-1 pr-4 rounded-full hover:bg-white/20 transition-all border border-white/5">
+              <div className="relative">
+                <Avatar className="w-10 h-10 border-2 border-accent shadow-md">
+                  {logo ? (
+                    <AvatarImage src={logo} className="object-cover" />
+                  ) : (
+                    <AvatarFallback className="bg-accent text-primary font-bold">MG</AvatarFallback>
+                  )}
+                </Avatar>
+                <div className="absolute -bottom-1 -right-1 bg-success rounded-full p-0.5 border-2 border-primary">
+                  <ShieldCheck className="w-3 h-3 text-white" />
                 </div>
+              </div>
+              <div className="hidden sm:block">
+                <h1 className="font-extrabold text-sm leading-none tracking-tight">
+                  {foundationName}
+                </h1>
+                <p className="text-[10px] text-accent/80 font-bold uppercase mt-1 tracking-widest">Admin Control</p>
               </div>
             </div>
           </DialogTrigger>
@@ -133,30 +143,30 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
             <DialogHeader>
               <DialogTitle className="text-primary font-extrabold flex items-center gap-2">
                 <UserIcon className="w-5 h-5" />
-                Foundation Profile Settings
+                ফাউন্ডেশন প্রোফাইল সেটিংস
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6 py-4">
-              {/* Logo Upload in Settings */}
+              {/* Logo Upload */}
               <div className="flex flex-col items-center gap-4">
-                <div className="w-24 h-24 rounded-full bg-secondary flex items-center justify-center overflow-hidden border-4 border-accent relative group">
+                <div className="w-28 h-28 rounded-full bg-secondary flex items-center justify-center overflow-hidden border-4 border-accent relative group shadow-lg">
                   {logo ? (
                     <img src={logo} alt="Preview" className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-primary font-bold text-2xl">MG</span>
+                    <span className="text-primary font-bold text-3xl">MG</span>
                   )}
                   <label className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white text-[10px] font-bold">
-                    <Camera className="w-6 h-6 mb-1" />
-                    CHANGE LOGO
+                    <Camera className="w-7 h-7 mb-1" />
+                    লোগো পরিবর্তন
                     <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
                   </label>
                 </div>
-                <p className="text-xs text-muted-foreground">Click the image to upload a new logo</p>
+                <p className="text-xs text-muted-foreground font-medium">ছবির উপরে ক্লিক করে নতুন লোগো দিন</p>
               </div>
 
-              {/* Name Edit in Settings */}
+              {/* Foundation Name Edit */}
               <div className="space-y-2">
-                <Label htmlFor="foundation-name" className="text-primary font-bold">Foundation Name</Label>
+                <Label htmlFor="foundation-name" className="text-primary font-bold">ফাউন্ডেশনের নাম</Label>
                 <div className="flex gap-2">
                   <Input 
                     id="foundation-name"
@@ -164,11 +174,12 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
                     readOnly={!isEditingName}
                     onFocus={() => { if(!isEditingName) { setTempName(foundationName); setIsEditingName(true); } }}
                     onChange={(e) => setTempName(e.target.value)}
-                    className="border-gray-200"
+                    className="h-11 border-gray-200 focus:border-primary font-medium"
+                    placeholder="ফাউন্ডেশনের নাম লিখুন"
                   />
                   {isEditingName && (
                     <div className="flex gap-1">
-                      <Button size="icon" className="bg-success" onClick={handleSaveName}>
+                      <Button size="icon" className="bg-success hover:bg-success/90" onClick={handleSaveName}>
                         <Check className="w-4 h-4" />
                       </Button>
                       <Button size="icon" variant="destructive" onClick={() => setIsEditingName(false)}>
@@ -182,12 +193,9 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
           </DialogContent>
         </Dialog>
 
-        {/* Title Section */}
-        <div>
-          <h1 className="font-extrabold text-sm sm:text-lg leading-none tracking-tight">
-            {foundationName}
-          </h1>
-          <p className="text-[10px] sm:text-xs text-accent font-medium mt-0.5">Admin Control Panel</p>
+        {/* Mobile Title View */}
+        <div className="sm:hidden">
+          <h1 className="font-extrabold text-xs leading-none">{foundationName}</h1>
         </div>
       </div>
       
@@ -195,7 +203,7 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
         <Button 
           variant="outline" 
           size="sm" 
-          className="border-accent text-accent hover:bg-accent hover:text-white transition-all active:scale-95"
+          className="bg-white/10 border-accent/50 text-accent hover:bg-accent hover:text-white transition-all active:scale-95 h-9"
           onClick={handleBackup}
           disabled={backupLoading}
         >
@@ -210,7 +218,7 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
         <Button 
           variant="destructive" 
           size="sm" 
-          className="transition-transform active:scale-95 px-3 sm:px-4 font-bold"
+          className="transition-transform active:scale-95 px-3 sm:px-4 font-bold shadow-md h-9"
           onClick={onLogout}
         >
           <LogOut className="w-4 h-4 sm:mr-2" />
