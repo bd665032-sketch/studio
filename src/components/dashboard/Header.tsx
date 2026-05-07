@@ -92,54 +92,54 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
   };
 
   return (
-    <header className="sticky top-0 z-[100] w-full bg-white/95 backdrop-blur-md py-1.5 px-4 flex items-center justify-between border-b border-slate-100 shadow-sm h-14 transition-all">
-      <div className="flex items-center gap-2.5">
+    <header className="sticky top-0 z-[100] w-full bg-white/80 backdrop-blur-xl py-2 px-6 flex items-center justify-between border-b border-slate-100 h-16 transition-all">
+      <div className="flex items-center gap-3">
         <Dialog>
           <DialogTrigger asChild>
-            <div className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity">
+            <div className="flex items-center gap-3 cursor-pointer group active:scale-95 transition-all">
               <div className="relative">
-                <Avatar className="w-8 h-8 border-2 border-slate-50 shadow-sm">
+                <Avatar className="w-10 h-10 border-2 border-blue-50 shadow-sm">
                   {logo ? (
                     <AvatarImage src={logo} className="object-cover" />
                   ) : (
-                    <AvatarFallback className="bg-[#1E3A8A] text-white font-black text-[10px]">MG</AvatarFallback>
+                    <AvatarFallback className="bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] text-white font-black text-xs italic">MG</AvatarFallback>
                   )}
                 </Avatar>
-                <div className="absolute -bottom-0.5 -right-0.5 bg-green-500 rounded-full p-0.5 border border-white">
-                  <ShieldCheck className="w-2.5 h-2.5 text-white" />
+                <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5 border-2 border-white shadow-sm">
+                  <ShieldCheck className="w-3 h-3 text-white" />
                 </div>
               </div>
               <div className="flex flex-col">
-                <h1 className="font-black text-[11px] text-[#1E3A8A] leading-none uppercase">{foundationName}</h1>
-                <p className="text-[7px] text-[#D4AF37] font-bold uppercase mt-0.5 tracking-tighter">Secure Admin Node</p>
+                <h1 className="font-black text-[12px] text-[#1E3A8A] leading-none uppercase tracking-tight">{foundationName}</h1>
+                <p className="text-[8px] text-[#D4AF37] font-black uppercase mt-1 tracking-widest opacity-80">Secure Node Connected</p>
               </div>
             </div>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-xs bg-white rounded-[24px]">
+          <DialogContent className="sm:max-w-xs bg-white rounded-[40px] border-none shadow-2xl p-8">
             <DialogHeader>
-              <DialogTitle className="text-[#1E3A8A] font-black text-sm flex items-center gap-2">
-                <Settings className="w-4 h-4" />
-                Profile Customization
+              <DialogTitle className="text-[#1E3A8A] font-black text-base flex items-center gap-2 mb-4">
+                <Settings className="w-5 h-5" />
+                System Profile
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-4 py-2">
-              <div className="flex flex-col items-center gap-3">
-                <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border-2 border-slate-50 relative group shadow-inner">
-                  {logo ? <img src={logo} alt="Preview" className="w-full h-full object-cover" /> : <span className="text-[#1E3A8A] font-bold text-lg">MG</span>}
-                  <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white text-[9px] font-bold">
-                    <Camera className="w-5 h-5 mb-1" /> Upload
+            <div className="space-y-6 py-2">
+              <div className="flex flex-col items-center gap-4">
+                <div className="w-24 h-24 rounded-full bg-slate-50 flex items-center justify-center overflow-hidden border-4 border-slate-100 relative group shadow-inner">
+                  {logo ? <img src={logo} alt="Preview" className="w-full h-full object-cover" /> : <span className="text-[#1E3A8A] font-black text-2xl">MG</span>}
+                  <label className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white text-[10px] font-black uppercase">
+                    <Camera className="w-6 h-6 mb-1" /> Update
                     <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
                   </label>
                 </div>
               </div>
-              <div className="space-y-1.5">
-                <Label className="font-bold text-slate-400 text-[9px] uppercase">Foundation Entity Name</Label>
-                <div className="flex gap-1.5">
-                  <Input value={isEditingName ? tempName : foundationName} readOnly={!isEditingName} onFocus={() => { if(!isEditingName) { setTempName(foundationName); setIsEditingName(true); } }} onChange={(e) => setTempName(e.target.value)} className="h-10 border-none bg-slate-50 rounded-xl font-bold text-xs" />
+              <div className="space-y-2">
+                <Label className="font-black text-slate-400 text-[10px] uppercase tracking-widest">Entity Name</Label>
+                <div className="flex gap-2">
+                  <Input value={isEditingName ? tempName : foundationName} readOnly={!isEditingName} onFocus={() => { if(!isEditingName) { setTempName(foundationName); setIsEditingName(true); } }} onChange={(e) => setTempName(e.target.value)} className="h-12 border-none bg-slate-50 rounded-2xl font-black text-sm" />
                   {isEditingName && (
-                    <div className="flex gap-1">
-                      <Button size="icon" className="h-10 w-10 bg-green-500 rounded-lg" onClick={handleSaveName}><Check className="w-4 h-4" /></Button>
-                      <Button size="icon" variant="destructive" className="h-10 w-10 rounded-lg" onClick={() => setIsEditingName(false)}><X className="w-4 h-4" /></Button>
+                    <div className="flex gap-2">
+                      <Button size="icon" className="h-12 w-12 bg-green-500 rounded-2xl" onClick={handleSaveName}><Check className="w-5 h-5" /></Button>
+                      <Button size="icon" variant="destructive" className="h-12 w-12 rounded-2xl" onClick={() => setIsEditingName(false)}><X className="w-5 h-5" /></Button>
                     </div>
                   )}
                 </div>
@@ -149,15 +149,15 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
         </Dialog>
       </div>
       
-      <div className="flex items-center gap-2.5">
-        <Button variant="ghost" size="icon" className="w-8 h-8 bg-blue-50 text-[#1E3A8A] rounded-lg">
-          <Bell className="w-4 h-4" />
+      <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" className="w-10 h-10 bg-blue-50/50 text-[#1E3A8A] rounded-2xl active:scale-90 transition-all">
+          <Bell className="w-5 h-5" />
         </Button>
-        <Button variant="ghost" size="icon" className="w-8 h-8 bg-slate-50 shadow-sm rounded-lg text-[#1E3A8A]" onClick={handleBackup} disabled={backupLoading}>
-          {backupLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CloudUpload className="w-3.5 h-3.5" />}
+        <Button variant="ghost" size="icon" className="w-10 h-10 bg-slate-50 text-[#1E3A8A] rounded-2xl active:scale-90 transition-all" onClick={handleBackup} disabled={backupLoading}>
+          {backupLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <CloudUpload className="w-5 h-5" />}
         </Button>
-        <Button variant="ghost" size="icon" className="w-8 h-8 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors" onClick={onLogout}>
-          <LogOut className="w-3.5 h-3.5" />
+        <Button variant="ghost" size="icon" className="w-10 h-10 bg-red-50 text-red-500 rounded-2xl hover:bg-red-100 active:scale-90 transition-all" onClick={onLogout}>
+          <LogOut className="w-5 h-5" />
         </Button>
       </div>
     </header>
