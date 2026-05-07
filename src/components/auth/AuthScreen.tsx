@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -73,7 +72,11 @@ export default function AuthScreen() {
 
   return (
     <div className="min-h-screen bg-auth-premium flex flex-col font-body overflow-hidden items-center justify-center p-4">
-      <div className="w-full max-w-[420px] bg-white/95 backdrop-blur-xl rounded-[45px] shadow-[0_25px_80px_rgba(0,0,0,0.3)] overflow-hidden border border-white/20">
+      {/* Absolute Decorative Glows */}
+      <div className="absolute top-[-10%] left-[-10%] w-[300px] h-[300px] bg-white/10 rounded-full blur-[80px]"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-400/10 rounded-full blur-[100px]"></div>
+
+      <div className="w-full max-w-[420px] bg-white/95 backdrop-blur-xl rounded-[45px] shadow-[0_25px_80px_rgba(0,0,0,0.4)] overflow-hidden border border-white/30 relative z-10">
         
         <div className="relative py-10 flex flex-col items-center justify-center text-center px-6">
           <div className="z-10 bg-white p-4 rounded-full shadow-xl border-4 border-blue-50/50 mb-5">
@@ -173,7 +176,7 @@ export default function AuthScreen() {
                 )}
               </Button>
               
-              <p className="text-center text-[9px] text-slate-300 font-black uppercase tracking-widest mt-6">
+              <p className="text-center text-[9px] text-slate-400 font-black uppercase tracking-widest mt-6">
                 {isLogin ? "Authenticated Node Access" : "Strong Password Required (8+ chars, A-Z, a-z, 0-9)"}
               </p>
             </form>

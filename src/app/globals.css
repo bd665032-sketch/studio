@@ -61,12 +61,27 @@ input:focus, select:focus, textarea:focus {
   @apply ring-2 ring-primary/20 outline-none transition-all !important;
 }
 
-/* Disable interaction for the "N" dev indicator if present */
-[data-nextjs-toast], [data-nextjs-dev-indicator], .nextjs-dev-indicator {
+/* 
+   CRITICAL: Disable the "N" dev indicator and all related technical overlays 
+   Targeting Next.js default dev tools elements aggressively
+*/
+nextjs-portal, 
+[data-nextjs-portal],
+#nextjs-dev-indicator,
+.nextjs-dev-indicator,
+[data-nextjs-dev-indicator],
+[data-nextjs-toast],
+[data-nextjs-dialog-overlay],
+[data-nextjs-dialog-content],
+#nextjs-dev-indicator-container {
   display: none !important;
   pointer-events: none !important;
   opacity: 0 !important;
   visibility: hidden !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+  z-index: -9999 !important;
 }
 
 /* Professional Notification Popup */
@@ -74,7 +89,7 @@ input:focus, select:focus, textarea:focus {
   @apply bg-gradient-to-r from-[#1E40AF] to-[#6366F1] text-white border-none shadow-[0_20px_60px_rgba(30,64,175,0.4)] rounded-[30px] p-6 flex items-center gap-5 animate-in slide-in-from-top-full duration-500 cursor-pointer;
 }
 
-/* Auth Page Background Gradient */
+/* Auth Page Background Gradient - Royal Mix */
 .bg-auth-premium {
-  background: linear-gradient(135deg, #1E3A8A 0%, #4F46E5 50%, #6366F1 100%);
+  background: linear-gradient(135deg, #002366 0%, #1E40AF 40%, #6366F1 100%);
 }
