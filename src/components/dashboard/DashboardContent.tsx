@@ -135,6 +135,13 @@ export default function DashboardContent() {
                 <ChevronRight className="w-4 h-4 text-white/30" />
               </button>
 
+              <Button 
+                className="w-full h-11 bg-white text-[#002366] border-2 border-accent/30 font-black text-[11px] rounded-[18px] hover:bg-accent hover:text-white transition-all shadow-sm" 
+                onClick={() => exportSummaryPDF(filteredTransactions, selectedMonth, totalCollection)}
+              >
+                <Download className="w-4 h-4 mr-2" /> Export Summary PDF
+              </Button>
+
               <div className="space-y-3 pt-1">
                 <div className="flex items-center justify-between px-1">
                   <h4 className="font-black text-[#002366] text-[10px] uppercase tracking-wider">Monthly Logs</h4>
@@ -150,28 +157,28 @@ export default function DashboardContent() {
                 </div>
 
                 <div className="space-y-2">
-                  {filteredTransactions.map(t => (
-                    <div key={t.id} className="luxury-card p-3 flex items-center justify-between border-slate-50">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center font-black text-primary text-[11px]">{t.n.charAt(0)}</div>
-                        <div>
-                          <p className="font-bold text-slate-800 text-[12px]">{t.n}</p>
-                          <p className="text-[8px] text-slate-400 font-medium">{t.d} • {t.c}</p>
+                  {filteredTransactions.length > 0 ? (
+                    filteredTransactions.map(t => (
+                      <div key={t.id} className="luxury-card p-3 flex items-center justify-between border-slate-50">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center font-black text-primary text-[11px]">{t.n.charAt(0)}</div>
+                          <div>
+                            <p className="font-bold text-slate-800 text-[12px]">{t.n}</p>
+                            <p className="text-[8px] text-slate-400 font-medium">{t.d} • {t.c}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <p className="font-black text-[#002366] text-[12px]">৳{t.a.toLocaleString()}</p>
+                          <button onClick={() => { if(confirm('ডিলিট করতে চান?')) deleteTransaction(t.id); }} className="p-1.5 text-slate-200 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <p className="font-black text-[#002366] text-[12px]">৳{t.a.toLocaleString()}</p>
-                        <button onClick={() => { if(confirm('ডিলিট করতে চান?')) deleteTransaction(t.id); }} className="p-1.5 text-slate-200 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
-                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-10 text-slate-400 font-bold text-xs bg-white rounded-[20px] border border-dashed border-slate-100">
+                      এই মাসে কোনো লেনদেন পাওয়া যায়নি
                     </div>
-                  ))}
+                  )}
                 </div>
-                <Button 
-                  className="w-full h-10 bg-white text-primary border-2 border-accent/20 font-black text-[10px] rounded-xl hover:bg-accent hover:text-white transition-all" 
-                  onClick={() => exportSummaryPDF(filteredTransactions, selectedMonth, totalCollection)}
-                >
-                  <Download className="w-3.5 h-3.5 mr-2" /> Export Summary PDF
-                </Button>
               </div>
             </div>
           )}
