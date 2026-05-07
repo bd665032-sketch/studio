@@ -8,7 +8,8 @@ import { useAuth } from "@/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { Mail, Lock, User, ShieldCheck, KeyRound } from "lucide-react";
 
-const AUTHORIZED_ADMINS = ["dulal", "omar faruk", "shahid"];
+// Authorized Admin Names (Flexible check)
+const AUTHORIZED_ADMIN_NAMES = ["dulal", "omar faruk", "shahid", "mr shahid"];
 const ADMIN_SECRET_KEY = "MINAR2026"; 
 
 export default function AuthScreen() {
@@ -41,8 +42,11 @@ export default function AuthScreen() {
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
         toast({ title: "স্বাগতম!", description: "সিকিউর লগইন সফল হয়েছে।" });
       } else {
-        // Validation for new registration
-        if (!AUTHORIZED_ADMINS.includes(formData.fullName.toLowerCase())) {
+        // Advanced validation for new admin registration
+        const inputName = formData.fullName.toLowerCase().trim();
+        const isAuthorized = AUTHORIZED_ADMIN_NAMES.some(name => inputName.includes(name));
+
+        if (!isAuthorized) {
           throw new Error("আপনি এই ফাউন্ডেশনের অনুমোদিত অ্যাডমিন নন। আপনার নাম লিস্টে থাকতে হবে।");
         }
         if (formData.accessKey !== ADMIN_SECRET_KEY) {
@@ -72,7 +76,6 @@ export default function AuthScreen() {
 
   return (
     <div className="min-h-screen bg-auth-premium flex flex-col font-body overflow-hidden items-center justify-center p-4">
-      {/* Absolute Decorative Glows */}
       <div className="absolute top-[-10%] left-[-10%] w-[300px] h-[300px] bg-white/10 rounded-full blur-[80px]"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[400px] h-[400px] bg-blue-400/10 rounded-full blur-[100px]"></div>
 
@@ -117,7 +120,7 @@ export default function AuthScreen() {
                     <User className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1E3A8A] transition-colors" />
                     <Input 
                       type="text" 
-                      placeholder="আপনার পুরো নাম (Admin Only)" 
+                      placeholder="আপনার নাম (যেমন: Mr Shahid)" 
                       required 
                       value={formData.fullName} 
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} 
@@ -177,7 +180,7 @@ export default function AuthScreen() {
               </Button>
               
               <p className="text-center text-[9px] text-slate-400 font-black uppercase tracking-widest mt-6">
-                {isLogin ? "Authenticated Node Access" : "Strong Password Required (8+ chars, A-Z, a-z, 0-9)"}
+                {isLogin ? "Encrypted Admin Access Node" : "Authorized Personal Only (Dulal/Faruk/Shahid)"}
               </p>
             </form>
           </div>
