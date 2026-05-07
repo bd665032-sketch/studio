@@ -16,7 +16,7 @@ export default function DemandLetterGenerator() {
   const [exporting, setExporting] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [letterData, setLetterData] = useState({
-    letterDate: "০৩ মে, ২০২৬ খ্রি.",
+    letterDate: "০৭ মে, ২০২৬ খ্রি.",
     toCompany: "Sundow Properties LTD",
     subject: "গ্রুপ অ্যাকাউন্ট খোলা এবং বিশেষ শর্তাবলির জন্য আবেদন।",
     body: `১. সদস্যপদ এবং অ্যাকাউন্ট খোলার আবেদন:
@@ -30,6 +30,7 @@ export default function DemandLetterGenerator() {
     mobileNumber: "+8801725277089",
     emailAddress: "pranuae.farooq@gmail.com",
     website: "https://1minargo7.atoms.world",
+    signerName: "Shahed",
   });
   
   const { toast } = useToast();
@@ -53,11 +54,12 @@ export default function DemandLetterGenerator() {
     setExporting(true);
     
     try {
+      // Small delay to ensure any layout changes are settled
       await new Promise(resolve => setTimeout(resolve, 500));
       
       const element = printRef.current;
       const canvas = await html2canvas(element, {
-        scale: 3,
+        scale: 3, // Higher scale for better PDF quality
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
@@ -162,7 +164,7 @@ export default function DemandLetterGenerator() {
         </CardContent>
       </Card>
 
-      {/* Hidden Template for PDF Generation - EXACT CLONE OF SCREENSHOT */}
+      {/* Hidden Template for PDF Generation */}
       <div style={{ position: 'absolute', top: '-10000px', left: '-10000px', width: '210mm', minHeight: '297mm' }}>
         <div 
           ref={printRef}
@@ -200,7 +202,7 @@ export default function DemandLetterGenerator() {
             </p>
           </div>
 
-          {/* Body Content Box with Light Beige BG */}
+          {/* Body Content Box with Light Beige BG (Numbered points background) */}
           <div className="mb-12 bg-[#FFF9F2] p-8 rounded-sm text-justify text-[17px] leading-[1.8] whitespace-pre-wrap flex-1 min-h-[400px]">
             {letterData.body}
           </div>
@@ -213,10 +215,10 @@ export default function DemandLetterGenerator() {
           {/* Signature Rows - Exact Two Column Layout */}
           <div className="flex justify-between mb-16 px-2">
             <div className="text-center w-[45%] border-t border-gray-900 pt-2">
-              <p className="font-bold text-[11px] uppercase text-gray-800">Minar Go Expatriate Development Foundation</p>
+              <p className="font-bold text-[13px] text-gray-800">{letterData.signerName}, Minar Go Expatriate Development Foundation</p>
             </div>
             <div className="text-center w-[40%] border-t border-gray-900 pt-2">
-              <p className="font-bold text-[11px] uppercase text-gray-800">{letterData.toCompany}</p>
+              <p className="font-bold text-[13px] text-gray-800">{letterData.toCompany}</p>
             </div>
           </div>
 
@@ -257,4 +259,3 @@ export default function DemandLetterGenerator() {
     </div>
   );
 }
-
