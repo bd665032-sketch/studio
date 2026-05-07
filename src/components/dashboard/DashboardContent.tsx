@@ -21,7 +21,8 @@ import {
   BookOpen,
   ClipboardList,
   FileText,
-  Bell
+  Bell,
+  ChevronDown
 } from "lucide-react";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
 import DemandLetterGenerator from "./DemandLetterGenerator";
@@ -49,30 +50,17 @@ export default function DashboardContent() {
     }
 
     if (!isInitialLoad.current && transactions.length > prevTransactionsCount.current) {
-      const latestTx = transactions[0];
       const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
       audio.play().catch(e => console.log("Audio play failed", e));
 
       toast({
         title: "🔔 নতুন জমা (New Deposit!)",
-        description: `${latestTx.n} জমা দিয়েছেন ৳${latestTx.a.toLocaleString()}`,
+        description: `নতুন জমা পাওয়া গেছে।`,
         duration: 5000,
       });
-
-      if (Notification.permission === "granted") {
-        new Notification("Minar Go Foundation", {
-          body: `${latestTx.n} জমা দিয়েছেন ৳${latestTx.a.toLocaleString()}`,
-        });
-      }
     }
     prevTransactionsCount.current = transactions.length;
   }, [transactions, toast]);
-
-  useEffect(() => {
-    if (Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-  }, []);
 
   const filteredTransactions = transactions.filter(t => {
     if (selectedMonth === "All") return true;
@@ -95,98 +83,139 @@ export default function DashboardContent() {
   return (
     <div className="flex flex-col h-screen bg-[#F8FAFC] overflow-hidden">
       <main className="flex-1 overflow-y-auto pb-28">
-        <div className="max-w-[450px] mx-auto px-4 pt-4 space-y-4">
+        <div className="max-w-[450px] mx-auto px-4 pt-6 space-y-6">
           
           {activeTab === "home" && (
-            <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4">
-              <div className="luxury-card p-5 relative overflow-hidden bg-primary text-white border-none shadow-xl">
-                <div className="absolute top-0 right-0 w-24 h-24 bg-accent opacity-10 rounded-bl-[100px]"></div>
-                <div>
-                  <p className="text-accent text-[8px] font-black uppercase tracking-widest mb-1">Total Collection</p>
-                  <h1 className="text-2xl font-black leading-tight">৳{totalCollection.toLocaleString()}</h1>
-                </div>
-                <div className="flex justify-between items-end mt-6">
-                  <div>
-                    <p className="text-[9px] font-bold opacity-60 uppercase">Active Members</p>
-                    <p className="text-lg font-black text-accent">{members.length}</p>
-                  </div>
-                  <div className="bg-white/10 p-2 rounded-full">
-                    <Bell className="w-4 h-4 text-accent animate-pulse" />
-                  </div>
-                </div>
+            <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-6">
+              {/* Portfolio Summary Card - Exact Match to Screenshot */}
+              <div className="luxury-card p-8 relative overflow-hidden">
+                 <div className="flex justify-between items-start mb-6">
+                    <div>
+                      <p className="text-[#94a3b8] text-[10px] font-black uppercase tracking-widest mb-1">Portfolio Summary</p>
+                      <h1 className="text-2xl font-black text-[#002366]">Collection Overview</h1>
+                    </div>
+                    <div className="bg-slate-50 p-2.5 rounded-full">
+                      <Bell className="w-5 h-5 text-slate-300" />
+                    </div>
+                 </div>
+                 
+                 <div className="flex justify-between items-end">
+                    <div className="space-y-1">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">Total Balance</p>
+                      <h2 className="text-3xl font-black text-[#002366]">৳{totalCollection.toLocaleString()}</h2>
+                    </div>
+                    <div className="text-right space-y-1">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase">Active Members</p>
+                      <h2 className="text-3xl font-black text-[#D4AF37]">{members.length}</h2>
+                    </div>
+                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <button onClick={() => setActiveTab("members")} className="luxury-card p-4 flex flex-col items-start active:scale-95 transition-transform shadow-sm">
-                  <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center mb-2"><BookOpen className="w-4 h-4 text-accent" /></div>
-                  <h3 className="text-[12px] font-black text-primary">Members</h3>
-                  <p className="text-slate-400 text-[8px]">{members.length} registered</p>
+              {/* Grid Cards - Members & Gallery */}
+              <div className="grid grid-cols-2 gap-4">
+                <button onClick={() => setActiveTab("members")} className="luxury-card p-6 flex flex-col items-start active:scale-95 transition-transform">
+                  <BookOpen className="w-6 h-6 text-[#D4AF37] mb-4" />
+                  <h3 className="text-[15px] font-black text-[#002366]">Members</h3>
+                  <p className="text-slate-400 text-[10px]">{members.length} registered</p>
                 </button>
-                <button onClick={() => setActiveTab("gallery")} className="luxury-card p-4 flex flex-col items-start active:scale-95 transition-transform shadow-sm">
-                  <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center mb-2"><ClipboardList className="w-4 h-4 text-accent" /></div>
-                  <h3 className="text-[12px] font-black text-primary">Gallery</h3>
-                  <p className="text-slate-400 text-[8px]">Photos</p>
+                <button onClick={() => setActiveTab("gallery")} className="luxury-card p-6 flex flex-col items-start active:scale-95 transition-transform">
+                  <ClipboardList className="w-6 h-6 text-[#D4AF37] mb-4" />
+                  <h3 className="text-[15px] font-black text-[#002366]">Gallery</h3>
+                  <p className="text-slate-400 text-[10px]">Photo Storage</p>
                 </button>
               </div>
 
-              <div className="space-y-3 pt-2">
+              {/* Demand Letter Generator Banner */}
+              <button 
+                onClick={() => setActiveTab("settings")}
+                className="w-full bg-[#002366] rounded-[24px] p-6 flex items-center justify-between text-white active:scale-[0.98] transition-all shadow-xl shadow-blue-900/10"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="bg-white/10 p-3 rounded-xl">
+                    <FileText className="w-6 h-6 text-[#D4AF37]" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-[14px] font-black">Demand Letter Generator</h3>
+                    <p className="text-white/40 text-[9px] font-bold uppercase tracking-wider">Official Documents</p>
+                  </div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-white/30" />
+              </button>
+
+              {/* Monthly Logs Section */}
+              <div className="space-y-4 pt-2">
                 <div className="flex items-center justify-between px-1">
-                  <h4 className="font-black text-primary text-[10px] uppercase tracking-wider">Monthly Logs</h4>
+                  <h4 className="font-black text-[#002366] text-[11px] uppercase tracking-wider">Monthly Logs</h4>
                   <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                    <SelectTrigger className="w-32 bg-white border border-slate-200 shadow-sm rounded-xl text-[10px] font-black h-8">
+                    <SelectTrigger className="w-32 bg-white border border-slate-100 shadow-sm rounded-xl text-[11px] font-black h-9">
                       <SelectValue placeholder="All Months" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border border-slate-200 shadow-2xl z-[1000]">
-                      <SelectItem value="All" className="text-[11px] font-black">All Time</SelectItem>
-                      {months.map(m => <SelectItem key={m} value={m} className="text-[11px] font-black">{m}</SelectItem>)}
+                    <SelectContent className="bg-white border-none shadow-2xl z-[1000]">
+                      <SelectItem value="All" className="text-[12px] font-black">All Time</SelectItem>
+                      {months.map(m => <SelectItem key={m} value={m} className="text-[12px] font-black">{m}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {filteredTransactions.map(t => (
-                    <div key={t.id} className="luxury-card p-3 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-accent text-[11px]">{t.n.charAt(0)}</div>
+                    <div key={t.id} className="luxury-card p-4 flex items-center justify-between border-slate-50">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-2xl bg-slate-50 flex items-center justify-center font-black text-[#D4AF37] text-[13px]">{t.n.charAt(0)}</div>
                         <div>
-                          <p className="font-bold text-slate-800 text-[11px]">{t.n}</p>
-                          <p className="text-[8px] text-slate-400">{t.d}</p>
+                          <p className="font-bold text-slate-800 text-[13px]">{t.n}</p>
+                          <p className="text-[9px] text-slate-400 font-medium">{t.d} • {t.c}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        <p className="font-black text-primary text-[11px]">৳{t.a.toLocaleString()}</p>
-                        <button onClick={() => { if(confirm('ডিলিট করতে চান?')) deleteTransaction(t.id); }} className="text-slate-300 hover:text-red-500 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <p className="font-black text-[#002366] text-[13px]">৳{t.a.toLocaleString()}</p>
+                        <button onClick={() => { if(confirm('ডিলিট করতে চান?')) deleteTransaction(t.id); }} className="p-2 text-slate-200 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button>
                       </div>
                     </div>
                   ))}
+                  {filteredTransactions.length === 0 && (
+                    <div className="text-center py-10 opacity-20">
+                      <ClipboardList className="w-10 h-10 mx-auto mb-2" />
+                      <p className="text-xs font-bold">No records for this month</p>
+                    </div>
+                  )}
                 </div>
-                <Button className="w-full bg-white text-primary border border-slate-100 font-black text-[10px]" onClick={() => exportSummaryPDF(filteredTransactions, selectedMonth, totalCollection)}><Download className="w-3 h-3 mr-2" /> Export PDF</Button>
+                <Button className="w-full h-12 bg-white text-[#002366] border border-slate-100 font-black text-[11px] rounded-2xl" onClick={() => exportSummaryPDF(filteredTransactions, selectedMonth, totalCollection)}><Download className="w-4 h-4 mr-2" /> Export Summary PDF</Button>
               </div>
             </div>
           )}
 
           {activeTab === "members" && (
             <div className="animate-in fade-in slide-in-from-right-2 duration-300 space-y-4">
-               <div className="flex items-center gap-3"><Button variant="ghost" size="sm" onClick={() => setActiveTab("home")} className="p-0 h-8 w-8 rounded-full bg-white"><ChevronRight className="rotate-180" /></Button><h2 className="font-black text-primary">Members</h2></div>
-               <div className="luxury-card p-4">
-                  <div className="flex gap-2 mb-4"><Input placeholder="Name" value={newMember} onChange={e=>setNewMember(e.target.value)} /><Button onClick={()=>{if(newMember)addMember(newMember);setNewMember("")}} className="gold-gradient">ADD</Button></div>
-                  <div className="space-y-2">{members.map(m=><div key={m} className="flex justify-between p-3 bg-slate-50 rounded-xl"><span className="font-bold text-xs">{m}</span><button onClick={()=>deleteMember(m)}><Trash2 className="w-3.5 h-3.5 text-slate-300"/></button></div>)}</div>
+               <div className="flex items-center gap-3"><Button variant="ghost" size="sm" onClick={() => setActiveTab("home")} className="p-0 h-8 w-8 rounded-full bg-white"><ChevronRight className="rotate-180" /></Button><h2 className="font-black text-[#002366]">Members Management</h2></div>
+               <div className="luxury-card p-5">
+                  <div className="flex gap-2 mb-6"><Input placeholder="Enter Member Name" value={newMember} onChange={e=>setNewMember(e.target.value)} className="h-12" /><Button onClick={()=>{if(newMember)addMember(newMember);setNewMember("")}} className="gold-gradient h-12 px-6 rounded-xl font-black">ADD</Button></div>
+                  <div className="space-y-3">{members.map(m=><div key={m} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl"><span className="font-bold text-[13px] text-slate-700">{m}</span><button onClick={()=>deleteMember(m)} className="p-2 text-slate-300 hover:text-red-500"><Trash2 className="w-4 h-4"/></button></div>)}</div>
                </div>
             </div>
           )}
 
           {activeTab === "add" && (
             <div className="animate-in fade-in zoom-in-95 duration-300">
-               <div className="luxury-card p-6 shadow-2xl">
-                  <h3 className="text-center font-black text-primary mb-6">New Deposit</h3>
-                  <form onSubmit={handleDeposit} className="space-y-4">
-                    <Select onValueChange={v=>setDeposit({...deposit, member:v})}>
-                      <SelectTrigger className="font-black text-slate-900"><SelectValue placeholder="Select Member"/></SelectTrigger>
-                      <SelectContent className="bg-white">{members.map(m=><SelectItem key={m} value={m} className="font-black">{m}</SelectItem>)}</SelectContent>
-                    </Select>
-                    <Input type="number" value={deposit.amount} onChange={e=>setDeposit({...deposit, amount:Number(e.target.value)})} placeholder="Amount"/>
-                    <Input type="date" value={deposit.date} onChange={e=>setDeposit({...deposit, date:e.target.value})}/>
-                    <Button type="submit" className="w-full h-12 gold-gradient text-white font-black shadow-xl">SAVE TRANSACTION</Button>
+               <div className="luxury-card p-8 shadow-2xl">
+                  <h3 className="text-center font-black text-[#002366] text-lg mb-8">New Member Deposit</h3>
+                  <form onSubmit={handleDeposit} className="space-y-5">
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase px-1">Select Member</Label>
+                      <Select onValueChange={v=>setDeposit({...deposit, member:v})}>
+                        <SelectTrigger className="h-14 font-black text-[#002366] rounded-2xl"><SelectValue placeholder="Choose a member"/></SelectTrigger>
+                        <SelectContent className="bg-white">{members.map(m=><SelectItem key={m} value={m} className="font-black">{m}</SelectItem>)}</SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase px-1">Amount (TK)</Label>
+                      <Input type="number" value={deposit.amount} onChange={e=>setDeposit({...deposit, amount:Number(e.target.value)})} className="h-14 text-lg" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-[10px] font-bold text-slate-400 uppercase px-1">Date</Label>
+                      <Input type="date" value={deposit.date} onChange={e=>setDeposit({...deposit, date:e.target.value})} className="h-14" />
+                    </div>
+                    <Button type="submit" className="w-full h-14 gold-gradient text-white text-md font-black shadow-xl mt-4 rounded-2xl">SAVE TRANSACTION</Button>
                   </form>
                </div>
             </div>
@@ -197,12 +226,12 @@ export default function DashboardContent() {
         </div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white h-20 px-6 flex items-center justify-between z-[100] nav-shadow rounded-t-[28px] border-t">
-        <button onClick={() => setActiveTab("home")} className={cn("flex flex-col items-center gap-1.5", activeTab === "home" ? "text-primary" : "text-slate-300")}><Home className="w-5 h-5"/><span className="text-[7px] font-black uppercase">Home</span></button>
-        <button onClick={() => setActiveTab("members")} className={cn("flex flex-col items-center gap-1.5", activeTab === "members" ? "text-primary" : "text-slate-300")}><Users className="w-5 h-5"/><span className="text-[7px] font-black uppercase">Members</span></button>
-        <div className="relative -top-8"><button onClick={() => setActiveTab("add")} className="w-14 h-14 gold-gradient rounded-full flex items-center justify-center text-white shadow-xl border-[6px] border-[#F8FAFC]"><Plus className="w-8 h-8"/></button></div>
-        <button onClick={() => setActiveTab("gallery")} className={cn("flex flex-col items-center gap-1.5", activeTab === "gallery" ? "text-primary" : "text-slate-300")}><ImageIcon className="w-5 h-5"/><span className="text-[7px] font-black uppercase">Gallery</span></button>
-        <button onClick={() => setActiveTab("settings")} className={cn("flex flex-col items-center gap-1.5", activeTab === "settings" ? "text-primary" : "text-slate-300")}><SettingsIcon className="w-5 h-5"/><span className="text-[7px] font-black uppercase">Menu</span></button>
+      <nav className="fixed bottom-0 left-0 right-0 bg-white h-24 px-8 flex items-center justify-between z-[100] nav-shadow rounded-t-[40px] border-t border-slate-50">
+        <button onClick={() => setActiveTab("home")} className={cn("flex flex-col items-center gap-2", activeTab === "home" ? "text-[#002366]" : "text-slate-300")}><Home className="w-6 h-6"/><span className="text-[8px] font-black uppercase">Dashboard</span></button>
+        <button onClick={() => setActiveTab("members")} className={cn("flex flex-col items-center gap-2", activeTab === "members" ? "text-[#002366]" : "text-slate-300")}><Users className="w-6 h-6"/><span className="text-[8px] font-black uppercase">Members</span></button>
+        <div className="relative -top-10"><button onClick={() => setActiveTab("add")} className="w-16 h-16 gold-gradient rounded-full flex items-center justify-center text-white shadow-2xl border-[8px] border-[#F8FAFC] active:scale-90 transition-transform"><Plus className="w-8 h-8"/></button></div>
+        <button onClick={() => setActiveTab("gallery")} className={cn("flex flex-col items-center gap-2", activeTab === "gallery" ? "text-[#002366]" : "text-slate-300")}><ImageIcon className="w-6 h-6"/><span className="text-[8px] font-black uppercase">Gallery</span></button>
+        <div className="flex flex-col items-center gap-2 text-slate-800"><div className="w-6 h-6 rounded-full bg-slate-900 text-white flex items-center justify-center text-[8px] font-black">N</div><span className="text-[8px] font-black uppercase">Profile</span></div>
       </nav>
     </div>
   );

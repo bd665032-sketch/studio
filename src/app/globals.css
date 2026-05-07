@@ -17,7 +17,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 20%;
     --border: 214 32% 91%;
-    --radius: 1rem;
+    --radius: 1.5rem;
   }
 }
 
@@ -31,9 +31,9 @@
   }
 }
 
-/* Luxury Card Styling */
+/* Luxury Styling from Screenshot */
 .luxury-card {
-  @apply bg-white border border-slate-100 shadow-sm rounded-[20px];
+  @apply bg-white border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] rounded-[32px];
 }
 
 .gold-gradient {
@@ -41,35 +41,24 @@
 }
 
 .nav-shadow {
-  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.04);
 }
 
 .font-bengali {
   font-family: 'Noto Sans Bengali', sans-serif;
 }
 
-/* Opaque Dropdowns and Popovers */
-[data-radix-popper-content-wrapper] {
-  z-index: 9999 !important;
-}
-
-.popover-content {
-  @apply bg-white shadow-2xl border border-slate-200 rounded-xl !important;
-  opacity: 1 !important;
-}
-
 /* High Contrast Input Styling */
 input, select, textarea {
-  @apply bg-slate-50 border border-slate-200 text-slate-900 font-bold !important;
+  @apply bg-slate-50 border border-slate-100 text-slate-900 font-bold !important;
+  border-radius: 1rem !important;
 }
 
 ::placeholder {
   @apply text-slate-400 font-medium !important;
 }
 
-/* Mobile-First Adjustments */
 @media (max-width: 640px) {
-  h1 { @apply text-sm; }
-  h2 { @apply text-[12px]; }
-  p { @apply text-[9px]; }
+  h1 { @apply text-[18px]; }
+  p { @apply text-[10px]; }
 }
