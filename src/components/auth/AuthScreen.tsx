@@ -1,14 +1,12 @@
-
 "use client";
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-import { Mail, Lock, ChevronRight, Globe, Shield } from "lucide-react";
+import { Mail, Lock, Globe, Shield, User } from "lucide-react";
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -28,16 +26,10 @@ export default function AuthScreen() {
         toast({ title: "স্বাগতম!", description: "লগইন সফল হয়েছে।" });
       } else {
         await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-        toast({ title: "সফল হয়েছে!", description: "আপনার একাউন্ট তৈরি হয়েছে।" });
+        toast({ title: "সফল!", description: "অ্যাকাউন্ট তৈরি হয়েছে।" });
       }
     } catch (error: any) {
-      let message = "Authentication failed.";
-      if (error.code === 'auth/invalid-credential') {
-        message = "ইমেইল বা পাসওয়ার্ড ভুল।";
-      } else if (error.code === 'auth/email-already-in-use') {
-        message = "এই ইমেইলটি ইতিমধ্যে ব্যবহৃত হচ্ছে।";
-      }
-      toast({ variant: "destructive", title: "ত্রুটি", description: message });
+      toast({ variant: "destructive", title: "ত্রুটি", description: "লগইন ব্যর্থ হয়েছে।" });
     } finally {
       setLoading(false);
     }
@@ -45,59 +37,58 @@ export default function AuthScreen() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-body overflow-hidden">
-      {/* Top Header Illustration Area */}
-      <div className="relative h-[35vh] bg-primary flex flex-col items-center justify-center overflow-hidden">
-        {/* Decorative elements to mimic screenshot */}
-        <div className="absolute inset-0 opacity-20 pointer-events-none">
-          <div className="absolute top-10 left-10"><Globe className="w-16 h-16 text-white" /></div>
-          <div className="absolute bottom-10 right-10"><Shield className="w-20 h-20 text-white" /></div>
+      {/* Top Banner Illustration */}
+      <div className="relative h-[38vh] bg-primary flex flex-col items-center justify-center overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <Globe className="absolute top-10 left-10 w-24 h-24 text-white" />
+          <Shield className="absolute bottom-10 right-10 w-24 h-24 text-white" />
         </div>
         
-        {/* Main curved background effect */}
-        <div className="absolute bottom-[-50px] left-[-10%] right-[-10%] h-[150px] bg-white rounded-[100%] shadow-[0_-10px_30px_rgba(0,0,0,0.1)]"></div>
+        {/* Curved Divider */}
+        <div className="absolute bottom-[-60px] left-[-10%] right-[-10%] h-[160px] bg-white rounded-[100%] shadow-lg"></div>
         
-        <div className="z-10 bg-white p-4 rounded-full shadow-xl border-4 border-accent mb-4">
+        <div className="z-10 bg-white p-5 rounded-full shadow-2xl border-[5px] border-accent/20 mb-4 animate-in zoom-in duration-500">
           <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
             <span className="text-white text-3xl font-black">MG</span>
           </div>
         </div>
       </div>
 
-      {/* Content Area */}
-      <div className="flex-1 px-8 pt-8 pb-12 z-20 bg-white">
-        <div className="text-center mb-10">
-          <h1 className="text-[22px] font-black text-primary leading-tight tracking-tight uppercase">
+      {/* Main Content Area */}
+      <div className="flex-1 px-8 pt-6 pb-12 z-20 bg-white">
+        <div className="text-center mb-8">
+          <h1 className="text-[20px] font-black text-primary leading-tight uppercase tracking-tight">
             MINAR GO EXPATRIATE
           </h1>
-          <h2 className="text-[18px] font-black text-primary leading-tight tracking-tight uppercase mb-2">
+          <h2 className="text-[17px] font-black text-primary leading-tight uppercase mb-2">
             DEVELOPMENT FOUNDATION
           </h2>
           <p className="text-accent font-bold text-xs">
-            United Experiences, Brightfar Future
+            United Experiences, Brighter Future
           </p>
         </div>
 
-        {/* Auth Tabs */}
-        <div className="flex bg-secondary/50 p-1 rounded-full mb-8">
+        {/* Tab Switcher */}
+        <div className="flex bg-secondary p-1.5 rounded-2xl mb-8">
           <button 
             onClick={() => setIsLogin(true)}
-            className={`flex-1 py-3 rounded-full text-sm font-bold transition-all ${isLogin ? 'bg-primary text-white shadow-md' : 'text-primary/60'}`}
+            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${isLogin ? 'bg-primary text-white shadow-lg' : 'text-primary/50'}`}
           >
-            Login
+            লগইন
           </button>
           <button 
             onClick={() => setIsLogin(false)}
-            className={`flex-1 py-3 rounded-full text-sm font-bold transition-all ${!isLogin ? 'bg-primary text-white shadow-md' : 'text-primary/60'}`}
+            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${!isLogin ? 'bg-primary text-white shadow-lg' : 'text-primary/50'}`}
           >
-            Sign Up
+            সাইন আপ
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="relative group">
+        {/* Auth Form */}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-              <Mail className="w-5 h-5 text-primary/40 group-focus-within:text-primary transition-colors" />
+              <Mail className="w-5 h-5 text-primary/30" />
             </div>
             <Input 
               type="email" 
@@ -105,13 +96,13 @@ export default function AuthScreen() {
               required 
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="h-14 pl-12 rounded-xl bg-secondary/30 border-none focus:ring-2 focus:ring-primary shadow-sm"
+              className="h-14 pl-12 rounded-2xl bg-secondary/50 border-none focus:ring-2 focus:ring-primary shadow-inner"
             />
           </div>
 
-          <div className="relative group">
+          <div className="relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-              <Lock className="w-5 h-5 text-primary/40 group-focus-within:text-primary transition-colors" />
+              <Lock className="w-5 h-5 text-primary/30" />
             </div>
             <Input 
               type="password" 
@@ -119,30 +110,24 @@ export default function AuthScreen() {
               required 
               value={formData.password}
               onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="h-14 pl-12 rounded-xl bg-secondary/30 border-none focus:ring-2 focus:ring-primary shadow-sm"
+              className="h-14 pl-12 rounded-2xl bg-secondary/50 border-none focus:ring-2 focus:ring-primary shadow-inner"
             />
           </div>
 
-          <div className="text-right">
-            <button type="button" className="text-sm font-bold text-primary/70 hover:text-primary">
-              Forgot Password?
-            </button>
-          </div>
-
           <Button 
-            className="w-full h-14 rounded-xl bg-gradient-to-r from-gold to-gold-dark text-white text-lg font-black shadow-lg hover:shadow-xl active:scale-95 transition-all"
+            className="w-full h-14 rounded-2xl bg-gold-gradient text-white text-lg font-black shadow-xl hover:shadow-2xl active:scale-95 transition-all mt-4"
             disabled={loading}
           >
-            {loading ? "Processing..." : (isLogin ? "Login" : "Create Account")}
+            {loading ? "অপেক্ষা করুন..." : (isLogin ? "Login Now" : "Create Account")}
           </Button>
         </form>
 
         <div className="mt-12 flex items-center justify-center gap-4">
-          <div className="h-[1px] flex-1 bg-gray-200"></div>
-          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
-            Don't have an account?
+          <div className="h-[1px] flex-1 bg-gray-100"></div>
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+            MG Foundation Management
           </span>
-          <div className="h-[1px] flex-1 bg-gray-200"></div>
+          <div className="h-[1px] flex-1 bg-gray-100"></div>
         </div>
       </div>
     </div>
