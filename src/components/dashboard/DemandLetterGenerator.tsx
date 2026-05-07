@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Wand2, Download } from "lucide-react";
+import { FileText, Wand2, Download, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { generateDemandLetterDraft } from "@/ai/flows/generate-demand-letter-draft";
 import { exportDemandLetterPDF } from "@/lib/pdf-utils";
@@ -22,22 +22,39 @@ export default function DemandLetterGenerator() {
     body: "",
     mobileNumber: "+880 ",
     emailAddress: "info@minargo.com",
-    language: "en" as "en" | "bn",
+    language: "bn" as "en" | "bn",
   });
   const [result, setResult] = useState("");
   const { toast } = useToast();
 
   const handleGenerate = async () => {
     if (!letterData.toCompany || !letterData.subject || !letterData.body) {
-      return toast({ variant: "destructive", title: "Missing Info", description: "Fill all mandatory fields." });
+      toast({ 
+        variant: "destructive", 
+        title: "তথ্য অসম্পূর্ণ", 
+        description: "দয়া করে কোম্পানি নাম, বিষয় এবং মূল বক্তব্য পূরণ করুন।" 
+      });
+      return;
     }
+
     setLoading(true);
+    setResult(""); // Clear previous result
+    
     try {
-      const { letterContent } = await generateDemandLetterDraft(letterData);
-      setResult(letterContent);
-      toast({ title: "AI Generated", description: "Your letter draft is ready." });
+      const response = await generateDemandLetterDraft(letterData);
+      if (response && response.letterContent) {
+        setResult(response.letterContent);
+        toast({ title: "সফল হয়েছে", description: "AI আপনার জন্য ড্রাফটটি তৈরি করেছে।" });
+      } else {
+        throw new Error("No content returned");
+      }
     } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "AI generation failed." });
+      console.error("AI Generation Error:", error);
+      toast({ 
+        variant: "destructive", 
+        title: "সমস্যা হয়েছে", 
+        description: "AI ড্রাফট তৈরি করতে পারেনি। আবার চেষ্টা করুন।" 
+      });
     } finally {
       setLoading(false);
     }
@@ -46,51 +63,62 @@ export default function DemandLetterGenerator() {
   const handleDownload = () => {
     if (!result) return;
     exportDemandLetterPDF(result, letterData.letterDate);
+    toast({ title: "PDF ডাউনলোড হচ্ছে", description: "আপনার ডকুমেন্টটি তৈরি করা হয়েছে।" });
   };
 
   return (
     <Card className="bg-white border-none shadow-sm">
       <CardHeader>
-        <CardTitle className="text-lg text-primary flex items-center gap-2">
+        <CardTitle className="text-lg text-primary flex items-center gap-2 font-extrabold">
           <FileText className="w-5 h-5" />
-          Demand Letter AI
+          AI ডিমান্ড লেটার জেনারেটর
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label>Letter Date</Label>
+            <Label>লেটারের তারিখ</Label>
             <Input type="date" value={letterData.letterDate} onChange={(e) => setLetterData({...letterData, letterDate: e.target.value})} />
           </div>
           <div className="space-y-1">
-            <Label>Language</Label>
+            <Label>ভাষা (Language)</Label>
             <Select value={letterData.language} onValueChange={(v: any) => setLetterData({...letterData, language: v})}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="bn">বাংলা (Bengali)</SelectItem>
                 <SelectItem value="en">English</SelectItem>
-                <SelectItem value="bn">Bengali</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
         <div className="space-y-1">
-          <Label>To (Company Name)</Label>
-          <Input placeholder="Recipient Company" value={letterData.toCompany} onChange={(e) => setLetterData({...letterData, toCompany: e.target.value})} />
+          <Label>কোম্পানির নাম (Recipient)</Label>
+          <Input 
+            placeholder="কাকে পাঠাতে চান?" 
+            value={letterData.toCompany} 
+            onChange={(e) => setLetterData({...letterData, toCompany: e.target.value})} 
+            className="h-11"
+          />
         </div>
 
         <div className="space-y-1">
-          <Label>Subject</Label>
-          <Input placeholder="Letter Subject" value={letterData.subject} onChange={(e) => setLetterData({...letterData, subject: e.target.value})} />
+          <Label>বিষয় (Subject)</Label>
+          <Input 
+            placeholder="লেটারের বিষয়বস্তু" 
+            value={letterData.subject} 
+            onChange={(e) => setLetterData({...letterData, subject: e.target.value})} 
+            className="h-11"
+          />
         </div>
 
         <div className="space-y-1">
-          <Label>Main Purpose / Context</Label>
+          <Label>মূল বক্তব্য (Context)</Label>
           <Textarea 
-            placeholder="Describe the demand or issue..." 
-            className="min-h-[100px]"
+            placeholder="আপনার দাবি বা সমস্যাটি সংক্ষেপে লিখুন..." 
+            className="min-h-[100px] border-gray-200"
             value={letterData.body}
             onChange={(e) => setLetterData({...letterData, body: e.target.value})}
           />
@@ -98,36 +126,39 @@ export default function DemandLetterGenerator() {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label>Mobile</Label>
+            <Label>মোবাইল</Label>
             <Input value={letterData.mobileNumber} onChange={(e) => setLetterData({...letterData, mobileNumber: e.target.value})} />
           </div>
           <div className="space-y-1">
-            <Label>Email</Label>
+            <Label>ইমেইল</Label>
             <Input value={letterData.emailAddress} onChange={(e) => setLetterData({...letterData, emailAddress: e.target.value})} />
           </div>
         </div>
 
         <Button 
-          className="w-full bg-accent hover:bg-gold-dark text-white active:scale-95 transition-transform flex items-center gap-2"
+          className="w-full bg-accent hover:bg-gold-dark text-white font-bold h-12 shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2"
           onClick={handleGenerate}
           disabled={loading}
         >
-          <Wand2 className="w-4 h-4" />
-          {loading ? "AI Drafting..." : "Generate AI Draft"}
+          {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
+          {loading ? "AI ড্রাফট তৈরি হচ্ছে..." : "AI দিয়ে লেটার তৈরি করুন"}
         </Button>
 
         {result && (
-          <div className="mt-4 p-3 bg-secondary rounded-lg space-y-3">
-            <h4 className="text-xs font-bold text-primary uppercase">Draft Preview:</h4>
-            <div className={`text-sm whitespace-pre-wrap ${letterData.language === 'bn' ? 'font-bengali' : 'font-body'}`}>
+          <div className="mt-6 p-4 bg-secondary/50 rounded-xl border border-dashed border-primary/20 space-y-4 animate-in fade-in slide-in-from-top-2">
+            <div className="flex items-center justify-between">
+              <h4 className="text-xs font-bold text-primary uppercase">Draft Preview:</h4>
+              <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">Ready to Export</span>
+            </div>
+            <div className={`text-sm leading-relaxed whitespace-pre-wrap p-3 bg-white rounded-md border border-gray-100 ${letterData.language === 'bn' ? 'font-bengali' : 'font-body'}`}>
               {result}
             </div>
             <Button 
-              className="w-full bg-primary hover:bg-primary/90 text-white flex items-center gap-2"
+              className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 flex items-center justify-center gap-2 shadow-lg"
               onClick={handleDownload}
             >
-              <Download className="w-4 h-4" />
-              Download Professional PDF
+              <Download className="w-5 h-5" />
+              প্রফেশনাল PDF ডাউনলোড করুন
             </Button>
           </div>
         )}

@@ -17,57 +17,84 @@ export interface Transaction {
 export const useMinarData = () => {
   const db = useFirestore();
 
-  // Members
+  // Members - Using onSnapshot via useCollection for real-time updates
   const membersQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, "members"), orderBy("name"));
   }, [db]);
+  
   const { data: membersDocs, loading: membersLoading } = useCollection(membersQuery);
-  const members = membersDocs?.map(d => d.name) || [];
+  
+  // Robust member mapping
+  const members = useMemo(() => {
+    return (membersDocs || []).map(d => d.name as string).filter(Boolean);
+  }, [membersDocs]);
 
   // Transactions
   const transactionsQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, "transactions"), orderBy("date", "desc"));
   }, [db]);
+  
   const { data: transactionsDocs, loading: transactionsLoading } = useCollection(transactionsQuery);
   
-  const transactions: Transaction[] = transactionsDocs?.map(d => ({
-    id: d.id,
-    n: d.memberName,
-    a: d.amount,
-    d: d.date,
-    c: d.category,
-    timestamp: d.timestamp
-  })) || [];
+  const transactions: Transaction[] = useMemo(() => {
+    return (transactionsDocs || []).map(d => ({
+      id: d.id,
+      n: d.memberName || "Unknown",
+      a: d.amount || 0,
+      d: d.date || "",
+      c: d.category || "General",
+      timestamp: d.timestamp
+    }));
+  }, [transactionsDocs]);
 
   const addMember = async (name: string) => {
-    if (!db || !name) return;
-    addDoc(collection(db, "members"), { name, createdAt: serverTimestamp() });
+    if (!db || !name.trim()) return;
+    try {
+      await addDoc(collection(db, "members"), { 
+        name: name.trim(), 
+        createdAt: serverTimestamp() 
+      });
+    } catch (e) {
+      console.error("Error adding member:", e);
+    }
   };
 
   const deleteMember = async (name: string) => {
     if (!db) return;
     const memberDoc = membersDocs?.find(d => d.name === name);
     if (memberDoc) {
-      deleteDoc(doc(db, "members", memberDoc.id));
+      try {
+        await deleteDoc(doc(db, "members", memberDoc.id));
+      } catch (e) {
+        console.error("Error deleting member:", e);
+      }
     }
   };
 
   const addTransaction = async (member: string, amount: number, date: string, category: string) => {
-    if (!db) return;
-    addDoc(collection(db, "transactions"), {
-      memberName: member,
-      amount,
-      date,
-      category,
-      timestamp: serverTimestamp()
-    });
+    if (!db || !member) return;
+    try {
+      await addDoc(collection(db, "transactions"), {
+        memberName: member,
+        amount,
+        date,
+        category,
+        timestamp: serverTimestamp()
+      });
+    } catch (e) {
+      console.error("Error adding transaction:", e);
+    }
   };
 
   const deleteTransaction = async (id: string) => {
-    if (!db) return;
-    deleteDoc(doc(db, "transactions", id));
+    if (!db || !id) return;
+    try {
+      await deleteDoc(doc(db, "transactions", id));
+    } catch (e) {
+      console.error("Error deleting transaction:", e);
+    }
   };
 
   return {
