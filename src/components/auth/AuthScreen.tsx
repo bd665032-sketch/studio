@@ -10,7 +10,7 @@ import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfi
 import { Mail, Lock, User, ShieldCheck, KeyRound } from "lucide-react";
 
 const AUTHORIZED_ADMINS = ["dulal", "omar faruk", "shahid"];
-const ADMIN_SECRET_KEY = "MINAR2026"; // এই কোডটি গোপন রাখুন
+const ADMIN_SECRET_KEY = "MINAR2026"; 
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -24,6 +24,14 @@ export default function AuthScreen() {
   const { toast } = useToast();
   const auth = useAuth();
 
+  const validatePassword = (password: string) => {
+    if (password.length < 8) return "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।";
+    if (!/[A-Z]/.test(password)) return "পাসওয়ার্ডে অন্তত একটি বড় হাতের অক্ষর (A-Z) থাকতে হবে।";
+    if (!/[a-z]/.test(password)) return "পাসওয়ার্ডে অন্তত একটি ছোট হাতের অক্ষর (a-z) থাকতে হবে।";
+    if (!/[0-9]/.test(password)) return "পাসওয়ার্ডে অন্তত একটি সংখ্যা থাকতে হবে।";
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) return;
@@ -36,16 +44,21 @@ export default function AuthScreen() {
       } else {
         // Validation for new registration
         if (!AUTHORIZED_ADMINS.includes(formData.fullName.toLowerCase())) {
-          throw new Error("আপনি এই ফাউন্ডেশনের অনুমোদিত অ্যাডমিন নন।");
+          throw new Error("আপনি এই ফাউন্ডেশনের অনুমোদিত অ্যাডমিন নন। আপনার নাম লিস্টে থাকতে হবে।");
         }
         if (formData.accessKey !== ADMIN_SECRET_KEY) {
           throw new Error("সিকিউরিটি এক্সেস কী ভুল।");
         }
 
+        const passwordError = validatePassword(formData.password);
+        if (passwordError) {
+          throw new Error(passwordError);
+        }
+
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         await updateProfile(userCredential.user, { displayName: formData.fullName });
         
-        toast({ title: "সফল!", description: "অ্যাডমিন প্রোফাইল তৈরি হয়েছে।" });
+        toast({ title: "সফল!", description: "শক্তিশালী অ্যাডমিন প্রোফাইল তৈরি হয়েছে।" });
       }
     } catch (error: any) {
       toast({ 
@@ -79,12 +92,14 @@ export default function AuthScreen() {
           <div className="space-y-8">
             <div className="flex bg-slate-100 p-1.5 rounded-[28px] shadow-inner">
               <button 
+                type="button"
                 onClick={() => setIsLogin(true)} 
                 className={`flex-1 py-4 rounded-[24px] text-xs font-black transition-all duration-500 ${isLogin ? 'bg-[#1E3A8A] text-white shadow-lg' : 'text-slate-400'}`}
               >
                 লগইন
               </button>
               <button 
+                type="button"
                 onClick={() => setIsLogin(false)} 
                 className={`flex-1 py-4 rounded-[24px] text-xs font-black transition-all duration-500 ${!isLogin ? 'bg-[#1E3A8A] text-white shadow-lg' : 'text-slate-400'}`}
               >
@@ -144,6 +159,7 @@ export default function AuthScreen() {
               </div>
 
               <Button 
+                type="submit"
                 className="w-full h-16 rounded-[24px] bg-[#1E3A8A] hover:bg-[#1E3A8A]/95 text-white text-sm font-black shadow-[0_12px_24px_rgba(30,64,175,0.25)] active:scale-95 transition-all flex items-center justify-center gap-3" 
                 disabled={loading}
               >
@@ -158,7 +174,7 @@ export default function AuthScreen() {
               </Button>
               
               <p className="text-center text-[9px] text-slate-300 font-black uppercase tracking-widest mt-6">
-                Protected by End-to-End Encryption
+                {isLogin ? "Authenticated Node Access" : "Strong Password Required (8+ chars, A-Z, a-z, 0-9)"}
               </p>
             </form>
           </div>
