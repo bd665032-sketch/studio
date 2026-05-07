@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /**
- * Global CSS Styles with Luxury Theme
+ * Global CSS Styles with Luxury Mobile-First Theme
  */
 
 @layer base {
@@ -12,8 +12,8 @@
     --foreground: 221 39% 11%;
     --primary: 262 83% 58%; /* Purple #7c3aed */
     --accent: 45 93% 47%;   /* Gold */
-    --secondary: 0 0% 100%;
-    --radius: 1.5rem;
+    --secondary: 210 40% 96%;
+    --radius: 1.25rem;
   }
 }
 
@@ -27,7 +27,7 @@
   }
 }
 
-/* Luxury Gradients from Screenshot */
+/* Luxury Gradients & Colors */
 .bg-luxury-purple {
   background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
 }
@@ -45,13 +45,22 @@
 }
 
 .nav-shadow {
-  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.04);
 }
 
 .card-shadow {
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
 }
 
 .font-bengali {
   font-family: 'Noto Sans Bengali', sans-serif;
+}
+
+/* Mobile Input Styling for Visibility */
+input, select, textarea {
+  @apply bg-slate-50 border-none text-slate-900 font-medium !important;
+}
+
+::placeholder {
+  @apply text-slate-400 !important;
 }
