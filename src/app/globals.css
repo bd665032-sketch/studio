@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
     --border: 214 32% 91%;
-    --radius: 1.2rem;
+    --radius: 1.5rem;
   }
 }
 
@@ -28,18 +29,18 @@
 }
 
 .luxury-card {
-  @apply bg-white border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] rounded-[24px];
+  @apply bg-white border border-slate-100 shadow-[0_15px_45px_-15px_rgba(0,0,0,0.06)] rounded-[32px];
 }
 
 /* Luxury Gradient with Purple, Blue and Gold touch */
 .purple-blue-gold-card {
   background: linear-gradient(135deg, #6366F1 0%, #3B82F6 100%);
   border-left: 6px solid #D4AF37;
-  box-shadow: 0 10px 30px -5px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 15px 40px -10px rgba(99, 102, 241, 0.4);
 }
 
 .nav-shadow {
-  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.05);
 }
 
 .font-bengali {
@@ -47,24 +48,25 @@
 }
 
 input, select, textarea {
-  @apply bg-slate-50 border border-slate-100 text-slate-900 font-bold !important;
-  border-radius: 1rem !important;
+  @apply bg-slate-50 border border-slate-100 text-[#1E3A8A] font-black !important;
+  border-radius: 1.25rem !important;
 }
 
 ::placeholder {
-  @apply text-slate-400 font-medium !important;
+  @apply text-slate-400 font-bold !important;
 }
 
 @media (max-width: 640px) {
-  h1 { @apply text-[18px]; }
-  p { @apply text-[10px]; }
+  h1 { @apply text-[20px]; }
+  p { @apply text-[11px]; }
 }
 
 .pdf-btn-luxury {
-  @apply w-full h-12 bg-white text-blue-700 border-2 border-[#D4AF37] font-black text-[11px] rounded-[18px] hover:bg-[#D4AF37] hover:text-white transition-all shadow-md active:scale-95;
+  @apply w-full h-14 bg-white text-[#1E3A8A] border-2 border-[#D4AF37] font-black text-[12px] rounded-[22px] hover:bg-[#D4AF37] hover:text-white transition-all shadow-xl active:scale-95;
 }
 
 /* Custom Notification Style */
 .facebook-toast {
-  @apply bg-[#1E40AF] text-white border-none shadow-2xl rounded-2xl p-4 flex items-center gap-3 animate-in slide-in-from-top-full duration-500;
+  @apply bg-[#1E40AF] text-white border-none shadow-2xl rounded-[24px] p-5 flex items-center gap-4 animate-in slide-in-from-top-full duration-700;
 }
+
