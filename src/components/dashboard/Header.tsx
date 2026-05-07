@@ -17,6 +17,7 @@ import {
 import { useMinarData } from "@/hooks/use-minar-data";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import { useUser } from "@/firebase";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +35,7 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
   const [isEditingName, setIsEditingName] = useState(false);
   const [backupLoading, setBackupLoading] = useState(false);
   const { transactions } = useMinarData();
+  const { user } = useUser();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -110,8 +112,8 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
                 </div>
               </div>
               <div className="flex flex-col">
-                <h1 className="font-black text-[12px] text-[#1E3A8A] leading-none uppercase tracking-tight">{foundationName}</h1>
-                <p className="text-[8px] text-[#D4AF37] font-black uppercase mt-1 tracking-widest opacity-80">Secure Node Connected</p>
+                <h1 className="font-black text-[12px] text-[#1E3A8A] leading-none uppercase tracking-tight">{user?.displayName || foundationName}</h1>
+                <p className="text-[8px] text-[#D4AF37] font-black uppercase mt-1 tracking-widest opacity-80">Verified Admin Node</p>
               </div>
             </div>
           </DialogTrigger>

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -5,13 +6,21 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/firebase";
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-import { Mail, Lock, Globe, Shield, ShieldCheck } from "lucide-react";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { Mail, Lock, User, ShieldCheck, KeyRound } from "lucide-react";
+
+const AUTHORIZED_ADMINS = ["dulal", "omar faruk", "shahid"];
+const ADMIN_SECRET_KEY = "MINAR2026"; // এই কোডটি গোপন রাখুন
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [formData, setFormData] = useState({ 
+    email: "", 
+    password: "", 
+    fullName: "",
+    accessKey: "" 
+  });
   const { toast } = useToast();
   const auth = useAuth();
 
@@ -23,13 +32,27 @@ export default function AuthScreen() {
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
-        toast({ title: "স্বাগতম!", description: "লগইন সফল হয়েছে।" });
+        toast({ title: "স্বাগতম!", description: "সিকিউর লগইন সফল হয়েছে।" });
       } else {
-        await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-        toast({ title: "সফল!", description: "অ্যাকাউন্ট তৈরি হয়েছে।" });
+        // Validation for new registration
+        if (!AUTHORIZED_ADMINS.includes(formData.fullName.toLowerCase())) {
+          throw new Error("আপনি এই ফাউন্ডেশনের অনুমোদিত অ্যাডমিন নন।");
+        }
+        if (formData.accessKey !== ADMIN_SECRET_KEY) {
+          throw new Error("সিকিউরিটি এক্সেস কী ভুল।");
+        }
+
+        const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+        await updateProfile(userCredential.user, { displayName: formData.fullName });
+        
+        toast({ title: "সফল!", description: "অ্যাডমিন প্রোফাইল তৈরি হয়েছে।" });
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "ত্রুটি", description: "লগইন বা সাইন আপ ব্যর্থ হয়েছে।" });
+      toast({ 
+        variant: "destructive", 
+        title: "অ্যাক্সেস ডিনাইড", 
+        description: error.message || "লগইন বা সাইন আপ ব্যর্থ হয়েছে।" 
+      });
     } finally {
       setLoading(false);
     }
@@ -39,8 +62,7 @@ export default function AuthScreen() {
     <div className="min-h-screen bg-auth-premium flex flex-col font-body overflow-hidden items-center justify-center p-4">
       <div className="w-full max-w-[420px] bg-white/95 backdrop-blur-xl rounded-[45px] shadow-[0_25px_80px_rgba(0,0,0,0.3)] overflow-hidden border border-white/20">
         
-        {/* Top Branding Section */}
-        <div className="relative py-12 flex flex-col items-center justify-center text-center px-6">
+        <div className="relative py-10 flex flex-col items-center justify-center text-center px-6">
           <div className="z-10 bg-white p-4 rounded-full shadow-xl border-4 border-blue-50/50 mb-5">
             <div className="w-14 h-14 bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] rounded-full flex items-center justify-center shadow-inner">
               <span className="text-white text-2xl font-black italic">MG</span>
@@ -49,14 +71,12 @@ export default function AuthScreen() {
 
           <div className="z-10">
             <h1 className="text-[20px] font-black text-[#1E3A8A] leading-tight uppercase tracking-[0.1em]">MINAR GO CONNECT</h1>
-            <p className="text-slate-400 font-bold text-[9px] uppercase tracking-[0.3em] mt-2">PREMIUM SECURE ACCESS NODE</p>
+            <p className="text-slate-400 font-bold text-[9px] uppercase tracking-[0.3em] mt-2">SECURE ADMIN GATEWAY</p>
           </div>
         </div>
 
-        {/* Auth Form Section */}
-        <div className="px-8 pb-12">
+        <div className="px-8 pb-10">
           <div className="space-y-8">
-            {/* Premium Tab Switcher */}
             <div className="flex bg-slate-100 p-1.5 rounded-[28px] shadow-inner">
               <button 
                 onClick={() => setIsLogin(true)} 
@@ -68,16 +88,43 @@ export default function AuthScreen() {
                 onClick={() => setIsLogin(false)} 
                 className={`flex-1 py-4 rounded-[24px] text-xs font-black transition-all duration-500 ${!isLogin ? 'bg-[#1E3A8A] text-white shadow-lg' : 'text-slate-400'}`}
               >
-                সাইন আপ
+                রেজিস্ট্রেশন
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {!isLogin && (
+                <>
+                  <div className="relative group">
+                    <User className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1E3A8A] transition-colors" />
+                    <Input 
+                      type="text" 
+                      placeholder="আপনার পুরো নাম (Admin Only)" 
+                      required 
+                      value={formData.fullName} 
+                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} 
+                      className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none text-base font-black" 
+                    />
+                  </div>
+                  <div className="relative group">
+                    <KeyRound className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1E3A8A] transition-colors" />
+                    <Input 
+                      type="password" 
+                      placeholder="অ্যাডমিন সিক্রেট কী" 
+                      required 
+                      value={formData.accessKey} 
+                      onChange={(e) => setFormData({ ...formData, accessKey: e.target.value })} 
+                      className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none text-base font-black" 
+                    />
+                  </div>
+                </>
+              )}
+              
               <div className="relative group">
                 <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1E3A8A] transition-colors" />
                 <Input 
                   type="email" 
-                  placeholder="Admin Email" 
+                  placeholder="ইমেইল অ্যাড্রেস" 
                   required 
                   value={formData.email} 
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
@@ -88,13 +135,14 @@ export default function AuthScreen() {
                 <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1E3A8A] transition-colors" />
                 <Input 
                   type="password" 
-                  placeholder="Password" 
+                  placeholder="পাসওয়ার্ড" 
                   required 
                   value={formData.password} 
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })} 
                   className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none text-base font-black" 
                 />
               </div>
+
               <Button 
                 className="w-full h-16 rounded-[24px] bg-[#1E3A8A] hover:bg-[#1E3A8A]/95 text-white text-sm font-black shadow-[0_12px_24px_rgba(30,64,175,0.25)] active:scale-95 transition-all flex items-center justify-center gap-3" 
                 disabled={loading}
@@ -104,7 +152,7 @@ export default function AuthScreen() {
                 ) : (
                   <>
                     <ShieldCheck className="w-5 h-5" /> 
-                    {isLogin ? "SECURE ACCESS" : "CREATE ACCOUNT"}
+                    {isLogin ? "SECURE ACCESS" : "AUTHORIZE ADMIN"}
                   </>
                 )}
               </Button>
