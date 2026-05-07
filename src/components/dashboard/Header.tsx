@@ -27,6 +27,10 @@ import {
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
+/**
+ * Header Component (Profile Section)
+ * This file contains the "HTML" structure for the top bar and profile settings.
+ */
 export default function Header({ onLogout }: { onLogout: () => void }) {
   const [logo, setLogo] = useState<string | null>(null);
   const [foundationName, setFoundationName] = useState("MINAR GO EXPATRIATE");
@@ -36,6 +40,7 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
   const { transactions } = useMinarData();
   const { toast } = useToast();
 
+  // Load saved data from browser storage
   useEffect(() => {
     const savedLogo = localStorage.getItem("mg_logo");
     const savedName = localStorage.getItem("mg_foundation_name");
@@ -115,7 +120,7 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
   return (
     <header className="sticky top-0 z-50 w-full bg-primary text-white shadow-lg py-3 px-4 flex items-center justify-between">
       <div className="flex items-center gap-3">
-        {/* Profile / Logo Section with Settings Trigger */}
+        {/* Profile Avatar / Logo Trigger */}
         <Dialog>
           <DialogTrigger asChild>
             <div className="relative cursor-pointer group flex items-center gap-3 bg-white/10 p-1 pr-4 rounded-full hover:bg-white/20 transition-all border border-white/5">
@@ -139,6 +144,8 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
               </div>
             </div>
           </DialogTrigger>
+          
+          {/* Settings Popup (Profile Edit) */}
           <DialogContent className="sm:max-w-md bg-white">
             <DialogHeader>
               <DialogTitle className="text-primary font-extrabold flex items-center gap-2">
@@ -147,7 +154,7 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-6 py-4">
-              {/* Logo Upload */}
+              {/* Logo Upload Section */}
               <div className="flex flex-col items-center gap-4">
                 <div className="w-28 h-28 rounded-full bg-secondary flex items-center justify-center overflow-hidden border-4 border-accent relative group shadow-lg">
                   {logo ? (
@@ -164,7 +171,7 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
                 <p className="text-xs text-muted-foreground font-medium">ছবির উপরে ক্লিক করে নতুন লোগো দিন</p>
               </div>
 
-              {/* Foundation Name Edit */}
+              {/* Foundation Name Section */}
               <div className="space-y-2">
                 <Label htmlFor="foundation-name" className="text-primary font-bold">ফাউন্ডেশনের নাম</Label>
                 <div className="flex gap-2">
@@ -193,12 +200,13 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
           </DialogContent>
         </Dialog>
 
-        {/* Mobile Title View */}
+        {/* Mobile View Title */}
         <div className="sm:hidden">
           <h1 className="font-extrabold text-xs leading-none">{foundationName}</h1>
         </div>
       </div>
       
+      {/* Right Side Actions (Backup & Logout) */}
       <div className="flex items-center gap-2">
         <Button 
           variant="outline" 
