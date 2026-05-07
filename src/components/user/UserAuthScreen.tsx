@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth, useFirestore } from "@/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { Mail, Lock, User, ShieldCheck, HelpCircle, Info } from "lucide-react";
+import { collection, getDocs } from "firebase/firestore";
+import { Mail, Lock, User, Info, ShieldCheck } from "lucide-react";
 
 export default function UserAuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -39,14 +39,16 @@ export default function UserAuthScreen() {
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
         toast({ title: "স্বাগতম!", description: "ইউজার প্যানেলে লগইন সফল হয়েছে।" });
       } else {
-        // Strict Name Verification from Foundation Member List
+        // Robust Name Verification (Case-Insensitive)
         const membersRef = collection(db, "members");
-        // exact match check (case sensitive for accuracy as stored by admin)
-        const q = query(membersRef, where("name", "==", formData.fullName.trim()));
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await getDocs(membersRef);
+        
+        // Get all member names and normalize for comparison
+        const memberList = querySnapshot.docs.map(doc => doc.data().name.toString().toLowerCase().trim());
+        const inputName = formData.fullName.toLowerCase().trim();
 
-        if (querySnapshot.empty) {
-          throw new Error(`"${formData.fullName}" নামটি ফাউন্ডেশনের মেম্বার লিস্টে পাওয়া যায়নি। দয়া করে অ্যাডমিনের দেওয়া সঠিক নামটি লিখুন (যেমন: Mr Shahid)।`);
+        if (!memberList.includes(inputName)) {
+          throw new Error(`"${formData.fullName}" নামটি ফাউন্ডেশনের সদস্য তালিকায় পাওয়া যায়নি। আপনি কি নিশ্চিত যে অ্যাডমিন এই নামটি ডিরেক্টরিতে অ্যাড করেছেন?`);
         }
 
         const passErr = validatePassword(formData.password);
@@ -83,7 +85,7 @@ export default function UserAuthScreen() {
 
           <div className="z-10">
             <h1 className="text-[18px] font-black text-[#1E3A8A] leading-tight uppercase tracking-[0.1em]">MINAR GO MEMBER HUB</h1>
-            <p className="text-slate-400 font-bold text-[9px] uppercase tracking-[0.3em] mt-2">UNITED FOR DEVELOPMENT</p>
+            <p className="text-slate-400 font-bold text-[9px] uppercase tracking-[0.3em] mt-2">SECURE MEMBER ACCESS</p>
           </div>
         </div>
 
@@ -112,13 +114,13 @@ export default function UserAuthScreen() {
                   <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 flex items-start gap-3">
                     <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                     <p className="text-[11px] text-blue-700 font-bold leading-relaxed">
-                      রেজিস্ট্রেশন করার জন্য আপনার নাম অবশ্যই অ্যাডমিন প্যানেলের সদস্য তালিকার সাথে মিলতে হবে। উদাহরণ: আপনার নাম যদি তালিকায় <span className="text-blue-900 underline">"Mr Shahid"</span> থাকে, তবে এখানেও হুবহু তাই লিখুন।
+                      রেজিস্ট্রেশন করার আগে নিশ্চিত হোন যে অ্যাডমিন আপনার নাম <span className="text-blue-900 underline font-black">"Directory"</span>-তে অ্যাড করেছেন। আপনার সঠিক নামটি লিখুন।
                     </p>
                   </div>
                   <div className="relative group">
                     <User className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <Input 
-                      placeholder="আপনার সঠিক নাম (তালিকানুযায়ী)" 
+                      placeholder="আপনার নাম (যেমন: Mr Shahid)" 
                       required 
                       value={formData.fullName} 
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} 
@@ -161,7 +163,7 @@ export default function UserAuthScreen() {
             </form>
             
             <p className="text-center text-[9px] text-slate-300 font-bold uppercase tracking-widest mt-4">
-              Secure Member Terminal • End-to-End Encrypted
+              Authorized Member Terminal • Encrypted Access
             </p>
           </div>
         </div>
