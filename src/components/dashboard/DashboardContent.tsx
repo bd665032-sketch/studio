@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -29,7 +30,7 @@ import { cn } from "@/lib/utils";
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export default function DashboardContent() {
-  const { members, transactions, addMember, deleteMember, addTransaction } = useMinarData();
+  const { members, transactions, addMember, deleteMember, addTransaction, deleteTransaction } = useMinarData();
   const [activeTab, setActiveTab] = useState("home");
   const [selectedMonth, setSelectedMonth] = useState("All");
   const [newMember, setNewMember] = useState("");
@@ -56,6 +57,13 @@ export default function DashboardContent() {
     toast({ title: "সফল!", description: "ডিপোজিট সেভ হয়েছে।" });
   };
 
+  const handleDeleteTransaction = async (id: string) => {
+    if (confirm("এই জমার তথ্যটি কি নিশ্চিতভাবে মুছে ফেলতে চান?")) {
+      await deleteTransaction(id);
+      toast({ title: "মুছে ফেলা হয়েছে", description: "ট্রানজ্যাকশনটি সফলভাবে ডিলিট করা হয়েছে।" });
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen bg-[#F8FAFC] overflow-hidden">
       <main className="flex-1 overflow-y-auto pb-28">
@@ -63,7 +71,6 @@ export default function DashboardContent() {
           
           {activeTab === "home" && (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4">
-              {/* White/Gold Summary Card */}
               <div className="bg-white border border-slate-100 rounded-[24px] p-5 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-gold-gradient opacity-10 rounded-bl-[100px]"></div>
                 <p className="text-slate-400 text-[8px] font-black uppercase tracking-widest mb-1">Portfolio Summary</p>
@@ -81,7 +88,6 @@ export default function DashboardContent() {
                 </div>
               </div>
 
-              {/* Gold Accented Feature Grid */}
               <div className="grid grid-cols-2 gap-3">
                 <button 
                   onClick={() => setActiveTab("members")}
@@ -122,17 +128,16 @@ export default function DashboardContent() {
                 </button>
               </div>
 
-              {/* Monthly Activity List */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between px-1">
                   <h4 className="font-black text-primary text-[10px] uppercase tracking-wider">Monthly Logs</h4>
                   <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                    <SelectTrigger className="w-28 bg-white border border-slate-200 shadow-sm rounded-xl text-[10px] font-bold h-8">
+                    <SelectTrigger className="w-28 bg-white border border-slate-200 shadow-sm rounded-xl text-[10px] font-black h-8">
                       <SelectValue placeholder="All Months" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border border-slate-200 shadow-2xl z-[1000]">
-                      <SelectItem value="All" className="text-[11px] font-bold">All Time</SelectItem>
-                      {months.map(m => <SelectItem key={m} value={m} className="text-[11px] font-bold">{m}</SelectItem>)}
+                    <SelectContent className="bg-white border border-slate-200 shadow-2xl z-[1000] popover-content">
+                      <SelectItem value="All" className="text-[11px] font-black">All Time</SelectItem>
+                      {months.map(m => <SelectItem key={m} value={m} className="text-[11px] font-black">{m}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -144,7 +149,7 @@ export default function DashboardContent() {
                     </div>
                   ) : (
                     filteredTransactions.map(t => (
-                      <div key={t.id} className="luxury-card p-3 flex items-center justify-between active:bg-slate-50 transition-colors">
+                      <div key={t.id} className="luxury-card p-3 flex items-center justify-between active:bg-slate-50 transition-colors group">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center font-black text-accent text-[11px]">
                             {t.n.charAt(0)}
@@ -154,9 +159,17 @@ export default function DashboardContent() {
                             <p className="text-[8px] text-slate-400 font-medium">{t.d}</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-black text-primary text-[11px]">৳{t.a.toLocaleString()}</p>
-                          <p className="text-[7px] text-accent font-bold uppercase tracking-tighter">{t.c}</p>
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <p className="font-black text-primary text-[11px]">৳{t.a.toLocaleString()}</p>
+                            <p className="text-[7px] text-accent font-bold uppercase tracking-tighter">{t.c}</p>
+                          </div>
+                          <button 
+                            onClick={() => handleDeleteTransaction(t.id)}
+                            className="text-slate-300 hover:text-red-500 transition-colors p-1"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
                     ))
@@ -185,7 +198,7 @@ export default function DashboardContent() {
               </div>
               <div className="luxury-card p-5">
                 <div className="flex gap-2 mb-6">
-                  <Input placeholder="Member Full Name" value={newMember} onChange={(e) => setNewMember(e.target.value)} className="rounded-xl h-11 text-xs" />
+                  <Input placeholder="Member Full Name" value={newMember} onChange={(e) => setNewMember(e.target.value)} className="rounded-xl h-11 text-xs font-black" />
                   <Button onClick={() => { if(newMember) addMember(newMember); setNewMember(""); }} className="gold-gradient rounded-xl px-5 h-11 text-xs font-black shadow-md">ADD</Button>
                 </div>
                 <div className="space-y-2 max-h-[450px] overflow-y-auto pr-1">
@@ -214,35 +227,35 @@ export default function DashboardContent() {
                     <div className="space-y-1.5">
                       <Label className="font-black ml-1 text-slate-400 text-[8px] uppercase tracking-widest">Select Member</Label>
                       <Select onValueChange={(v) => setDeposit({...deposit, member: v})}>
-                        <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-200 font-bold text-xs text-slate-900">
+                        <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-200 font-black text-xs text-slate-900">
                           <SelectValue placeholder="মেম্বার নির্বাচন করুন" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border border-slate-200 shadow-2xl z-[1000] max-h-[250px]">
-                          {members.map(m => <SelectItem key={m} value={m} className="text-xs font-bold text-primary">{m}</SelectItem>)}
+                        <SelectContent className="bg-white border border-slate-200 shadow-2xl z-[1000] max-h-[250px] popover-content">
+                          {members.map(m => <SelectItem key={m} value={m} className="text-xs font-black text-primary">{m}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-1.5">
                       <Label className="font-black ml-1 text-slate-400 text-[8px] uppercase tracking-widest">Category</Label>
                       <Select value={deposit.category} onValueChange={(v) => setDeposit({...deposit, category: v})}>
-                        <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-200 font-bold text-xs text-slate-900">
+                        <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-200 font-black text-xs text-slate-900">
                           <SelectValue placeholder="ক্যাটাগরি" />
                         </SelectTrigger>
-                        <SelectContent className="bg-white border border-slate-200 shadow-2xl z-[1000]">
-                          <SelectItem value="প্রতি মাসের জমা" className="text-xs font-bold">প্রতি মাসের জমা</SelectItem>
-                          <SelectItem value="যাকাত" className="text-xs font-bold">যাকাত</SelectItem>
-                          <SelectItem value="বিশেষ অনুদান" className="text-xs font-bold">বিশেষ অনুদান</SelectItem>
+                        <SelectContent className="bg-white border border-slate-200 shadow-2xl z-[1000] popover-content">
+                          <SelectItem value="প্রতি মাসের জমা" className="text-xs font-black">প্রতি মাসের জমা</SelectItem>
+                          <SelectItem value="যাকাত" className="text-xs font-black">যাকাত</SelectItem>
+                          <SelectItem value="বিশেষ অনুদান" className="text-xs font-black">বিশেষ অনুদান</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <Label className="font-black ml-1 text-slate-400 text-[8px] uppercase tracking-widest">Amount (TK)</Label>
-                        <Input type="number" value={deposit.amount} onChange={(e) => setDeposit({...deposit, amount: Number(e.target.value)})} className="h-11 rounded-xl text-xs font-bold" />
+                        <Input type="number" value={deposit.amount} onChange={(e) => setDeposit({...deposit, amount: Number(e.target.value)})} className="h-11 rounded-xl text-xs font-black" />
                       </div>
                       <div className="space-y-1.5">
                         <Label className="font-black ml-1 text-slate-400 text-[8px] uppercase tracking-widest">Deposit Date</Label>
-                        <Input type="date" value={deposit.date} onChange={(e) => setDeposit({...deposit, date: e.target.value})} className="h-11 rounded-xl text-[10px] font-bold" />
+                        <Input type="date" value={deposit.date} onChange={(e) => setDeposit({...deposit, date: e.target.value})} className="h-11 rounded-xl text-[10px] font-black" />
                       </div>
                     </div>
                     <Button className="w-full h-13 rounded-xl gold-gradient text-white font-black text-sm shadow-xl active:scale-95 transition-all mt-4 uppercase tracking-widest">
@@ -259,7 +272,6 @@ export default function DashboardContent() {
         </div>
       </main>
 
-      {/* Slim Gold Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white h-20 px-6 flex items-center justify-between z-[100] nav-shadow rounded-t-[28px] border-t border-slate-50">
         <button 
           onClick={() => setActiveTab("home")} 
@@ -305,3 +317,4 @@ export default function DashboardContent() {
     </div>
   );
 }
+
