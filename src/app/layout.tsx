@@ -1,8 +1,8 @@
-
 import type {Metadata} from 'next';
 import './globals.css';
 import {Toaster} from '@/components/ui/toaster';
 import { FirebaseClientProvider } from '@/firebase';
+import { GlobalNotificationListener } from '@/components/GlobalNotificationListener';
 
 export const metadata: Metadata = {
   title: 'Minar Go Connect - Development Foundation',
@@ -27,6 +27,7 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-[#F0F2F5]">
         <FirebaseClientProvider>
+          <GlobalNotificationListener />
           {children}
           <Toaster />
         </FirebaseClientProvider>

@@ -2,10 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/**
- * Global CSS Styles with Premium Light Purple, Royal Blue & Gold Theme
- */
-
 @layer base {
   :root {
     --background: 210 40% 98%;
@@ -35,7 +31,7 @@
   @apply bg-white border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] rounded-[24px];
 }
 
-/* Updated Luxury Gradient with Purple, Blue and Gold touch */
+/* Luxury Gradient with Purple, Blue and Gold touch */
 .purple-blue-gold-card {
   background: linear-gradient(135deg, #6366F1 0%, #3B82F6 100%);
   border-left: 6px solid #D4AF37;
@@ -43,7 +39,7 @@
 }
 
 .nav-shadow {
-  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.05);
 }
 
 .font-bengali {
@@ -66,4 +62,9 @@ input, select, textarea {
 
 .pdf-btn-luxury {
   @apply w-full h-12 bg-white text-blue-700 border-2 border-[#D4AF37] font-black text-[11px] rounded-[18px] hover:bg-[#D4AF37] hover:text-white transition-all shadow-md active:scale-95;
+}
+
+/* Custom Notification Style */
+.facebook-toast {
+  @apply bg-[#1E40AF] text-white border-none shadow-2xl rounded-2xl p-4 flex items-center gap-3 animate-in slide-in-from-top-full duration-500;
 }

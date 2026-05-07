@@ -92,7 +92,7 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
   };
 
   return (
-    <header className="sticky top-0 z-[100] w-full bg-white/90 backdrop-blur-md py-2 px-4 flex items-center justify-between border-b border-slate-100 shadow-sm h-14">
+    <header className="sticky top-0 z-[100] w-full bg-white/95 backdrop-blur-md py-1.5 px-4 flex items-center justify-between border-b border-slate-100 shadow-sm h-14 transition-all">
       <div className="flex items-center gap-2.5">
         <Dialog>
           <DialogTrigger asChild>
@@ -149,16 +149,15 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
         </Dialog>
       </div>
       
-      <div className="flex items-center gap-2">
-        {/* Notification Bell Icon */}
-        <div className="relative">
-          <Button variant="ghost" size="icon" className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg">
+      <div className="flex items-center gap-2.5">
+        <div className="relative group cursor-pointer">
+          <Button variant="ghost" size="icon" className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">
             <Bell className="w-4 h-4" />
           </Button>
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 border border-white rounded-full"></span>
+          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
         </div>
 
-        <Button variant="ghost" size="icon" className="w-8 h-8 bg-slate-50 shadow-sm rounded-lg text-blue-600" onClick={handleBackup} disabled={backupLoading}>
+        <Button variant="ghost" size="icon" className="w-8 h-8 bg-slate-50 shadow-sm rounded-lg text-blue-600 hover:bg-slate-100" onClick={handleBackup} disabled={backupLoading}>
           {backupLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CloudUpload className="w-3.5 h-3.5" />}
         </Button>
         <Button variant="ghost" size="icon" className="w-8 h-8 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors" onClick={onLogout}>

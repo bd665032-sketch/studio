@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useMinarData } from "@/hooks/use-minar-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,29 +34,6 @@ export default function DashboardContent() {
   const [newMember, setNewMember] = useState("");
   const [deposit, setDeposit] = useState({ member: "", amount: 5000, category: "প্রতি মাসের জমা", date: new Date().toISOString().split('T')[0] });
   const { toast } = useToast();
-  
-  const prevTransactionsCount = useRef(transactions.length);
-  const isInitialLoad = useRef(true);
-
-  useEffect(() => {
-    if (isInitialLoad.current && transactions.length > 0) {
-      isInitialLoad.current = false;
-      prevTransactionsCount.current = transactions.length;
-      return;
-    }
-
-    if (!isInitialLoad.current && transactions.length > prevTransactionsCount.current) {
-      const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3");
-      audio.play().catch(e => console.log("Audio play failed", e));
-
-      toast({
-        title: "🔔 নতুন জমা পাওয়া গেছে!",
-        description: `সফলভাবে ডাটা আপডেট হয়েছে।`,
-        className: "bg-blue-600 text-white border-none shadow-2xl rounded-2xl",
-      });
-    }
-    prevTransactionsCount.current = transactions.length;
-  }, [transactions, toast]);
 
   const filteredTransactions = transactions.filter(t => {
     if (selectedMonth === "All") return true;
@@ -138,13 +115,13 @@ export default function DashboardContent() {
                   <ChevronRight className="w-4 h-4 text-white/30" />
                 </button>
 
-                {/* PDF Button - Placed here as requested */}
+                {/* PDF Button - Placed between Demand Letter and Logs as requested */}
                 <button 
-                  className="pdf-btn-luxury" 
+                  className="pdf-btn-luxury h-10" 
                   onClick={() => exportSummaryPDF(filteredTransactions, selectedMonth, totalCollection)}
                 >
                   <div className="flex items-center justify-center gap-2">
-                    <Download className="w-4 h-4" /> 
+                    <Download className="w-3.5 h-3.5" /> 
                     <span>Export Summary PDF</span>
                   </div>
                 </button>
@@ -233,12 +210,12 @@ export default function DashboardContent() {
         </div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white h-16 px-8 flex items-center justify-between z-[100] nav-shadow rounded-t-[24px] border-t border-slate-50">
-        <button onClick={() => setActiveTab("home")} className={cn("flex flex-col items-center gap-1", activeTab === "home" ? "text-blue-600" : "text-slate-300")}><Home className="w-4 h-4"/><span className="text-[7px] font-black uppercase">Home</span></button>
-        <button onClick={() => setActiveTab("members")} className={cn("flex flex-col items-center gap-1", activeTab === "members" ? "text-blue-600" : "text-slate-300")}><Users className="w-4 h-4"/><span className="text-[7px] font-black uppercase">Members</span></button>
-        <div className="relative -top-6"><button onClick={() => setActiveTab("add")} className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-xl border-[4px] border-[#F8FAFC] active:scale-90 transition-transform"><Plus className="w-6 h-6"/></button></div>
-        <button onClick={() => setActiveTab("gallery")} className={cn("flex flex-col items-center gap-1", activeTab === "gallery" ? "text-blue-600" : "text-slate-300")}><ImageIcon className="w-4 h-4"/><span className="text-[7px] font-black uppercase">Gallery</span></button>
-        <div className="flex flex-col items-center gap-1 text-slate-800"><div className="w-4 h-4 rounded-full bg-blue-900 text-white flex items-center justify-center text-[7px] font-black">N</div><span className="text-[7px] font-black uppercase">Profile</span></div>
+      <nav className="fixed bottom-0 left-0 right-0 bg-white md:h-20 h-16 px-8 flex items-center justify-between z-[100] nav-shadow rounded-t-[24px] border-t border-slate-50 transition-all">
+        <button onClick={() => setActiveTab("home")} className={cn("flex flex-col items-center gap-1", activeTab === "home" ? "text-blue-600" : "text-slate-300")}><Home className="md:w-5 md:h-5 w-4 h-4"/><span className="text-[7px] font-black uppercase">Home</span></button>
+        <button onClick={() => setActiveTab("members")} className={cn("flex flex-col items-center gap-1", activeTab === "members" ? "text-blue-600" : "text-slate-300")}><Users className="md:w-5 md:h-5 w-4 h-4"/><span className="text-[7px] font-black uppercase">Members</span></button>
+        <div className="relative -top-6"><button onClick={() => setActiveTab("add")} className="md:w-14 md:h-14 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-xl border-[4px] border-[#F8FAFC] active:scale-90 transition-transform"><Plus className="w-6 h-6"/></button></div>
+        <button onClick={() => setActiveTab("gallery")} className={cn("flex flex-col items-center gap-1", activeTab === "gallery" ? "text-blue-600" : "text-slate-300")}><ImageIcon className="md:w-5 md:h-5 w-4 h-4"/><span className="text-[7px] font-black uppercase">Gallery</span></button>
+        <div className="flex flex-col items-center gap-1 text-slate-800"><div className="md:w-5 md:h-5 w-4 h-4 rounded-full bg-blue-900 text-white flex items-center justify-center text-[7px] font-black">N</div><span className="text-[7px] font-black uppercase">Profile</span></div>
       </nav>
     </div>
   );
