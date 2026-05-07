@@ -61,15 +61,15 @@ export default function DemandLetterGenerator() {
     
     try {
       // Small delay to ensure state is updated in the hidden div
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 300));
       
       const element = printRef.current;
       const canvas = await html2canvas(element, {
-        scale: 3, // Balanced scale for quality vs size
+        scale: 2, // Good balance between quality and size
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
-        windowWidth: 794, // A4 width in pixels at 96 DPI
+        windowWidth: 794, // A4 width at 96 DPI
       });
       
       const imgData = canvas.toDataURL("image/png");
@@ -111,27 +111,15 @@ export default function DemandLetterGenerator() {
               />
             </div>
             <div className="space-y-1">
-              <Label>ভাষা (Language)</Label>
-              <Select value={letterData.language} onValueChange={(v: any) => setLetterData({...letterData, language: v})}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bn">বাংলা (Bengali)</SelectItem>
-                  <SelectItem value="en">English</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="space-y-1">
               <Label>মোবাইল নম্বর</Label>
               <Input 
                 value={letterData.mobileNumber} 
                 onChange={(e) => setLetterData({...letterData, mobileNumber: e.target.value})} 
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>ইমেইল এড্রেস</Label>
               <Input 
@@ -189,93 +177,99 @@ export default function DemandLetterGenerator() {
         </CardContent>
       </Card>
 
-      {/* Hidden Template for PDF Generation - Improved Container */}
-      <div style={{ position: 'absolute', top: '-10000px', left: '-10000px', overflow: 'hidden', height: 0 }}>
+      {/* Hidden Template for PDF Generation - EXACT CLONE OF SCREENSHOT */}
+      <div style={{ position: 'absolute', top: '-10000px', left: '-10000px', width: '210mm', minHeight: '297mm', overflow: 'hidden' }}>
         <div 
           ref={printRef}
           className="bg-white text-[#333] font-bengali leading-relaxed relative flex flex-col"
-          style={{ width: '210mm', minHeight: '297mm', padding: '15mm' }}
+          style={{ width: '210mm', minHeight: '297mm', padding: '15mm 20mm' }}
         >
-          {/* Top Border Line */}
-          <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#002366]"></div>
+          {/* Top Blue Border */}
+          <div className="absolute top-0 left-0 right-0 h-2 bg-[#002366]"></div>
 
-          {/* Header Box - Blue Rounded */}
-          <div className="mt-4 mb-10 flex justify-center">
-            <div className="bg-[#002366] text-white rounded-[25px] py-10 px-16 text-center shadow-lg w-full max-w-[85%]">
-              <h1 className="text-[34px] font-extrabold mb-3 leading-tight tracking-wide">মিনার গো প্রবাসী উন্নয়ন ফাউন্ডেশন</h1>
-              <p className="text-[13px] font-bold tracking-[0.25em] text-[#D4AF37] uppercase">
+          {/* Professional Header Box */}
+          <div className="mt-6 mb-12 flex justify-center">
+            <div className="bg-[#002366] text-white rounded-[30px] py-10 px-16 text-center shadow-lg w-full">
+              <h1 className="text-[36px] font-extrabold mb-2 leading-tight">মিনার গো প্রবাসী উন্নয়ন ফাউন্ডেশন</h1>
+              <p className="text-[14px] font-bold tracking-[0.2em] text-[#D4AF37] uppercase">
                 MINAR GO EXPATRIATE DEVELOPMENT FOUNDATION
               </p>
             </div>
           </div>
 
-          {/* Date Section - Right Aligned */}
+          {/* Date Section */}
           <div className="text-right mb-10">
             <p className="text-[18px] font-bold">Date: {letterData.letterDate}</p>
           </div>
 
           {/* Recipient Section */}
-          <div className="mb-8 space-y-1">
-            <p className="font-extrabold text-[20px]">To:</p>
-            <p className="text-[20px] font-medium">{letterData.toCompany}</p>
+          <div className="mb-6 space-y-1">
+            <p className="font-extrabold text-[19px]">To:</p>
+            <p className="text-[19px] font-medium">{letterData.toCompany}</p>
           </div>
 
           {/* Subject Section */}
-          <div className="mb-12">
-            <p className="font-extrabold text-[20px] flex gap-2 items-start">
-              <span>Subject:</span>
-              <span className="font-bold underline underline-offset-[8px] decoration-1">{letterData.subject}</span>
+          <div className="mb-10">
+            <p className="font-extrabold text-[19px]">
+              <span className="mr-2">Subject:</span>
+              <span className="font-bold underline underline-offset-4 decoration-1">{letterData.subject}</span>
             </p>
           </div>
 
-          {/* Body Section */}
-          <div className="mb-16 text-justify text-[18px] leading-[1.8] whitespace-pre-wrap flex-1 px-1">
+          {/* Body Section with Beige Background Box */}
+          <div className="mb-16 bg-[#FFF9F2] p-8 rounded-sm text-justify text-[18px] leading-[1.8] whitespace-pre-wrap flex-1">
             {letterData.body}
           </div>
 
-          {/* Sincerely Closing */}
+          {/* Closing */}
           <div className="mb-24">
-            <p className="text-[20px] font-medium">Sincerely,</p>
+            <p className="text-[19px] font-medium">Sincerely,</p>
           </div>
 
-          {/* Signature Lines - Two Columns - Fixed Visibility */}
-          <div className="flex justify-between items-end mb-24 px-4 w-full">
-            <div className="w-[300px] text-center border-t-[1.5px] border-gray-900 pt-4">
-              <p className="font-bold text-[14px] uppercase leading-tight tracking-tight">Minar Go Expatriate Development Foundation</p>
+          {/* Signature Section - Two Columns */}
+          <div className="grid grid-cols-2 gap-20 mb-20">
+            <div className="text-center">
+              <div className="border-t border-gray-900 pt-3">
+                <p className="font-bold text-[13px] uppercase">Minar Go Expatriate Development Foundation</p>
+              </div>
             </div>
-            <div className="w-[300px] text-center border-t-[1.5px] border-gray-900 pt-4">
-              <p className="font-bold text-[14px] uppercase leading-tight tracking-tight">{letterData.toCompany}</p>
+            <div className="text-center">
+              <div className="border-t border-gray-900 pt-3">
+                <p className="font-bold text-[13px] uppercase">{letterData.toCompany}</p>
+              </div>
             </div>
           </div>
 
-          {/* Contact Information - Fixed Visibility */}
-          <div className="border-t border-gray-200 pt-8 pb-4 mt-auto">
-             <div className="flex items-center justify-center gap-10 text-[16px] text-gray-800 font-bold">
-               <div className="flex items-center gap-2">
-                 <div className="p-1.5 bg-blue-50 rounded-full"><Phone className="w-4 h-4 text-[#002366]" /></div>
-                 <span>{letterData.mobileNumber}</span>
-               </div>
-               <div className="flex items-center gap-2">
-                 <div className="p-1.5 bg-blue-50 rounded-full"><Mail className="w-4 h-4 text-[#002366]" /></div>
-                 <span>{letterData.emailAddress}</span>
-               </div>
-               <div className="flex items-center gap-2">
-                 <div className="p-1.5 bg-blue-50 rounded-full"><Globe className="w-4 h-4 text-[#002366]" /></div>
-                 <span>{letterData.website}</span>
-               </div>
+          {/* Contact Info Row with Icons */}
+          <div className="flex items-center justify-center gap-10 text-[14px] font-bold mb-6 pt-6 border-t border-gray-100">
+             <div className="flex items-center gap-1.5">
+               <Phone className="w-4 h-4 text-[#E91E63]" />
+               <span>{letterData.mobileNumber}</span>
+             </div>
+             <div className="flex items-center gap-1.5">
+               <Mail className="w-4 h-4 text-[#9C27B0]" />
+               <span>{letterData.emailAddress}</span>
+             </div>
+             <div className="flex items-center gap-1.5">
+               <Globe className="w-4 h-4 text-[#03A9F4]" />
+               <span>{letterData.website}</span>
              </div>
           </div>
 
           {/* Bottom Green Strip */}
-          <div className="text-center mt-6">
-            <div className="bg-[#E7F3EF] text-[#2D6A4F] py-3.5 px-16 rounded-full inline-block text-[15px] font-extrabold border border-[#CDE5DC] shadow-sm">
+          <div className="text-center mb-6">
+            <div className="bg-[#E7F3EF] text-[#2D6A4F] py-3 px-12 rounded-full inline-block text-[15px] font-bold border border-[#CDE5DC]">
               Thank you for your cooperation.
             </div>
-            <p className="text-[11px] text-gray-400 mt-5 font-bold tracking-widest uppercase">© Minar Go Expatriate Development Foundation</p>
+          </div>
+
+          {/* Copyright Footer */}
+          <div className="text-center pb-4">
+            <p className="text-[11px] text-gray-400 font-bold uppercase tracking-widest">© Minar Go Expatriate Development Foundation</p>
           </div>
           
-          {/* Bottom Border Line */}
-          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-[#002366]"></div>
+          {/* Bottom Blue Border */}
+          <div className="absolute bottom-0 left-0 right-0 h-2 bg-[#002366]"></div>
         </div>
       </div>
     </div>
