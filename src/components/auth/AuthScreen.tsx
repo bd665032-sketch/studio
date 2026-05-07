@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -37,14 +38,17 @@ export default function AuthScreen() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-body overflow-hidden">
-      <div className="relative h-[38vh] bg-indigo-700 flex flex-col items-center justify-center overflow-hidden">
+      {/* Curved Header Section */}
+      <div className="relative h-[38vh] bg-[#1E3A8A] flex flex-col items-center justify-center overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <Globe className="absolute top-10 left-10 w-24 h-24 text-white" />
           <Shield className="absolute bottom-10 right-10 w-24 h-24 text-white" />
         </div>
+        {/* Curved overlay */}
         <div className="absolute bottom-[-60px] left-[-10%] right-[-10%] h-[160px] bg-white rounded-[100%] shadow-lg"></div>
+        
         <div className="z-10 bg-white p-5 rounded-full shadow-2xl border-[5px] border-indigo-100 mb-4">
-          <div className="w-16 h-16 bg-indigo-700 rounded-full flex items-center justify-center">
+          <div className="w-16 h-16 bg-[#1E3A8A] rounded-full flex items-center justify-center">
             <span className="text-white text-3xl font-black">MG</span>
           </div>
         </div>
@@ -52,26 +56,54 @@ export default function AuthScreen() {
 
       <div className="flex-1 px-8 pt-6 pb-12 z-20 bg-white">
         <div className="text-center mb-8">
-          <h1 className="text-[20px] font-black text-indigo-900 leading-tight uppercase">MINAR GO EXPATRIATE</h1>
-          <h2 className="text-[17px] font-black text-indigo-900 leading-tight uppercase mb-2">DEVELOPMENT FOUNDATION</h2>
-          <p className="text-indigo-500 font-bold text-xs">United Experiences, Brighter Future</p>
+          <h1 className="text-[20px] font-black text-[#1E3A8A] leading-tight uppercase">MINAR GO EXPATRIATE</h1>
+          <h2 className="text-[17px] font-black text-[#1E3A8A] leading-tight uppercase mb-2">DEVELOPMENT FOUNDATION</h2>
+          <p className="text-indigo-400 font-bold text-xs uppercase tracking-widest">United Experiences, Brighter Future</p>
         </div>
 
-        <div className="flex bg-slate-50 p-1.5 rounded-2xl mb-8">
-          <button onClick={() => setIsLogin(true)} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${isLogin ? 'bg-indigo-600 text-white shadow-lg' : 'text-indigo-900/40'}`}>লগইন</button>
-          <button onClick={() => setIsLogin(false)} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${!isLogin ? 'bg-indigo-600 text-white shadow-lg' : 'text-indigo-900/40'}`}>সাইন আপ</button>
+        {/* Premium Tab Switcher */}
+        <div className="flex bg-slate-50 p-1.5 rounded-[22px] mb-8 shadow-inner">
+          <button 
+            onClick={() => setIsLogin(true)} 
+            className={`flex-1 py-4 rounded-[18px] text-sm font-black transition-all duration-300 ${isLogin ? 'bg-[#1E3A8A] text-white shadow-lg scale-[1.02]' : 'text-slate-400'}`}
+          >
+            লগইন
+          </button>
+          <button 
+            onClick={() => setIsLogin(false)} 
+            className={`flex-1 py-4 rounded-[18px] text-sm font-black transition-all duration-300 ${!isLogin ? 'bg-[#1E3A8A] text-white shadow-lg scale-[1.02]' : 'text-slate-400'}`}
+          >
+            সাইন আপ
+          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div className="relative">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-300" />
-            <Input type="email" placeholder="Email Address" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="h-14 pl-12 rounded-2xl bg-slate-50 border-none shadow-inner" />
+            <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-300" />
+            <Input 
+              type="email" 
+              placeholder="Email Address" 
+              required 
+              value={formData.email} 
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+              className="h-16 pl-14 rounded-[22px] bg-slate-50 border-none shadow-inner text-lg" 
+            />
           </div>
           <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-300" />
-            <Input type="password" placeholder="Password" required value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="h-14 pl-12 rounded-2xl bg-slate-50 border-none shadow-inner" />
+            <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-indigo-300" />
+            <Input 
+              type="password" 
+              placeholder="Password" 
+              required 
+              value={formData.password} 
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })} 
+              className="h-16 pl-14 rounded-[22px] bg-slate-50 border-none shadow-inner text-lg" 
+            />
           </div>
-          <Button className="w-full h-14 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-lg font-black shadow-xl mt-4" disabled={loading}>
+          <Button 
+            className="w-full h-16 rounded-[22px] bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white text-lg font-black shadow-xl mt-4 active:scale-95 transition-all" 
+            disabled={loading}
+          >
             {loading ? "অপেক্ষা করুন..." : (isLogin ? "Login Now" : "Create Account")}
           </Button>
         </form>
