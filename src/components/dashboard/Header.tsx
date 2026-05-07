@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -80,9 +81,8 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
       const rows = transactions.map(t => [t.n, t.d, t.a]);
       const total = transactions.reduce((s, r) => s + r.a, 0);
       rows.push(["TOTAL COLLECTION", "", total]);
-      rows.push(["Backup Date", new Date().toLocaleString('bn-BD'), ""]);
-      const payload = { sheetName: "MinarGo_Data", headers: ["Member Name", "Date", "Amount (TK)"], rows: rows };
-      await fetch(GOOGLE_SHEETS_URL, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(payload) });
+      const payload = { sheetName: "MinarGo_Live", rows: rows };
+      await fetch(GOOGLE_SHEETS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
       toast({ title: "ব্যাকআপ সম্পন্ন!", description: "গুগল শিটে ডাটা পাঠানো হয়েছে।" });
     } catch (error) {
       toast({ variant: "destructive", title: "ব্যাকআপ ব্যর্থ", description: "সমস্যা হয়েছে।" });
@@ -102,7 +102,7 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
                   {logo ? (
                     <AvatarImage src={logo} className="object-cover" />
                   ) : (
-                    <AvatarFallback className="bg-blue-600 text-white font-black text-[10px]">MG</AvatarFallback>
+                    <AvatarFallback className="bg-[#1E3A8A] text-white font-black text-[10px]">MG</AvatarFallback>
                   )}
                 </Avatar>
                 <div className="absolute -bottom-0.5 -right-0.5 bg-green-500 rounded-full p-0.5 border border-white">
@@ -110,30 +110,30 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
                 </div>
               </div>
               <div className="flex flex-col">
-                <h1 className="font-black text-[11px] text-slate-800 leading-none uppercase">{foundationName}</h1>
-                <p className="text-[7px] text-slate-400 font-bold uppercase mt-0.5">Admin Panel</p>
+                <h1 className="font-black text-[11px] text-[#1E3A8A] leading-none uppercase">{foundationName}</h1>
+                <p className="text-[7px] text-[#D4AF37] font-bold uppercase mt-0.5 tracking-tighter">Secure Admin Node</p>
               </div>
             </div>
           </DialogTrigger>
           <DialogContent className="sm:max-w-xs bg-white rounded-[24px]">
             <DialogHeader>
-              <DialogTitle className="text-blue-600 font-black text-sm flex items-center gap-2">
+              <DialogTitle className="text-[#1E3A8A] font-black text-sm flex items-center gap-2">
                 <Settings className="w-4 h-4" />
-                Profile Settings
+                Profile Customization
               </DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-2">
               <div className="flex flex-col items-center gap-3">
                 <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border-2 border-slate-50 relative group shadow-inner">
-                  {logo ? <img src={logo} alt="Preview" className="w-full h-full object-cover" /> : <span className="text-blue-600 font-bold text-lg">MG</span>}
+                  {logo ? <img src={logo} alt="Preview" className="w-full h-full object-cover" /> : <span className="text-[#1E3A8A] font-bold text-lg">MG</span>}
                   <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white text-[9px] font-bold">
-                    <Camera className="w-5 h-5 mb-1" /> Change
+                    <Camera className="w-5 h-5 mb-1" /> Upload
                     <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
                   </label>
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label className="font-bold text-slate-400 text-[9px] uppercase">Foundation Name</Label>
+                <Label className="font-bold text-slate-400 text-[9px] uppercase">Foundation Entity Name</Label>
                 <div className="flex gap-1.5">
                   <Input value={isEditingName ? tempName : foundationName} readOnly={!isEditingName} onFocus={() => { if(!isEditingName) { setTempName(foundationName); setIsEditingName(true); } }} onChange={(e) => setTempName(e.target.value)} className="h-10 border-none bg-slate-50 rounded-xl font-bold text-xs" />
                   {isEditingName && (
@@ -150,14 +150,10 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
       </div>
       
       <div className="flex items-center gap-2.5">
-        <div className="relative group cursor-pointer">
-          <Button variant="ghost" size="icon" className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">
-            <Bell className="w-4 h-4" />
-          </Button>
-          <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-red-500 border-2 border-white rounded-full"></span>
-        </div>
-
-        <Button variant="ghost" size="icon" className="w-8 h-8 bg-slate-50 shadow-sm rounded-lg text-blue-600 hover:bg-slate-100" onClick={handleBackup} disabled={backupLoading}>
+        <Button variant="ghost" size="icon" className="w-8 h-8 bg-blue-50 text-[#1E3A8A] rounded-lg">
+          <Bell className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="icon" className="w-8 h-8 bg-slate-50 shadow-sm rounded-lg text-[#1E3A8A]" onClick={handleBackup} disabled={backupLoading}>
           {backupLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CloudUpload className="w-3.5 h-3.5" />}
         </Button>
         <Button variant="ghost" size="icon" className="w-8 h-8 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors" onClick={onLogout}>

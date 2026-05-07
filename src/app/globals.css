@@ -23,7 +23,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#F8FAFC] text-foreground font-body antialiased;
+    @apply bg-[#F0F2F5] text-foreground font-body antialiased;
     -webkit-tap-highlight-color: transparent;
   }
 }
@@ -32,7 +32,7 @@
   @apply bg-white border border-slate-100 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.06)] rounded-[32px];
 }
 
-/* Luxury Gradient with Purple, Blue and Gold touch */
+/* Premium Purple-Blue Gradient with Gold Border */
 .purple-blue-gold-card {
   background: linear-gradient(135deg, #6366F1 0%, #3B82F6 100%);
   border-left: 8px solid #D4AF37;
@@ -60,12 +60,7 @@ input:focus, select:focus, textarea:focus {
   @apply text-slate-400 font-bold !important;
 }
 
-@media (max-width: 640px) {
-  h1 { @apply text-[22px]; }
-  p { @apply text-[12px]; }
-}
-
 /* Facebook style highlighted notification */
 .facebook-toast {
-  @apply bg-gradient-to-r from-[#1E40AF] to-[#3B82F6] text-white border-none shadow-[0_20px_50px_rgba(30,64,175,0.3)] rounded-[24px] p-6 flex items-center gap-5 animate-in slide-in-from-top-full duration-700;
+  @apply bg-gradient-to-r from-[#1E40AF] to-[#6366F1] text-white border-none shadow-[0_20px_50px_rgba(30,64,175,0.3)] rounded-[24px] p-6 flex items-center gap-5 animate-in slide-in-from-top-full duration-700;
 }
