@@ -64,19 +64,19 @@ export default function DashboardContent() {
           {activeTab === "home" && (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-4">
               {/* White/Gold Summary Card */}
-              <div className="bg-white border border-slate-100 rounded-[28px] p-6 shadow-sm relative overflow-hidden">
+              <div className="bg-white border border-slate-100 rounded-[24px] p-5 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-gold-gradient opacity-10 rounded-bl-[100px]"></div>
-                <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1">Portfolio Summary</p>
-                <h1 className="text-xl font-black text-primary leading-tight">Collection Overview</h1>
+                <p className="text-slate-400 text-[8px] font-black uppercase tracking-widest mb-1">Portfolio Summary</p>
+                <h1 className="text-lg font-black text-primary leading-tight">Collection Overview</h1>
                 
-                <div className="grid grid-cols-2 gap-4 mt-6">
+                <div className="grid grid-cols-2 gap-4 mt-5">
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Total Balance</p>
-                    <p className="text-2xl font-black text-primary">৳{totalCollection.toLocaleString()}</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Total Balance</p>
+                    <p className="text-xl font-black text-primary">৳{totalCollection.toLocaleString()}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Active Members</p>
-                    <p className="text-2xl font-black text-accent">{members.length}</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Active Members</p>
+                    <p className="text-xl font-black text-accent">{members.length}</p>
                   </div>
                 </div>
               </div>
@@ -85,61 +85,61 @@ export default function DashboardContent() {
               <div className="grid grid-cols-2 gap-3">
                 <button 
                   onClick={() => setActiveTab("members")}
-                  className="bg-white border border-slate-100 rounded-[24px] p-4 flex flex-col items-start active:scale-95 transition-transform shadow-sm"
+                  className="bg-white border border-slate-100 rounded-[20px] p-4 flex flex-col items-start active:scale-95 transition-transform shadow-sm"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center mb-3">
+                  <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center mb-2">
                     <BookOpen className="w-4 h-4 text-accent" />
                   </div>
-                  <h3 className="text-[13px] font-black text-primary">Members</h3>
-                  <p className="text-slate-400 text-[9px]">{members.length} registered</p>
+                  <h3 className="text-[12px] font-black text-primary">Members</h3>
+                  <p className="text-slate-400 text-[8px]">{members.length} registered</p>
                 </button>
 
                 <button 
                   onClick={() => setActiveTab("gallery")}
-                  className="bg-white border border-slate-100 rounded-[24px] p-4 flex flex-col items-start active:scale-95 transition-transform shadow-sm"
+                  className="bg-white border border-slate-100 rounded-[20px] p-4 flex flex-col items-start active:scale-95 transition-transform shadow-sm"
                 >
-                  <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center mb-3">
+                  <div className="w-8 h-8 rounded-xl bg-slate-50 flex items-center justify-center mb-2">
                     <ClipboardList className="w-4 h-4 text-accent" />
                   </div>
-                  <h3 className="text-[13px] font-black text-primary">Gallery</h3>
-                  <p className="text-slate-400 text-[9px]">Photo Storage</p>
+                  <h3 className="text-[12px] font-black text-primary">Gallery</h3>
+                  <p className="text-slate-400 text-[8px]">Photo Storage</p>
                 </button>
 
                 <button 
                   onClick={() => setActiveTab("settings")}
-                  className="col-span-2 bg-primary rounded-[24px] p-4 text-white flex items-center justify-between active:scale-95 transition-transform shadow-md"
+                  className="col-span-2 bg-primary rounded-[20px] p-4 text-white flex items-center justify-between active:scale-95 transition-transform shadow-md"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center">
                       <FileText className="w-4 h-4 text-accent" />
                     </div>
                     <div>
-                      <h3 className="text-[13px] font-black">Demand Letter Generator</h3>
-                      <p className="text-white/50 text-[9px]">Official Documents</p>
+                      <h3 className="text-[12px] font-black">Demand Letter Generator</h3>
+                      <p className="text-white/50 text-[8px]">Official Documents</p>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 opacity-30" />
                 </button>
               </div>
 
-              {/* Monthly Activity List - RESTORED */}
+              {/* Monthly Activity List */}
               <div className="space-y-3 pt-2">
                 <div className="flex items-center justify-between px-1">
                   <h4 className="font-black text-primary text-[10px] uppercase tracking-wider">Monthly Logs</h4>
                   <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                    <SelectTrigger className="w-28 bg-white border border-slate-100 shadow-sm rounded-xl text-[10px] font-bold h-8">
+                    <SelectTrigger className="w-28 bg-white border border-slate-200 shadow-sm rounded-xl text-[10px] font-bold h-8">
                       <SelectValue placeholder="All Months" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="All">All Time</SelectItem>
-                      {months.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                    <SelectContent className="bg-white border border-slate-200 shadow-2xl z-[1000]">
+                      <SelectItem value="All" className="text-[11px] font-bold">All Time</SelectItem>
+                      {months.map(m => <SelectItem key={m} value={m} className="text-[11px] font-bold">{m}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-2">
                   {filteredTransactions.length === 0 ? (
-                    <div className="py-12 text-center luxury-card">
+                    <div className="py-12 text-center luxury-card border-dashed">
                       <p className="text-slate-300 italic text-[10px]">No logs found for {selectedMonth}</p>
                     </div>
                   ) : (
@@ -150,13 +150,13 @@ export default function DashboardContent() {
                             {t.n.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-bold text-slate-800 text-[12px]">{t.n}</p>
-                            <p className="text-[9px] text-slate-400 font-medium">{t.d}</p>
+                            <p className="font-bold text-slate-800 text-[11px]">{t.n}</p>
+                            <p className="text-[8px] text-slate-400 font-medium">{t.d}</p>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="font-black text-primary text-[12px]">৳{t.a.toLocaleString()}</p>
-                          <p className="text-[8px] text-accent font-bold uppercase tracking-tighter">{t.c}</p>
+                          <p className="font-black text-primary text-[11px]">৳{t.a.toLocaleString()}</p>
+                          <p className="text-[7px] text-accent font-bold uppercase tracking-tighter">{t.c}</p>
                         </div>
                       </div>
                     ))
@@ -164,7 +164,7 @@ export default function DashboardContent() {
                   {filteredTransactions.length > 0 && (
                     <Button 
                       variant="ghost" 
-                      className="w-full h-10 text-primary font-black text-[10px] uppercase" 
+                      className="w-full h-10 text-primary font-black text-[10px] uppercase border border-slate-100 mt-2" 
                       onClick={() => exportSummaryPDF(filteredTransactions, `${selectedMonth} Report`, totalCollection)}
                     >
                       <Download className="w-3.5 h-3.5 mr-2" /> Export Report
@@ -190,7 +190,7 @@ export default function DashboardContent() {
                 </div>
                 <div className="space-y-2 max-h-[450px] overflow-y-auto pr-1">
                   {members.map(m => (
-                    <div key={m} className="flex items-center justify-between bg-slate-50 border border-slate-100 p-4 rounded-2xl">
+                    <div key={m} className="flex items-center justify-between bg-slate-50 border border-slate-100 p-4 rounded-xl">
                       <span className="font-black text-slate-700 text-xs">{m}</span>
                       <button onClick={() => { if(confirm('সদস্যকে মুছে ফেলতে চান?')) deleteMember(m); }} className="text-slate-300 hover:text-red-500 transition-colors">
                         <Trash2 className="w-4 h-4" />
@@ -205,47 +205,47 @@ export default function DashboardContent() {
           {activeTab === "add" && (
             <div className="animate-in fade-in zoom-in-95 duration-300">
               <div className="luxury-card overflow-hidden shadow-lg border-gold-gradient/10 border">
-                <div className="gold-gradient p-6 text-white text-center">
+                <div className="gold-gradient p-5 text-white text-center">
                   <h3 className="text-lg font-black uppercase tracking-widest">New Deposit</h3>
-                  <p className="text-white/60 text-[10px] font-bold mt-1">জমার তথ্য পূরণ করুন</p>
+                  <p className="text-white/60 text-[9px] font-bold mt-1">জমার তথ্য পূরণ করুন</p>
                 </div>
-                <CardContent className="p-6 space-y-5">
+                <CardContent className="p-5 space-y-5">
                   <form onSubmit={handleDeposit} className="space-y-5">
                     <div className="space-y-1.5">
-                      <Label className="font-black ml-1 text-slate-400 text-[9px] uppercase tracking-widest">Select Member</Label>
+                      <Label className="font-black ml-1 text-slate-400 text-[8px] uppercase tracking-widest">Select Member</Label>
                       <Select onValueChange={(v) => setDeposit({...deposit, member: v})}>
-                        <SelectTrigger className="h-12 rounded-2xl bg-slate-50 border-slate-100 font-black text-xs text-slate-900">
+                        <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-200 font-bold text-xs text-slate-900">
                           <SelectValue placeholder="মেম্বার নির্বাচন করুন" />
                         </SelectTrigger>
-                        <SelectContent className="max-h-[300px]">
-                          {members.map(m => <SelectItem key={m} value={m} className="text-xs font-black text-primary">{m}</SelectItem>)}
+                        <SelectContent className="bg-white border border-slate-200 shadow-2xl z-[1000] max-h-[250px]">
+                          {members.map(m => <SelectItem key={m} value={m} className="text-xs font-bold text-primary">{m}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="font-black ml-1 text-slate-400 text-[9px] uppercase tracking-widest">Category</Label>
+                      <Label className="font-black ml-1 text-slate-400 text-[8px] uppercase tracking-widest">Category</Label>
                       <Select value={deposit.category} onValueChange={(v) => setDeposit({...deposit, category: v})}>
-                        <SelectTrigger className="h-12 rounded-2xl bg-slate-50 border-slate-100 font-black text-xs text-slate-900">
+                        <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-200 font-bold text-xs text-slate-900">
                           <SelectValue placeholder="ক্যাটাগরি" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="প্রতি মাসের জমা" className="text-xs font-black">প্রতি মাসের জমা</SelectItem>
-                          <SelectItem value="যাকাত" className="text-xs font-black">যাকাত</SelectItem>
-                          <SelectItem value="বিশেষ অনুদান" className="text-xs font-black">বিশেষ অনুদান</SelectItem>
+                        <SelectContent className="bg-white border border-slate-200 shadow-2xl z-[1000]">
+                          <SelectItem value="প্রতি মাসের জমা" className="text-xs font-bold">প্রতি মাসের জমা</SelectItem>
+                          <SelectItem value="যাকাত" className="text-xs font-bold">যাকাত</SelectItem>
+                          <SelectItem value="বিশেষ অনুদান" className="text-xs font-bold">বিশেষ অনুদান</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <Label className="font-black ml-1 text-slate-400 text-[9px] uppercase tracking-widest">Amount (TK)</Label>
-                        <Input type="number" value={deposit.amount} onChange={(e) => setDeposit({...deposit, amount: Number(e.target.value)})} className="h-12 rounded-2xl text-xs font-black" />
+                        <Label className="font-black ml-1 text-slate-400 text-[8px] uppercase tracking-widest">Amount (TK)</Label>
+                        <Input type="number" value={deposit.amount} onChange={(e) => setDeposit({...deposit, amount: Number(e.target.value)})} className="h-11 rounded-xl text-xs font-bold" />
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="font-black ml-1 text-slate-400 text-[9px] uppercase tracking-widest">Deposit Date</Label>
-                        <Input type="date" value={deposit.date} onChange={(e) => setDeposit({...deposit, date: e.target.value})} className="h-12 rounded-2xl text-[11px] font-black" />
+                        <Label className="font-black ml-1 text-slate-400 text-[8px] uppercase tracking-widest">Deposit Date</Label>
+                        <Input type="date" value={deposit.date} onChange={(e) => setDeposit({...deposit, date: e.target.value})} className="h-11 rounded-xl text-[10px] font-bold" />
                       </div>
                     </div>
-                    <Button className="w-full h-14 rounded-2xl gold-gradient text-white font-black text-sm shadow-xl active:scale-95 transition-all mt-4 uppercase tracking-widest">
+                    <Button className="w-full h-13 rounded-xl gold-gradient text-white font-black text-sm shadow-xl active:scale-95 transition-all mt-4 uppercase tracking-widest">
                       SAVE TRANSACTION
                     </Button>
                   </form>
@@ -260,13 +260,13 @@ export default function DashboardContent() {
       </main>
 
       {/* Slim Gold Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white h-20 px-6 flex items-center justify-between z-[100] nav-shadow rounded-t-[32px] border-t border-slate-50">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white h-20 px-6 flex items-center justify-between z-[100] nav-shadow rounded-t-[28px] border-t border-slate-50">
         <button 
           onClick={() => setActiveTab("home")} 
           className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "home" ? "text-primary scale-110" : "text-slate-300")}
         >
           <Home className={cn("w-5 h-5", activeTab === "home" && "fill-primary/5 text-primary")} />
-          <span className="text-[8px] font-black uppercase tracking-tighter">Dashboard</span>
+          <span className="text-[7px] font-black uppercase tracking-tighter">Dashboard</span>
         </button>
 
         <button 
@@ -274,15 +274,15 @@ export default function DashboardContent() {
           className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "members" ? "text-primary scale-110" : "text-slate-300")}
         >
           <Users className={cn("w-5 h-5", activeTab === "members" && "fill-primary/5 text-primary")} />
-          <span className="text-[8px] font-black uppercase tracking-tighter">Members</span>
+          <span className="text-[7px] font-black uppercase tracking-tighter">Members</span>
         </button>
 
         <div className="relative -top-8">
           <button 
             onClick={() => setActiveTab("add")} 
-            className="w-16 h-16 gold-gradient rounded-full flex items-center justify-center text-white shadow-[0_10px_30px_rgba(212,175,55,0.4)] border-[6px] border-[#F8FAFC] active:scale-90 transition-transform"
+            className="w-14 h-14 gold-gradient rounded-full flex items-center justify-center text-white shadow-[0_10px_30px_rgba(212,175,55,0.4)] border-[6px] border-[#F8FAFC] active:scale-90 transition-transform"
           >
-            <Plus className="w-9 h-9 font-black" />
+            <Plus className="w-8 h-8 font-black" />
           </button>
         </div>
 
@@ -291,7 +291,7 @@ export default function DashboardContent() {
           className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "gallery" ? "text-primary scale-110" : "text-slate-300")}
         >
           <ImageIcon className={cn("w-5 h-5", activeTab === "gallery" && "fill-primary/5 text-primary")} />
-          <span className="text-[8px] font-black uppercase tracking-tighter">Gallery</span>
+          <span className="text-[7px] font-black uppercase tracking-tighter">Gallery</span>
         </button>
 
         <button 
@@ -299,7 +299,7 @@ export default function DashboardContent() {
           className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "settings" ? "text-primary scale-110" : "text-slate-300")}
         >
           <SettingsIcon className={cn("w-5 h-5", activeTab === "settings" && "fill-primary/5 text-primary")} />
-          <span className="text-[8px] font-black uppercase tracking-tighter">Menu</span>
+          <span className="text-[7px] font-black uppercase tracking-tighter">Menu</span>
         </button>
       </nav>
     </div>
