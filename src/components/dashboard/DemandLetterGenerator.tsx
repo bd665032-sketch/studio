@@ -55,7 +55,7 @@ export default function DemandLetterGenerator() {
     
     try {
       // Small delay to ensure any layout changes are settled
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise(resolve => setTimeout(resolve, 800));
       
       const element = printRef.current;
       const canvas = await html2canvas(element, {
@@ -63,6 +63,8 @@ export default function DemandLetterGenerator() {
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
+        windowWidth: 794, // Approx 210mm in pixels at 96dpi
+        windowHeight: 1123, // Approx 297mm in pixels at 96dpi
       });
       
       const imgData = canvas.toDataURL("image/png");
@@ -90,7 +92,7 @@ export default function DemandLetterGenerator() {
         <CardHeader>
           <CardTitle className="text-lg text-primary flex items-center gap-2 font-extrabold">
             <FileText className="w-5 h-5" />
-            ডিমান্ড লেটার জেনারেটর (Official PDF)
+            ডিমান্ড লেটার জেনারেটর (Official 100% Matching)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -159,101 +161,107 @@ export default function DemandLetterGenerator() {
             disabled={exporting}
           >
             {exporting ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
-            {exporting ? "PDF তৈরি হচ্ছে..." : "প্রফেশনাল PDF ডাউনলোড করুন"}
+            {exporting ? "প্রসেসিং হচ্ছে..." : "প্রফেশনাল PDF ডাউনলোড করুন"}
           </Button>
         </CardContent>
       </Card>
 
-      {/* Hidden Template for PDF Generation */}
+      {/* 100% IDENTICAL TEMPLATE FOR PDF GENERATION */}
       <div style={{ position: 'absolute', top: '-10000px', left: '-10000px', width: '210mm', minHeight: '297mm' }}>
         <div 
           ref={printRef}
           className="bg-white text-[#333] font-bengali relative flex flex-col"
           style={{ width: '210mm', minHeight: '297mm', padding: '10mm 15mm' }}
         >
-          {/* Top Blue Border Strip */}
-          <div className="absolute top-0 left-0 right-0 h-2 bg-[#002366]"></div>
+          {/* Top Blue Border Strip - Identical to Image */}
+          <div className="absolute top-0 left-0 right-0 h-[6px] bg-[#002366]"></div>
 
-          {/* Professional Header Banner Box */}
-          <div className="mt-8 mb-8 flex justify-center">
-            <div className="bg-[#002366] text-white rounded-[20px] py-10 px-12 text-center shadow-lg w-full max-w-[90%] flex flex-col items-center">
-              <h1 className="text-[34px] font-extrabold mb-1 leading-tight tracking-wide">মিনার গো প্রবাসী উন্নয়ন ফাউন্ডেশন</h1>
-              <p className="text-[14px] font-bold tracking-[0.15em] text-[#D4AF37] uppercase">
+          {/* Professional Header Banner Box - Identical Proportions */}
+          <div className="mt-8 mb-6 flex justify-center">
+            <div className="bg-[#1a4b8c] text-white rounded-[15px] py-10 px-12 text-center shadow-md w-full max-w-[95%] flex flex-col items-center">
+              <h1 className="text-[38px] font-extrabold mb-1 leading-tight tracking-wide drop-shadow-sm">মিনার গো প্রবাসী উন্নয়ন ফাউন্ডেশন</h1>
+              <p className="text-[13px] font-bold tracking-[0.2em] text-[#e0b943] uppercase mt-1">
                 MINAR GO EXPATRIATE DEVELOPMENT FOUNDATION
               </p>
             </div>
           </div>
 
-          {/* Date Row */}
+          {/* Date Row - Right Aligned */}
           <div className="text-right mb-6">
-            <p className="text-[17px] font-bold">Date: {letterData.letterDate}</p>
+            <p className="text-[18px] font-bold"><span className="text-gray-900">Date:</span> {letterData.letterDate}</p>
           </div>
 
           {/* Recipient Row */}
           <div className="mb-2">
-            <p className="text-[17px] font-bold">To:</p>
-            <p className="text-[17px] font-medium leading-none">{letterData.toCompany}</p>
+            <p className="text-[18px] font-bold">To:</p>
+            <p className="text-[18px] font-medium leading-tight">{letterData.toCompany}</p>
           </div>
 
-          {/* Subject Row */}
-          <div className="mb-8">
-            <p className="text-[17px] font-bold">
-              Subject: <span className="underline underline-offset-4 decoration-1">{letterData.subject}</span>
+          {/* Subject Row - Underlined */}
+          <div className="mb-6">
+            <p className="text-[18px] font-bold">
+              Subject: <span className="underline underline-offset-4 decoration-[1.5px]">{letterData.subject}</span>
             </p>
           </div>
 
-          {/* Body Content Box with Light Beige BG (Numbered points background) */}
-          <div className="mb-12 bg-[#FFF9F2] p-8 rounded-sm text-justify text-[17px] leading-[1.8] whitespace-pre-wrap flex-1 min-h-[400px]">
+          {/* Body Content Box - Beige Background Matching Original */}
+          <div className="mb-10 bg-[#fdfaf5] p-10 rounded-[5px] text-justify text-[17.5px] leading-[1.85] whitespace-pre-wrap flex-1 border border-[#f5efdf]/50">
             {letterData.body}
           </div>
 
           {/* Closing */}
-          <div className="mb-20">
-            <p className="text-[17px] font-medium">Sincerely,</p>
+          <div className="mb-16">
+            <p className="text-[18px] font-medium">Sincerely,</p>
           </div>
 
-          {/* Signature Rows - Exact Two Column Layout */}
-          <div className="flex justify-between mb-16 px-2">
-            <div className="text-center w-[45%] border-t border-gray-900 pt-2">
-              <p className="font-bold text-[13px] text-gray-800">{letterData.signerName}, Minar Go Expatriate Development Foundation</p>
+          {/* Two Signature Lines - Restored and Fixed Positioning */}
+          <div className="flex justify-between mb-12 px-2 items-start">
+            <div className="text-center w-[45%]">
+               <div className="w-full border-t-[1.5px] border-gray-800 mb-2"></div>
+               <p className="font-bold text-[13.5px] text-gray-800 leading-tight">
+                 {letterData.signerName}, Minar Go Expatriate Development Foundation
+               </p>
             </div>
-            <div className="text-center w-[40%] border-t border-gray-900 pt-2">
-              <p className="font-bold text-[13px] text-gray-800">{letterData.toCompany}</p>
+            <div className="text-center w-[40%]">
+               <div className="w-full border-t-[1.5px] border-gray-800 mb-2"></div>
+               <p className="font-bold text-[13.5px] text-gray-800 leading-tight">
+                 {letterData.toCompany}
+               </p>
             </div>
           </div>
 
-          {/* Contact Details with Colored Icons */}
-          <div className="flex items-center justify-center gap-8 text-[12px] font-bold mb-4 pt-4 border-t border-gray-100">
+          {/* Contact Details Footer Bar - Identical Icons and Style */}
+          <div className="flex items-center justify-center gap-6 text-[12px] font-bold mb-4 pt-4 border-t border-gray-100/50">
              <div className="flex items-center gap-1.5">
-               <Phone className="w-3.5 h-3.5 text-[#E91E63]" />
-               <span className="text-[#333]">{letterData.mobileNumber}</span>
+               <Phone className="w-3.5 h-3.5 text-[#ff1744]" fill="currentColor" />
+               <span className="text-[#444]">{letterData.mobileNumber}</span>
              </div>
-             <div className="flex items-center gap-1.5 border-l border-gray-300 pl-8">
-               <Mail className="w-3.5 h-3.5 text-[#9C27B0]" />
-               <span className="text-[#333]">{letterData.emailAddress}</span>
+             <div className="flex items-center gap-1.5 border-l border-gray-300 pl-6">
+               <Mail className="w-3.5 h-3.5 text-[#6200ea]" fill="currentColor" />
+               <span className="text-[#444]">{letterData.emailAddress}</span>
              </div>
-             <div className="flex items-center gap-1.5 border-l border-gray-300 pl-8">
-               <Globe className="w-3.5 h-3.5 text-[#03A9F4]" />
-               <span className="text-[#333]">{letterData.website}</span>
+             <div className="flex items-center gap-1.5 border-l border-gray-300 pl-6">
+               <Globe className="w-3.5 h-3.5 text-[#00b0ff]" fill="currentColor" />
+               <span className="text-[#444]">{letterData.website}</span>
              </div>
           </div>
 
-          {/* Green "Thank You" Pill Bar */}
-          <div className="text-center mb-4">
-            <div className="bg-[#E7F3EF] text-[#2D6A4F] py-2 px-10 rounded-full inline-block text-[13px] font-bold border border-[#CDE5DC] shadow-sm">
+          {/* Green "Thank You" Highlight Bar - Identical to Image */}
+          <div className="text-center mb-4 px-10">
+            <div className="bg-[#e7f3ef] text-[#2d6a4f] py-2.5 w-full rounded-full text-[14px] font-bold border border-[#cde5dc] shadow-sm">
               Thank you for your cooperation.
             </div>
           </div>
 
-          {/* Small Copyright Footer */}
-          <div className="text-center pb-4">
-            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+          {/* Copyright Notice - Center Bottom */}
+          <div className="text-center pb-6">
+            <p className="text-[11px] text-gray-400 font-bold uppercase tracking-[0.1em]">
               © Minar Go Expatriate Development Foundation
             </p>
           </div>
           
           {/* Bottom Blue Border Strip */}
-          <div className="absolute bottom-0 left-0 right-0 h-2 bg-[#002366]"></div>
+          <div className="absolute bottom-0 left-0 right-0 h-[6px] bg-[#002366]"></div>
         </div>
       </div>
     </div>
