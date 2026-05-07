@@ -33,7 +33,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const [depositAmount, setDepositAmount] = useState(5000);
   const [loading, setLoading] = useState(false);
 
-  // Strictly match the official name from Auth
+  // Strictly match the official name from Auth for the summary
   const txQuery = user?.displayName ? query(
     collection(db!, "transactions"),
     where("memberName", "==", user.displayName),
@@ -61,10 +61,17 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
         category: "মেম্বার জমা",
         timestamp: serverTimestamp()
       });
-      toast({ title: "সফল!", description: "আপনার জমা রেকর্ড করা হয়েছে এবং অ্যাডমিনকে জানানো হয়েছে।" });
+      toast({ 
+        title: "সফল!", 
+        description: "আপনার জমা রেকর্ড করা হয়েছে এবং অ্যাডমিন প্যানেলে পাঠানো হয়েছে।" 
+      });
       setActiveTab("home");
     } catch (e: any) {
-      toast({ variant: "destructive", title: "ত্রুটি", description: "জমা রেকর্ড করা যায়নি।" });
+      toast({ 
+        variant: "destructive", 
+        title: "ত্রুটি", 
+        description: "জমা রেকর্ড করা যায়নি। আবার চেষ্টা করুন।" 
+      });
     } finally {
       setLoading(false);
     }
@@ -75,7 +82,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
       {/* Premium User Header */}
       <header className="sticky top-0 z-[100] w-full bg-white/80 backdrop-blur-xl py-3 px-6 flex items-center justify-between border-b border-slate-100 h-18">
         <div className="flex items-center gap-4">
-          <div className="w-11 h-11 bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] rounded-full flex items-center justify-center text-white font-black text-xs shadow-lg">MG</div>
+          <div className="w-11 h-11 bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] rounded-full flex items-center justify-center text-white font-black text-xs shadow-lg active:scale-95 transition-transform">MG</div>
           <div className="flex flex-col">
             <h1 className="font-black text-[13px] text-[#1E3A8A] leading-none uppercase tracking-tight">{user?.displayName}</h1>
             <div className="flex items-center gap-1.5 mt-1.5">
@@ -85,7 +92,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="w-10 h-10 bg-blue-50/50 text-[#1E3A8A] rounded-2xl">
+          <Button variant="ghost" size="icon" className="w-10 h-10 bg-blue-50/50 text-[#1E3A8A] rounded-2xl active:scale-90 transition-transform">
             <Bell className="w-5 h-5" />
           </Button>
           <Button variant="ghost" size="icon" className="w-10 h-10 bg-red-50 text-red-500 rounded-2xl active:scale-90 transition-transform" onClick={onLogout}>
@@ -143,9 +150,9 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
                 </div>
             </div>
 
-            {/* Verified Balance Summary */}
-            <div className="luxury-card p-8 border-t-[12px] border-[#1E3A8A]">
-              <p className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">Personal Contribution</p>
+            {/* Verified Balance Summary (Member Personal Summary) */}
+            <div className="luxury-card p-8 border-t-[12px] border-[#1E3A8A] shadow-xl">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">আপনার ব্যক্তিগত জমার সামারি</p>
               <h2 className="text-4xl font-black text-[#1E3A8A] mt-2">৳{totalMyBalance.toLocaleString()}</h2>
               <div className="flex items-center gap-2 mt-6 bg-green-50/50 p-4 rounded-2xl border border-green-100">
                 <ShieldCheck className="w-4 h-4 text-green-500" />
@@ -177,12 +184,12 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
           <div className="animate-in fade-in zoom-in-95 duration-500">
             <div className="luxury-card p-8 shadow-2xl border-t-[12px] border-[#D4AF37]">
               <div className="flex items-center gap-3 mb-10">
-                <Button variant="ghost" onClick={() => setActiveTab("home")} className="w-10 h-10 rounded-full bg-slate-50 p-0 shadow-sm"><ChevronRight className="rotate-180 w-5 h-5 text-primary"/></Button>
+                <Button variant="ghost" onClick={() => setActiveTab("home")} className="w-10 h-10 rounded-full bg-slate-50 p-0 shadow-sm active:scale-90 transition-transform"><ChevronRight className="rotate-180 w-5 h-5 text-primary"/></Button>
                 <h3 className="font-black text-[#1E3A8A] text-lg uppercase tracking-widest">Authorize Deposit</h3>
               </div>
               <form onSubmit={handleDeposit} className="space-y-8">
                 <div className="space-y-3">
-                  <Label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-widest">Amount (TK)</Label>
+                  <Label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-widest">Deposit Amount (TK)</Label>
                   <Input 
                     type="number" 
                     value={depositAmount} 
@@ -191,10 +198,16 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
                   />
                 </div>
                 <div className="space-y-3">
-                   <Label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-widest">Beneficiary Node</Label>
+                   <Label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-widest">Verified Member Name</Label>
                    <div className="h-16 px-6 bg-slate-50 rounded-[24px] flex items-center justify-between border border-slate-100 shadow-inner">
                       <span className="font-black text-[#1E3A8A] text-sm">{user?.displayName}</span>
                       <ShieldCheck className="w-5 h-5 text-green-500" />
+                   </div>
+                </div>
+                <div className="space-y-3">
+                   <Label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-widest">Deposit Date</Label>
+                   <div className="h-16 px-6 bg-slate-50 rounded-[24px] flex items-center justify-between border border-slate-100 shadow-inner">
+                      <span className="font-black text-[#1E3A8A] text-sm">{new Date().toLocaleDateString('bn-BD', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
                    </div>
                 </div>
                 <Button type="submit" disabled={loading} className="w-full h-18 bg-[#1E3A8A] text-white text-[15px] font-black shadow-[0_15px_30px_rgba(30,64,175,0.3)] rounded-[28px] uppercase tracking-[0.3em] active:scale-95 transition-all mt-6 border-b-4 border-slate-900">
@@ -211,7 +224,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               <button onClick={() => setActiveTab("home")} className="h-12 w-12 rounded-[20px] bg-white shadow-lg flex items-center justify-center text-[#1E3A8A] active:scale-90 transition-transform">
                 <History className="w-6 h-6" />
               </button>
-              <h2 className="font-black text-[#1E3A8A] text-sm uppercase tracking-[0.2em]">Transaction Archives</h2>
+              <h2 className="font-black text-[#1E3A8A] text-sm uppercase tracking-[0.2em]">My Transaction Logs</h2>
             </div>
             {myTransactions?.map((t, idx) => (
               <div key={idx} className="luxury-card p-6 flex items-center justify-between border-slate-50 shadow-md animate-in fade-in slide-in-from-right-2 duration-300">
