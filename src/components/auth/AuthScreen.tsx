@@ -2,13 +2,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { Mail, Lock, ChevronRight, Globe, Shield } from "lucide-react";
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -28,88 +28,123 @@ export default function AuthScreen() {
         toast({ title: "স্বাগতম!", description: "লগইন সফল হয়েছে।" });
       } else {
         await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-        toast({ title: "সফল হয়েছে!", description: "আপনার একাউন্ট তৈরি হয়েছে। স্বাগতম মিনার গো ফাউন্ডেশনে।" });
+        toast({ title: "সফল হয়েছে!", description: "আপনার একাউন্ট তৈরি হয়েছে।" });
       }
     } catch (error: any) {
       let message = "Authentication failed.";
-      
-      // Better error messages for the user
       if (error.code === 'auth/invalid-credential') {
-        message = "ইমেইল বা পাসওয়ার্ড ভুল অথবা আপনার একাউন্ট নেই। নতুন হলে নিচে থেকে 'Sign Up' করুন।";
+        message = "ইমেইল বা পাসওয়ার্ড ভুল।";
       } else if (error.code === 'auth/email-already-in-use') {
-        message = "এই ইমেইলটি দিয়ে অলরেডি একাউন্ট খোলা আছে। লগইন করার চেষ্টা করুন।";
-      } else if (error.code === 'auth/weak-password') {
-        message = "পাসওয়ার্ডটি অন্তত ৬ অক্ষরের হতে হবে।";
-      } else if (error.code === 'auth/invalid-email') {
-        message = "দয়া করে একটি সঠিক ইমেইল এড্রেস দিন।";
+        message = "এই ইমেইলটি ইতিমধ্যে ব্যবহৃত হচ্ছে।";
       }
-
-      toast({ 
-        variant: "destructive", 
-        title: "দুঃখিত, সমস্যা হয়েছে", 
-        description: message 
-      });
+      toast({ variant: "destructive", title: "ত্রুটি", description: message });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-[#F0F2F5]">
-      <Card className="w-full max-w-md shadow-xl border-none">
-        <CardHeader className="text-center space-y-1">
-          <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4 border-4 border-accent">
-            <span className="text-white text-2xl font-bold">MG</span>
+    <div className="min-h-screen bg-white flex flex-col font-body overflow-hidden">
+      {/* Top Header Illustration Area */}
+      <div className="relative h-[35vh] bg-primary flex flex-col items-center justify-center overflow-hidden">
+        {/* Decorative elements to mimic screenshot */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <div className="absolute top-10 left-10"><Globe className="w-16 h-16 text-white" /></div>
+          <div className="absolute bottom-10 right-10"><Shield className="w-20 h-20 text-white" /></div>
+        </div>
+        
+        {/* Main curved background effect */}
+        <div className="absolute bottom-[-50px] left-[-10%] right-[-10%] h-[150px] bg-white rounded-[100%] shadow-[0_-10px_30px_rgba(0,0,0,0.1)]"></div>
+        
+        <div className="z-10 bg-white p-4 rounded-full shadow-xl border-4 border-accent mb-4">
+          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
+            <span className="text-white text-3xl font-black">MG</span>
           </div>
-          <CardTitle className="text-2xl font-extrabold text-primary">MINAR GO EXPATRIATE</CardTitle>
-          <CardDescription className="text-muted-foreground font-medium">Development Foundation</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email (ইমেইল)</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="example@email.com" 
-                required 
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                className="h-12 border-gray-200 focus:border-primary"
-              />
+        </div>
+      </div>
+
+      {/* Content Area */}
+      <div className="flex-1 px-8 pt-8 pb-12 z-20 bg-white">
+        <div className="text-center mb-10">
+          <h1 className="text-[22px] font-black text-primary leading-tight tracking-tight uppercase">
+            MINAR GO EXPATRIATE
+          </h1>
+          <h2 className="text-[18px] font-black text-primary leading-tight tracking-tight uppercase mb-2">
+            DEVELOPMENT FOUNDATION
+          </h2>
+          <p className="text-accent font-bold text-xs">
+            United Experiences, Brightfar Future
+          </p>
+        </div>
+
+        {/* Auth Tabs */}
+        <div className="flex bg-secondary/50 p-1 rounded-full mb-8">
+          <button 
+            onClick={() => setIsLogin(true)}
+            className={`flex-1 py-3 rounded-full text-sm font-bold transition-all ${isLogin ? 'bg-primary text-white shadow-md' : 'text-primary/60'}`}
+          >
+            Login
+          </button>
+          <button 
+            onClick={() => setIsLogin(false)}
+            className={`flex-1 py-3 rounded-full text-sm font-bold transition-all ${!isLogin ? 'bg-primary text-white shadow-md' : 'text-primary/60'}`}
+          >
+            Sign Up
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+              <Mail className="w-5 h-5 text-primary/40 group-focus-within:text-primary transition-colors" />
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password (পাসওয়ার্ড)</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                placeholder="৬ অক্ষরের পাসওয়ার্ড"
-                required 
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="h-12 border-gray-200 focus:border-primary"
-              />
+            <Input 
+              type="email" 
+              placeholder="Email Address" 
+              required 
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="h-14 pl-12 rounded-xl bg-secondary/30 border-none focus:ring-2 focus:ring-primary shadow-sm"
+            />
+          </div>
+
+          <div className="relative group">
+            <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
+              <Lock className="w-5 h-5 text-primary/40 group-focus-within:text-primary transition-colors" />
             </div>
-            <Button className="w-full bg-primary hover:bg-primary/90 text-white h-12 text-lg font-bold transition-transform active:scale-95" disabled={loading}>
-              {loading ? "লোডিং হচ্ছে..." : isLogin ? "লগইন করুন" : "একাউন্ট তৈরি করুন"}
-            </Button>
-            <div className="text-center mt-4">
-              <button 
-                type="button"
-                onClick={() => setIsLogin(!isLogin)}
-                className="text-sm text-primary font-bold hover:underline"
-              >
-                {isLogin ? "নতুন একাউন্ট খুলতে চান? Sign Up করুন" : "একাউন্ট আছে? লগইন করুন"}
-              </button>
-            </div>
-          </form>
-          {isLogin && (
-            <div className="mt-6 p-3 bg-blue-50 border border-blue-100 rounded-md text-xs text-blue-800">
-              <strong>টিপস:</strong> যদি আপনার পুরাতন একাউন্টে লগইন না হয়, তবে দয়া করে উপরে <strong>'Sign Up'</strong> অপশন থেকে একবার একাউন্ট তৈরি করে নিন।
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            <Input 
+              type="password" 
+              placeholder="Password" 
+              required 
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              className="h-14 pl-12 rounded-xl bg-secondary/30 border-none focus:ring-2 focus:ring-primary shadow-sm"
+            />
+          </div>
+
+          <div className="text-right">
+            <button type="button" className="text-sm font-bold text-primary/70 hover:text-primary">
+              Forgot Password?
+            </button>
+          </div>
+
+          <Button 
+            className="w-full h-14 rounded-xl bg-gradient-to-r from-gold to-gold-dark text-white text-lg font-black shadow-lg hover:shadow-xl active:scale-95 transition-all"
+            disabled={loading}
+          >
+            {loading ? "Processing..." : (isLogin ? "Login" : "Create Account")}
+          </Button>
+        </form>
+
+        <div className="mt-12 flex items-center justify-center gap-4">
+          <div className="h-[1px] flex-1 bg-gray-200"></div>
+          <span className="text-xs font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
+            Don't have an account?
+          </span>
+          <div className="h-[1px] flex-1 bg-gray-200"></div>
+        </div>
+      </div>
     </div>
   );
 }
