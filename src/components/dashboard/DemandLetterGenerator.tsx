@@ -62,7 +62,7 @@ export default function DemandLetterGenerator() {
     try {
       const element = printRef.current;
       const canvas = await html2canvas(element, {
-        scale: 3,
+        scale: 4, // Higher scale for better text quality
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
@@ -97,7 +97,7 @@ export default function DemandLetterGenerator() {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label>লেটারের তারিখ</Label>
               <Input 
@@ -120,7 +120,7 @@ export default function DemandLetterGenerator() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="space-y-1">
               <Label>মোবাইল নম্বর</Label>
               <Input 
@@ -185,87 +185,95 @@ export default function DemandLetterGenerator() {
         </CardContent>
       </Card>
 
-      {/* Hidden Template for PDF Generation - Matching Screenshot Perfectly */}
+      {/* Hidden Template for PDF Generation */}
       <div className="fixed left-[-9999px] top-0">
         <div 
           ref={printRef}
-          className="w-[210mm] bg-white p-[15mm] text-[#333] font-bengali leading-relaxed relative border-t-[8px] border-b-[8px] border-primary"
-          style={{ minHeight: '297mm' }}
+          className="w-[210mm] bg-white text-[#333] font-bengali leading-relaxed relative flex flex-col"
+          style={{ minHeight: '297mm', padding: '15mm' }}
         >
-          {/* Header Block - Rounded Blue Box */}
-          <div className="bg-[#002366] text-white rounded-[25px] py-8 px-10 text-center mb-8 shadow-sm">
-            <h1 className="text-4xl font-extrabold mb-2 tracking-wide">মিনার গো প্রবাসী উন্নয়ন ফাউন্ডেশন</h1>
-            <p className="text-sm font-bold tracking-[0.2em] text-[#D4AF37] uppercase">
-              MINAR GO EXPATRIATE DEVELOPMENT FOUNDATION
-            </p>
+          {/* Top Border Line */}
+          <div className="absolute top-0 left-0 right-0 h-1.5 bg-primary"></div>
+
+          {/* Header Box - Blue Rounded */}
+          <div className="mt-4 mb-10 flex justify-center">
+            <div className="bg-[#002366] text-white rounded-[25px] py-10 px-16 text-center shadow-lg w-full max-w-[85%]">
+              <h1 className="text-[34px] font-extrabold mb-3 leading-tight tracking-wide">মিনার গো প্রবাসী উন্নয়ন ফাউন্ডেশন</h1>
+              <p className="text-[13px] font-bold tracking-[0.25em] text-[#D4AF37] uppercase">
+                MINAR GO EXPATRIATE DEVELOPMENT FOUNDATION
+              </p>
+            </div>
           </div>
 
-          {/* Date Section */}
-          <div className="text-right mb-8">
-            <p className="text-lg font-bold"><span className="text-gray-900">Date:</span> {letterData.letterDate}</p>
+          {/* Date Section - Right Aligned */}
+          <div className="text-right mb-10">
+            <p className="text-[18px] font-bold">Date: {letterData.letterDate}</p>
           </div>
 
           {/* Recipient Section */}
-          <div className="mb-6 space-y-1">
-            <p className="font-extrabold text-xl">To:</p>
-            <p className="text-xl font-medium">{letterData.toCompany}</p>
+          <div className="mb-8 space-y-1">
+            <p className="font-extrabold text-[20px]">To:</p>
+            <p className="text-[20px] font-medium">{letterData.toCompany}</p>
           </div>
 
           {/* Subject Section */}
-          <div className="mb-10">
-            <p className="font-extrabold text-xl flex gap-2 items-start">
+          <div className="mb-12">
+            <p className="font-extrabold text-[20px] flex gap-2 items-start">
               <span>Subject:</span>
-              <span className="font-bold underline decoration-gray-400 underline-offset-[6px]">{letterData.subject}</span>
+              <span className="font-bold underline underline-offset-[8px] decoration-1">{letterData.subject}</span>
             </p>
           </div>
 
           {/* Body Section */}
-          <div className="mb-14 text-justify text-[18px] leading-[1.7] whitespace-pre-wrap min-h-[450px] px-2 text-gray-800">
+          <div className="mb-16 text-justify text-[18px] leading-[1.8] whitespace-pre-wrap flex-1 px-1">
             {letterData.body}
           </div>
 
-          {/* Closing */}
-          <div className="mb-20">
-            <p className="text-xl">Sincerely,</p>
+          {/* Sincerely Closing */}
+          <div className="mb-24">
+            <p className="text-[20px] font-medium">Sincerely,</p>
           </div>
 
-          {/* Signatures Section - Two Columns */}
-          <div className="flex justify-between items-end mb-20">
+          {/* Signature Lines - Two Columns */}
+          <div className="flex justify-between items-end mb-24 px-4">
             <div className="w-[300px] text-center">
-              <div className="border-t-2 border-gray-800 mb-3 w-full"></div>
-              <p className="font-bold text-[14px] uppercase leading-tight">Minar Go Expatriate Development Foundation</p>
+              <div className="border-t-[1.5px] border-gray-900 mb-4 w-full"></div>
+              <p className="font-bold text-[14px] uppercase leading-tight tracking-tight">Minar Go Expatriate Development Foundation</p>
             </div>
             <div className="w-[300px] text-center">
-              <div className="border-t-2 border-gray-800 mb-3 w-full"></div>
-              <p className="font-bold text-[14px] uppercase leading-tight">{letterData.toCompany}</p>
+              <div className="border-t-[1.5px] border-gray-900 mb-4 w-full"></div>
+              <p className="font-bold text-[14px] uppercase leading-tight tracking-tight">{letterData.toCompany}</p>
             </div>
           </div>
 
-          {/* Footer Contact Info with Icons */}
-          <div className="absolute bottom-20 left-0 right-0 px-[15mm]">
-             <div className="flex items-center justify-center gap-10 text-[14px] text-gray-700 pt-6">
-               <div className="flex items-center gap-2">
-                 <div className="p-1 bg-pink-100 rounded-full"><Phone className="w-3.5 h-3.5 text-pink-600" /></div>
-                 <span className="font-bold">{letterData.mobileNumber}</span>
+          {/* Contact Information with Icons */}
+          <div className="border-t border-gray-100 pt-8 pb-4">
+             <div className="flex items-center justify-center gap-12 text-[15px] text-gray-800 font-bold">
+               <div className="flex items-center gap-2.5">
+                 <div className="p-1.5 bg-pink-100 rounded-full"><Phone className="w-4 h-4 text-pink-600 fill-pink-600" /></div>
+                 <span>{letterData.mobileNumber}</span>
                </div>
-               <div className="flex items-center gap-2">
-                 <div className="p-1 bg-purple-100 rounded-full"><Mail className="w-3.5 h-3.5 text-purple-600" /></div>
-                 <span className="font-bold">{letterData.emailAddress}</span>
+               <div className="flex items-center gap-2.5">
+                 <div className="p-1.5 bg-purple-100 rounded-full"><Mail className="w-4 h-4 text-purple-600 fill-purple-600" /></div>
+                 <span>{letterData.emailAddress}</span>
                </div>
-               <div className="flex items-center gap-2">
-                 <div className="p-1 bg-blue-100 rounded-full"><Globe className="w-3.5 h-3.5 text-blue-600" /></div>
-                 <span className="font-bold">{letterData.website}</span>
+               <div className="flex items-center gap-2.5">
+                 <div className="p-1.5 bg-blue-100 rounded-full"><Globe className="w-4 h-4 text-blue-600" /></div>
+                 <span>{letterData.website}</span>
                </div>
              </div>
           </div>
 
           {/* Bottom Green Strip */}
-          <div className="absolute bottom-8 left-0 right-0 px-[15mm] text-center">
-            <div className="bg-[#E7F3EF] text-[#2D6A4F] py-3 px-12 rounded-full inline-block text-[14px] font-bold border border-[#CDE5DC] shadow-sm">
+          <div className="text-center mt-4">
+            <div className="bg-[#E7F3EF] text-[#2D6A4F] py-3.5 px-16 rounded-full inline-block text-[15px] font-extrabold border border-[#CDE5DC] shadow-sm">
               Thank you for your cooperation.
             </div>
-            <p className="text-[11px] text-gray-400 mt-3 font-medium tracking-wide">© Minar Go Expatriate Development Foundation</p>
+            <p className="text-[11px] text-gray-400 mt-5 font-bold tracking-widest uppercase">© Minar Go Expatriate Development Foundation</p>
           </div>
+          
+          {/* Bottom Border Line */}
+          <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-primary"></div>
         </div>
       </div>
     </div>
