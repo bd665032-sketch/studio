@@ -7,49 +7,35 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { db } from "@/lib/firebase";
-import { ref, push, set, get, query, orderByChild, equalTo } from "firebase/database";
+import { useAuth } from "@/firebase";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 
-export default function AuthScreen({ onLogin }: { onLogin: (user: any) => void }) {
+export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [formData, setFormData] = useState({ email: "", password: "" });
   const { toast } = useToast();
+  const auth = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth) return;
     setLoading(true);
 
     try {
       if (isLogin) {
-        // Login Logic
-        const usersRef = ref(db, "admin_users");
-        const userQuery = query(usersRef, orderByChild("email"), equalTo(formData.email));
-        const snapshot = await get(userQuery);
-        
-        if (snapshot.exists()) {
-          const userData = Object.values(snapshot.val())[0] as any;
-          if (userData.password === formData.password) {
-            sessionStorage.setItem("mg_user", JSON.stringify(userData));
-            onLogin(userData);
-            toast({ title: "Welcome back!", description: "Login successful." });
-          } else {
-            toast({ variant: "destructive", title: "Error", description: "Invalid password." });
-          }
-        } else {
-          toast({ variant: "destructive", title: "Error", description: "User not found." });
-        }
+        await signInWithEmailAndPassword(auth, formData.email, formData.password);
+        toast({ title: "Welcome back!", description: "Login successful." });
       } else {
-        // Signup Logic
-        const usersRef = ref(db, "admin_users");
-        const newUserRef = push(usersRef);
-        await set(newUserRef, { ...formData });
-        sessionStorage.setItem("mg_user", JSON.stringify(formData));
-        onLogin(formData);
+        await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         toast({ title: "Account created!", description: "Welcome to Minar Go Foundation." });
       }
-    } catch (error) {
-      toast({ variant: "destructive", title: "Error", description: "Operation failed." });
+    } catch (error: any) {
+      toast({ 
+        variant: "destructive", 
+        title: "Error", 
+        description: error.message || "Authentication failed." 
+      });
     } finally {
       setLoading(false);
     }
@@ -67,18 +53,6 @@ export default function AuthScreen({ onLogin }: { onLogin: (user: any) => void }
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
-                <Input 
-                  id="name" 
-                  placeholder="John Doe" 
-                  required 
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
-              </div>
-            )}
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input 

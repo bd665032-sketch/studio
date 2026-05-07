@@ -1,30 +1,30 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
 import AuthScreen from "@/components/auth/AuthScreen";
 import Header from "@/components/dashboard/Header";
 import DashboardContent from "@/components/dashboard/DashboardContent";
+import { useUser, useAuth } from "@/firebase";
+import { signOut } from "firebase/auth";
 
 export default function Home() {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const savedUser = sessionStorage.getItem("mg_user");
-    if (savedUser) setUser(JSON.parse(savedUser));
-    setLoading(false);
-  }, []);
+  const { user, loading } = useUser();
+  const auth = useAuth();
 
   const handleLogout = () => {
-    sessionStorage.removeItem("mg_user");
-    setUser(null);
+    if (auth) signOut(auth);
   };
 
-  if (loading) return null;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   if (!user) {
-    return <AuthScreen onLogin={setUser} />;
+    return <AuthScreen />;
   }
 
   return (
