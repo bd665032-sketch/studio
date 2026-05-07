@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -7,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth, useFirestore } from "@/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
-import { Mail, Lock, User, ShieldCheck, HelpCircle } from "lucide-react";
+import { Mail, Lock, User, ShieldCheck, HelpCircle, Info } from "lucide-react";
 
 export default function UserAuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -38,14 +39,14 @@ export default function UserAuthScreen() {
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
         toast({ title: "স্বাগতম!", description: "ইউজার প্যানেলে লগইন সফল হয়েছে।" });
       } else {
-        // Verify if name exists in Admin's Member List
+        // Strict Name Verification from Foundation Member List
         const membersRef = collection(db, "members");
-        // Exact match with trim to handle "Mr Shahid" format
+        // exact match check (case sensitive for accuracy as stored by admin)
         const q = query(membersRef, where("name", "==", formData.fullName.trim()));
         const querySnapshot = await getDocs(q);
 
         if (querySnapshot.empty) {
-          throw new Error(`"${formData.fullName}" নামটি ফাউন্ডেশনের সদস্য তালিকায় পাওয়া যায়নি। দয়া করে অ্যাডমিনের দেওয়া সঠিক নামটি লিখুন (যেমন: Mr Shahid)।`);
+          throw new Error(`"${formData.fullName}" নামটি ফাউন্ডেশনের মেম্বার লিস্টে পাওয়া যায়নি। দয়া করে অ্যাডমিনের দেওয়া সঠিক নামটি লিখুন (যেমন: Mr Shahid)।`);
         }
 
         const passErr = validatePassword(formData.password);
@@ -69,7 +70,6 @@ export default function UserAuthScreen() {
 
   return (
     <div className="min-h-screen bg-auth-premium flex flex-col items-center justify-center p-4 font-body relative overflow-hidden">
-      {/* Decorative BG */}
       <div className="absolute top-[-5%] right-[-5%] w-[250px] h-[250px] bg-white/5 rounded-full blur-[60px]"></div>
 
       <div className="w-full max-w-[420px] bg-white/95 backdrop-blur-xl rounded-[45px] shadow-[0_25px_80px_rgba(0,0,0,0.4)] overflow-hidden border border-white/30 relative z-10">
@@ -108,20 +108,23 @@ export default function UserAuthScreen() {
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
-                <div className="space-y-2">
+                <div className="space-y-3">
+                  <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 flex items-start gap-3">
+                    <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
+                    <p className="text-[11px] text-blue-700 font-bold leading-relaxed">
+                      রেজিস্ট্রেশন করার জন্য আপনার নাম অবশ্যই অ্যাডমিন প্যানেলের সদস্য তালিকার সাথে মিলতে হবে। উদাহরণ: আপনার নাম যদি তালিকায় <span className="text-blue-900 underline">"Mr Shahid"</span> থাকে, তবে এখানেও হুবহু তাই লিখুন।
+                    </p>
+                  </div>
                   <div className="relative group">
                     <User className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <Input 
-                      placeholder="আপনার সঠিক পুরো নাম (যেমন: Mr Shahid)" 
+                      placeholder="আপনার সঠিক নাম (তালিকানুযায়ী)" 
                       required 
                       value={formData.fullName} 
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} 
                       className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none text-base font-black" 
                     />
                   </div>
-                  <p className="flex items-center gap-1.5 text-[10px] text-blue-500 font-bold px-4">
-                    <HelpCircle className="w-3 h-3" /> এডমিনের সদস্য তালিকায় আপনার নাম যেভাবে আছে ঠিক সেভাবেই লিখুন।
-                  </p>
                 </div>
               )}
               
