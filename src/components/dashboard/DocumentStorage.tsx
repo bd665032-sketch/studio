@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Upload, Trash2, Eye, FileText } from "lucide-react";
+import { Upload, Trash2, Eye, FileText, Download, Image as ImageIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface MGDoc {
@@ -43,6 +43,12 @@ export default function DocumentStorage() {
       return;
     }
 
+    // Check file size (localStorage is limited to ~5MB total)
+    if (file.size > 1024 * 1024 * 2) { // 2MB limit per file for localStorage safety
+      toast({ variant: "destructive", title: "ফাইল অনেক বড়", description: "দয়া করে ২ এমবি-র কম সাইজের ফাইল আপলোড করুন।" });
+      return;
+    }
+
     const reader = new FileReader();
     reader.onloadend = () => {
       const base64 = reader.result as string;
@@ -71,14 +77,17 @@ export default function DocumentStorage() {
     toast({ title: "ডিলিট হয়েছে", description: "ডকুমেন্টটি মুছে ফেলা হয়েছে।" });
   };
 
-  const viewDoc = (doc: MGDoc) => {
+  const downloadDoc = (doc: MGDoc) => {
     try {
       const link = document.createElement('a');
       link.href = doc.data;
-      link.target = '_blank';
+      link.download = doc.name;
+      document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      toast({ title: "ডাউনলোড শুরু হয়েছে", description: doc.name + " ফাইলটি সেভ হচ্ছে।" });
     } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "ডকুমেন্টটি ওপেন করা যাচ্ছে না।" });
+      toast({ variant: "destructive", title: "Error", description: "ডাউনলোড করা সম্ভব হচ্ছে না।" });
     }
   };
 
@@ -94,43 +103,65 @@ export default function DocumentStorage() {
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label>ডকুমেন্টের নাম (যেমন: পাসপোর্ট কপি)</Label>
+          <Label className="text-sm font-bold">ডকুমেন্টের নাম (যেমন: পাসপোর্ট বা আইডি কার্ড)</Label>
           <div className="flex gap-2">
             <Input 
               placeholder="ফাইলের নাম লিখুন" 
               value={newDocName} 
               onChange={(e) => setNewDocName(e.target.value)} 
-              className="h-12"
+              className="h-12 border-gray-200"
             />
-            <label className="bg-primary hover:bg-primary/90 text-white px-4 flex items-center justify-center rounded-md cursor-pointer transition-transform active:scale-95">
-              <input type="file" className="hidden" onChange={handleUpload} accept=".png,.jpg,.jpeg,.pdf" />
+            <label className="bg-accent hover:bg-gold-dark text-white px-5 flex items-center justify-center rounded-md cursor-pointer transition-transform active:scale-95 shadow-sm">
+              <input type="file" className="hidden" onChange={handleUpload} accept="image/*,.pdf" />
               <Upload className="w-5 h-5" />
             </label>
           </div>
+          <p className="text-[10px] text-muted-foreground italic">টিপস: ভালো পারফরম্যান্সের জন্য ছোট সাইজের ছবি ব্যবহার করুন।</p>
         </div>
 
-        <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
           {docs.length === 0 ? (
-            <p className="text-center text-muted-foreground italic text-xs py-8 bg-secondary/30 rounded-lg">কোন ডকুমেন্ট সেভ করা নেই।</p>
+            <div className="text-center py-10 bg-secondary/20 rounded-xl border border-dashed border-gray-200">
+              <ImageIcon className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-muted-foreground text-xs">কোন ডকুমেন্ট বা ছবি সেভ করা নেই।</p>
+            </div>
           ) : (
-            <div className="grid gap-2">
+            <div className="grid gap-3">
               {docs.map(doc => (
-                <div key={doc.id} className="bg-secondary/50 p-3 rounded-md flex items-center justify-between border border-gray-100">
+                <div key={doc.id} className="bg-white p-3 rounded-lg flex items-center justify-between border border-gray-100 shadow-sm hover:border-primary/20 transition-colors">
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <div className="bg-white p-2 rounded-full">
-                      <FileText className="w-4 h-4 text-primary" />
-                    </div>
+                    {doc.type.startsWith('image/') ? (
+                      <div className="w-12 h-12 rounded-md overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0">
+                        <img src={doc.data} alt={doc.name} className="w-full h-full object-cover" />
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-md bg-primary/5 flex items-center justify-center flex-shrink-0">
+                        <FileText className="w-6 h-6 text-primary" />
+                      </div>
+                    )}
                     <div className="overflow-hidden">
                       <p className="text-sm font-bold text-gray-800 truncate">{doc.name}</p>
-                      <p className="text-[10px] text-gray-500">{doc.date}</p>
+                      <p className="text-[10px] text-gray-500 font-medium">{doc.date}</p>
                     </div>
                   </div>
                   <div className="flex gap-1">
-                    <Button variant="ghost" size="icon" onClick={() => viewDoc(doc)} className="h-8 w-8 text-primary">
-                      <Eye className="w-4 h-4" />
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => downloadDoc(doc)} 
+                      className="h-9 w-9 text-primary hover:bg-primary/5"
+                      title="Download"
+                    >
+                      <Download className="w-4.5 h-4.5" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => deleteDoc(doc.id)} className="h-8 w-8 text-destructive">
-                      <Trash2 className="w-4 h-4" />
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => deleteDoc(doc.id)} 
+                      className="h-9 w-9 text-destructive hover:bg-destructive/5"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-4.5 h-4.5" />
                     </Button>
                   </div>
                 </div>
