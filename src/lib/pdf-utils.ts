@@ -4,37 +4,73 @@ import "jspdf-autotable";
 
 export const exportSummaryPDF = (data: any[], title: string, total: number) => {
   const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
   
-  // Header
+  // Font setup
+  doc.setFont("helvetica", "bold");
+  
+  // Main Title (Black, Centered)
   doc.setFontSize(18);
-  doc.setTextColor(0, 35, 102); // Primary Blue
-  doc.text("MINAR GO EXPATRIATE DEVELOPMENT FOUNDATION", 105, 20, { align: "center" });
+  doc.setTextColor(0, 0, 0);
+  doc.text("MINAR GO EXPATRIATE DEVELOPMENT FOUNDATION", pageWidth / 2, 20, { align: "center" });
   
-  doc.setFontSize(14);
-  doc.setTextColor(100);
-  doc.text(title, 105, 30, { align: "center" });
+  // Subtitle (Black, Normal, Centered)
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(12);
+  doc.text(`OFFICIAL COLLECTION SUMMARY REPORT - ${new Date().getFullYear()}`, pageWidth / 2, 30, { align: "center" });
   
-  // Table
-  const tableData = data.map(t => [t.n, t.d, `${t.a} BDT`]);
+  // Prepare Table Data
+  const tableData = data.map(t => [
+    t.n, 
+    t.d, 
+    `${t.a.toLocaleString()} TK`
+  ]);
+  
+  // Generate Table
   (doc as any).autoTable({
     startY: 40,
-    head: [["Member Name", "Date", "Amount"]],
+    head: [["Member Name", "Deposit Date", "Amount (TK)"]],
     body: tableData,
     theme: "striped",
-    headStyles: { fillStyle: "#002366" },
+    headStyles: { 
+      fillColor: [0, 35, 102], // Dark Blue from screenshot
+      textColor: [255, 255, 255],
+      fontStyle: "bold",
+      fontSize: 11,
+      halign: "left"
+    },
+    styles: {
+      fontSize: 10,
+      cellPadding: 3,
+      valign: "middle"
+    },
+    columnStyles: {
+      2: { halign: "right" } // Amount column right aligned
+    },
+    alternateRowStyles: {
+      fillColor: [245, 245, 245] // Light Grey Zebra rows
+    },
+    margin: { left: 15, right: 15 }
   });
   
-  // Footer
-  const finalY = (doc as any).lastAutoTable.finalY + 10;
-  doc.setFontSize(12);
-  doc.setTextColor(0);
-  doc.text(`Total Collection: ${total} BDT`, 190, finalY, { align: "right" });
+  // Get the Y position after table
+  const finalY = (doc as any).lastAutoTable.finalY + 12;
   
-  doc.setFontSize(10);
-  doc.setTextColor(150);
-  doc.text(`© ${new Date().getFullYear()} Minar Go Foundation - All Rights Reserved`, 105, 285, { align: "center" });
+  // Footer - Total Collection (Right Aligned)
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(0, 0, 0);
+  doc.text("TOTAL COLLECTION AMOUNT", pageWidth - 55, finalY, { align: "right" });
+  doc.text(`${total.toLocaleString()} TK`, pageWidth - 15, finalY, { align: "right" });
   
-  doc.save(`MinarGo_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+  // Footer - Copyright (Left Aligned, Grey)
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(120);
+  doc.text(`© ${new Date().getFullYear()} MINAR GO EXPATRIATE DEVELOPMENT FOUNDATION`, 15, finalY);
+  
+  // Save PDF
+  doc.save(`MinarGo_Summary_${new Date().toISOString().split('T')[0]}.pdf`);
 };
 
 export const exportDemandLetterPDF = (content: string, date: string) => {
