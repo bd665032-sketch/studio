@@ -64,14 +64,11 @@ export default function DocumentStorage() {
   const deleteDoc = (id: string) => {
     if (typeof window === 'undefined') return;
     
-    // Non-blocking simple confirm
     if (!window.confirm("আপনি কি এই ছবিটি ডিলিট করতে চান?")) return;
 
-    setDocs((prevDocs) => {
-      const updated = prevDocs.filter(d => d.id !== id);
-      localStorage.setItem("mg_docs", JSON.stringify(updated));
-      return updated;
-    });
+    const updated = docs.filter(d => d.id !== id);
+    setDocs(updated);
+    localStorage.setItem("mg_docs", JSON.stringify(updated));
     
     toast({ title: "ডিলিট হয়েছে", description: "ছবিটি মুছে ফেলা হয়েছে।" });
   };
@@ -92,21 +89,21 @@ export default function DocumentStorage() {
   if (!isClient) return <div className="p-10 text-center text-muted-foreground">Loading Gallery...</div>;
 
   return (
-    <Card className="bg-white border-none shadow-sm">
+    <Card className="bg-white border-none shadow-sm rounded-[30px] overflow-hidden">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg text-primary flex items-center gap-2">
-          <ImageIcon className="w-5 h-5" />
+        <CardTitle className="text-lg text-primary flex items-center gap-2 font-black">
+          <ImageIcon className="w-5 h-5 text-accent" />
           আমার গ্যালারি (Photo Gallery)
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-primary/20 rounded-xl bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer group">
+        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-primary/20 rounded-2xl bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer group">
           <div className="flex flex-col items-center justify-center pt-5 pb-6">
             <div className="p-3 bg-white rounded-full shadow-sm group-active:scale-95 transition-transform mb-2">
               <Camera className="w-6 h-6 text-primary" />
             </div>
             <p className="text-sm font-bold text-primary">ছবি আপলোড করুন</p>
-            <p className="text-[10px] text-muted-foreground mt-1">গ্যালারি থেকে ফটো সিলেক্ট করুন</p>
+            <p className="text-[10px] text-muted-foreground mt-1">ক্যামেরা বা গ্যালারি থেকে</p>
           </div>
           <input type="file" className="hidden" onChange={handleUpload} accept="image/*" />
         </label>
@@ -115,11 +112,11 @@ export default function DocumentStorage() {
           {docs.length === 0 ? (
             <div className="col-span-2 text-center py-10 opacity-30">
               <ImageIcon className="w-12 h-12 mx-auto mb-2" />
-              <p className="text-xs">কোন ছবি রাখা নেই</p>
+              <p className="text-xs font-bold">কোন ছবি রাখা নেই</p>
             </div>
           ) : (
             docs.map(doc => (
-              <div key={doc.id} className="relative group bg-white rounded-lg overflow-hidden border border-gray-100 shadow-sm aspect-square">
+              <div key={doc.id} className="relative group bg-white rounded-[20px] overflow-hidden border border-gray-100 shadow-sm aspect-square">
                 <img 
                   src={doc.data} 
                   alt="Stored document" 
@@ -145,7 +142,7 @@ export default function DocumentStorage() {
                   </Button>
                 </div>
                 
-                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] px-2 py-1">
+                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] px-2 py-1 font-bold">
                   {doc.date}
                 </div>
               </div>
