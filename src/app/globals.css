@@ -13,7 +13,7 @@
     --primary: 262 83% 58%; /* Purple #7c3aed */
     --accent: 45 93% 47%;   /* Gold */
     --secondary: 210 40% 96%;
-    --radius: 1.25rem;
+    --radius: 1rem;
   }
 }
 
@@ -33,15 +33,15 @@
 }
 
 .bg-luxury-coral {
-  background: #fb7185;
+  background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
 }
 
 .bg-luxury-yellow {
-  background: #fbbf24;
+  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
 }
 
 .bg-luxury-green {
-  background: #10b981;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
 .nav-shadow {
@@ -56,11 +56,18 @@
   font-family: 'Noto Sans Bengali', sans-serif;
 }
 
-/* Mobile Input Styling for Visibility */
+/* High Contrast Input Styling */
 input, select, textarea {
-  @apply bg-slate-50 border-none text-slate-900 font-medium !important;
+  @apply bg-slate-100 border-none text-slate-900 font-semibold !important;
 }
 
 ::placeholder {
-  @apply text-slate-400 !important;
+  @apply text-slate-400 font-medium !important;
+}
+
+/* Mobile-First Adjustments */
+@media (max-width: 640px) {
+  h1 { @apply text-lg; }
+  h2 { @apply text-base; }
+  p { @apply text-xs; }
 }
