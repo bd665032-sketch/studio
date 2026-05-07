@@ -1,11 +1,4 @@
-
 "use client";
-
-/* 
-   -----------------------------------------
-   ২. লগইন অংশ (Login UI & Logic)
-   -----------------------------------------
-*/
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -15,6 +8,10 @@ import { useAuth } from "@/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
 import { Mail, Lock, Globe, Shield } from "lucide-react";
 
+/**
+ * AuthScreen Component
+ * This file contains both the HTML-like structure (JSX) and the Login/Signup logic (JS).
+ */
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -44,7 +41,7 @@ export default function AuthScreen() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-body overflow-hidden">
-      {/* ব্যানার সেকশন */}
+      {/* ব্যানার সেকশন - Header with Blue Background */}
       <div className="relative h-[38vh] bg-primary flex flex-col items-center justify-center overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <Globe className="absolute top-10 left-10 w-24 h-24 text-white" />
@@ -58,6 +55,7 @@ export default function AuthScreen() {
         </div>
       </div>
 
+      {/* ফর্ম সেকশন - Form Area */}
       <div className="flex-1 px-8 pt-6 pb-12 z-20 bg-white">
         <div className="text-center mb-8">
           <h1 className="text-[20px] font-black text-primary leading-tight uppercase">MINAR GO EXPATRIATE</h1>
@@ -65,6 +63,7 @@ export default function AuthScreen() {
           <p className="text-accent font-bold text-xs">United Experiences, Brighter Future</p>
         </div>
 
+        {/* লগইন/সাইন-আপ সুইচ */}
         <div className="flex bg-secondary p-1.5 rounded-2xl mb-8">
           <button onClick={() => setIsLogin(true)} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${isLogin ? 'bg-primary text-white shadow-lg' : 'text-primary/50'}`}>লগইন</button>
           <button onClick={() => setIsLogin(false)} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${!isLogin ? 'bg-primary text-white shadow-lg' : 'text-primary/50'}`}>সাইন আপ</button>

@@ -1,15 +1,14 @@
-
 "use client";
-
-/* 
-   -----------------------------------------
-   ৩. লজিক অংশ (Firebase Data Logic)
-   -----------------------------------------
-*/
 
 import { useCollection, useFirestore } from "@/firebase";
 import { collection, addDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from "firebase/firestore";
 import { useMemo } from "react";
+
+/**
+ * useMinarData Hook
+ * This file handles all the database (Firebase) logic.
+ * It's written in TypeScript (.ts).
+ */
 
 export interface Transaction {
   id: string;
@@ -22,7 +21,7 @@ export interface Transaction {
 export const useMinarData = () => {
   const db = useFirestore();
 
-  // মেম্বার লিস্ট
+  // Fetching Members List
   const membersQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, "members"), orderBy("name"));
@@ -30,7 +29,7 @@ export const useMinarData = () => {
   const { data: membersDocs } = useCollection(membersQuery);
   const members = useMemo(() => (membersDocs || []).map(d => d.name as string), [membersDocs]);
 
-  // ট্রানজেকশন বা জমার লিস্ট
+  // Fetching Transactions List
   const transactionsQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, "transactions"), orderBy("date", "desc"));
