@@ -3,15 +3,15 @@
 @tailwind utilities;
 
 /**
- * Global CSS Styles with Premium Royal Blue Theme
+ * Global CSS Styles with Premium Royal Blue & Gold Theme
  */
 
 @layer base {
   :root {
     --background: 210 40% 98%;
     --foreground: 222 47% 11%;
-    --primary: 221 83% 53%; /* Premium Royal Blue */
-    --accent: 45 93% 47%;   /* Luxury Gold (for highlights) */
+    --primary: 221 83% 53%; /* Royal Blue */
+    --accent: 45 93% 47%;   /* Luxury Gold */
     --secondary: 210 40% 96%;
     --card: 0 0% 100%;
     --popover: 0 0% 100%;
@@ -39,8 +39,13 @@
   background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
 }
 
+.blue-gold-card {
+  background: linear-gradient(135deg, #002366 0%, #1E40AF 100%);
+  border-left: 6px solid #D4AF37;
+}
+
 .nav-shadow {
-  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.06);
 }
 
 .font-bengali {
