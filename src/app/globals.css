@@ -24,9 +24,6 @@
   body {
     @apply bg-[#F0F2F5] text-foreground font-body antialiased;
     -webkit-tap-highlight-color: transparent;
-    background-image: radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.05) 0px, transparent 50%),
-                      radial-gradient(at 100% 100%, rgba(30, 58, 138, 0.05) 0px, transparent 50%);
-    background-attachment: fixed;
   }
 }
 
@@ -69,9 +66,15 @@ input:focus, select:focus, textarea:focus {
   display: none !important;
   pointer-events: none !important;
   opacity: 0 !important;
+  visibility: hidden !important;
 }
 
 /* Professional Notification Popup */
 .facebook-toast {
   @apply bg-gradient-to-r from-[#1E40AF] to-[#6366F1] text-white border-none shadow-[0_20px_60px_rgba(30,64,175,0.4)] rounded-[30px] p-6 flex items-center gap-5 animate-in slide-in-from-top-full duration-500 cursor-pointer;
+}
+
+/* Auth Page Background Gradient */
+.bg-auth-premium {
+  background: linear-gradient(135deg, #1E3A8A 0%, #4F46E5 50%, #6366F1 100%);
 }
