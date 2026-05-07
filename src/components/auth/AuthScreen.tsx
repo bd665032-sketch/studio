@@ -1,4 +1,11 @@
+
 "use client";
+
+/* 
+   -----------------------------------------
+   ২. লগইন অংশ (Login UI & Logic)
+   -----------------------------------------
+*/
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -6,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
-import { Mail, Lock, Globe, Shield, User } from "lucide-react";
+import { Mail, Lock, Globe, Shield } from "lucide-react";
 
 export default function AuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -29,7 +36,7 @@ export default function AuthScreen() {
         toast({ title: "সফল!", description: "অ্যাকাউন্ট তৈরি হয়েছে।" });
       }
     } catch (error: any) {
-      toast({ variant: "destructive", title: "ত্রুটি", description: "লগইন ব্যর্থ হয়েছে।" });
+      toast({ variant: "destructive", title: "ত্রুটি", description: "লগইন বা সাইন আপ ব্যর্থ হয়েছে।" });
     } finally {
       setLoading(false);
     }
@@ -37,98 +44,45 @@ export default function AuthScreen() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col font-body overflow-hidden">
-      {/* Top Banner Illustration */}
+      {/* ব্যানার সেকশন */}
       <div className="relative h-[38vh] bg-primary flex flex-col items-center justify-center overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <Globe className="absolute top-10 left-10 w-24 h-24 text-white" />
           <Shield className="absolute bottom-10 right-10 w-24 h-24 text-white" />
         </div>
-        
-        {/* Curved Divider */}
         <div className="absolute bottom-[-60px] left-[-10%] right-[-10%] h-[160px] bg-white rounded-[100%] shadow-lg"></div>
-        
-        <div className="z-10 bg-white p-5 rounded-full shadow-2xl border-[5px] border-accent/20 mb-4 animate-in zoom-in duration-500">
+        <div className="z-10 bg-white p-5 rounded-full shadow-2xl border-[5px] border-accent/20 mb-4">
           <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
             <span className="text-white text-3xl font-black">MG</span>
           </div>
         </div>
       </div>
 
-      {/* Main Content Area */}
       <div className="flex-1 px-8 pt-6 pb-12 z-20 bg-white">
         <div className="text-center mb-8">
-          <h1 className="text-[20px] font-black text-primary leading-tight uppercase tracking-tight">
-            MINAR GO EXPATRIATE
-          </h1>
-          <h2 className="text-[17px] font-black text-primary leading-tight uppercase mb-2">
-            DEVELOPMENT FOUNDATION
-          </h2>
-          <p className="text-accent font-bold text-xs">
-            United Experiences, Brighter Future
-          </p>
+          <h1 className="text-[20px] font-black text-primary leading-tight uppercase">MINAR GO EXPATRIATE</h1>
+          <h2 className="text-[17px] font-black text-primary leading-tight uppercase mb-2">DEVELOPMENT FOUNDATION</h2>
+          <p className="text-accent font-bold text-xs">United Experiences, Brighter Future</p>
         </div>
 
-        {/* Tab Switcher */}
         <div className="flex bg-secondary p-1.5 rounded-2xl mb-8">
-          <button 
-            onClick={() => setIsLogin(true)}
-            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${isLogin ? 'bg-primary text-white shadow-lg' : 'text-primary/50'}`}
-          >
-            লগইন
-          </button>
-          <button 
-            onClick={() => setIsLogin(false)}
-            className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${!isLogin ? 'bg-primary text-white shadow-lg' : 'text-primary/50'}`}
-          >
-            সাইন আপ
-          </button>
+          <button onClick={() => setIsLogin(true)} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${isLogin ? 'bg-primary text-white shadow-lg' : 'text-primary/50'}`}>লগইন</button>
+          <button onClick={() => setIsLogin(false)} className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${!isLogin ? 'bg-primary text-white shadow-lg' : 'text-primary/50'}`}>সাইন আপ</button>
         </div>
 
-        {/* Auth Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-              <Mail className="w-5 h-5 text-primary/30" />
-            </div>
-            <Input 
-              type="email" 
-              placeholder="Email Address" 
-              required 
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="h-14 pl-12 rounded-2xl bg-secondary/50 border-none focus:ring-2 focus:ring-primary shadow-inner"
-            />
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary/30" />
+            <Input type="email" placeholder="Email Address" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="h-14 pl-12 rounded-2xl bg-secondary/50 border-none shadow-inner" />
           </div>
-
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none">
-              <Lock className="w-5 h-5 text-primary/30" />
-            </div>
-            <Input 
-              type="password" 
-              placeholder="Password" 
-              required 
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="h-14 pl-12 rounded-2xl bg-secondary/50 border-none focus:ring-2 focus:ring-primary shadow-inner"
-            />
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-primary/30" />
+            <Input type="password" placeholder="Password" required value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="h-14 pl-12 rounded-2xl bg-secondary/50 border-none shadow-inner" />
           </div>
-
-          <Button 
-            className="w-full h-14 rounded-2xl bg-gold-gradient text-white text-lg font-black shadow-xl hover:shadow-2xl active:scale-95 transition-all mt-4"
-            disabled={loading}
-          >
+          <Button className="w-full h-14 rounded-2xl bg-gold-gradient text-white text-lg font-black shadow-xl mt-4" disabled={loading}>
             {loading ? "অপেক্ষা করুন..." : (isLogin ? "Login Now" : "Create Account")}
           </Button>
         </form>
-
-        <div className="mt-12 flex items-center justify-center gap-4">
-          <div className="h-[1px] flex-1 bg-gray-100"></div>
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap">
-            MG Foundation Management
-          </span>
-          <div className="h-[1px] flex-1 bg-gray-100"></div>
-        </div>
       </div>
     </div>
   );

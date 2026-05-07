@@ -1,6 +1,13 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 
+   -----------------------------------------
+   ১. CSS অংশ (Styling)
+   -----------------------------------------
+*/
 
 @layer base {
   :root {
@@ -24,7 +31,7 @@
   }
 }
 
-/* Custom Gold Gradient for Mobile Buttons */
+/* গোল্ডেন গ্রেডিয়েন্ট বাটন */
 .bg-gold-gradient {
   background: linear-gradient(135deg, #D4AF37 0%, #B8960C 100%);
 }
@@ -33,7 +40,7 @@
   font-family: 'Noto Sans Bengali', sans-serif;
 }
 
-/* Bottom Nav Shadow */
+/* বটম নেভিগেশন শ্যাডো */
 .nav-shadow {
   box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.08);
 }
