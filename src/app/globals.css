@@ -3,19 +3,17 @@
 @tailwind utilities;
 
 /**
- * Global CSS Styles
- * All colors and custom design rules are defined here.
+ * Global CSS Styles with Luxury Theme
  */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
-    --primary: 221 100% 20%; /* Dark Blue #002366 */
-    --accent: 45 65% 52%;   /* Gold #D4AF37 */
-    --success: 153 40% 30%; /* Green #2d6a4f */
-    --secondary: 210 20% 96%;
-    --radius: 1rem;
+    --background: 210 20% 98%;
+    --foreground: 221 39% 11%;
+    --primary: 262 83% 58%; /* Purple #7c3aed */
+    --accent: 45 93% 47%;   /* Gold */
+    --secondary: 0 0% 100%;
+    --radius: 1.5rem;
   }
 }
 
@@ -24,21 +22,36 @@
     @apply border-border;
   }
   body {
-    @apply bg-[#F0F2F5] text-foreground font-body antialiased;
+    @apply bg-[#F8FAFC] text-foreground font-body antialiased;
     -webkit-tap-highlight-color: transparent;
   }
 }
 
-/* Golden Gradient Button */
-.bg-gold-gradient {
-  background: linear-gradient(135deg, #D4AF37 0%, #B8960C 100%);
+/* Luxury Gradients from Screenshot */
+.bg-luxury-purple {
+  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+}
+
+.bg-luxury-coral {
+  background: #fb7185;
+}
+
+.bg-luxury-yellow {
+  background: #fbbf24;
+}
+
+.bg-luxury-green {
+  background: #10b981;
+}
+
+.nav-shadow {
+  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.05);
+}
+
+.card-shadow {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
 }
 
 .font-bengali {
   font-family: 'Noto Sans Bengali', sans-serif;
-}
-
-/* Navigation Shadow */
-.nav-shadow {
-  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.08);
 }
