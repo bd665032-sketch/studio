@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Upload, Trash2, Download, Image as ImageIcon, Camera } from "lucide-react";
+import { Trash2, Download, Image as ImageIcon, Camera, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface MGDoc {
@@ -36,8 +36,12 @@ export default function DocumentStorage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 1024 * 1024 * 2) { 
-      toast({ variant: "destructive", title: "ফাইল অনেক বড়", description: "দয়া করে ২ এমবি-র কম সাইজের ছবি ব্যবহার করুন।" });
+    if (file.size > 1024 * 1024 * 5) { 
+      toast({ 
+        variant: "destructive", 
+        title: "File too large", 
+        description: "Please upload an image under 5MB for better performance." 
+      });
       return;
     }
 
@@ -55,34 +59,18 @@ export default function DocumentStorage() {
       const updated = [newDoc, ...docs];
       setDocs(updated);
       localStorage.setItem("mg_docs", JSON.stringify(updated));
-      toast({ title: "সফল হয়েছে", description: "ছবিটি গ্যালারিতে সেভ করা হয়েছে।" });
+      toast({ title: "সফল!", description: "ছবিটি আপনার গ্যালারিতে যোগ করা হয়েছে।" });
     };
     reader.readAsDataURL(file);
     e.target.value = '';
   };
 
   const deleteDoc = (id: string) => {
-    if (typeof window === 'undefined') return;
-    
-    if (!window.confirm("আপনি কি এই ছবিটি ডিলিট করতে চান?")) return;
-
-    const updated = docs.filter(d => d.id !== id);
-    setDocs(updated);
-    localStorage.setItem("mg_docs", JSON.stringify(updated));
-    
-    toast({ title: "ডিলিট হয়েছে", description: "ছবিটি মুছে ফেলা হয়েছে।" });
-  };
-
-  const downloadDoc = (doc: MGDoc) => {
-    try {
-      const link = document.createElement('a');
-      link.href = doc.data;
-      link.download = `MinarGo_${doc.id}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } catch (e) {
-      toast({ variant: "destructive", title: "Error", description: "ডাউনলোড করা সম্ভব হচ্ছে না।" });
+    if (confirm("আপনি কি এই ছবিটি স্থায়ীভাবে ডিলিট করতে চান?")) {
+      const updated = docs.filter(d => d.id !== id);
+      setDocs(updated);
+      localStorage.setItem("mg_docs", JSON.stringify(updated));
+      toast({ title: "ডিলিট হয়েছে", description: "ছবিটি মুছে ফেলা হয়েছে।" });
     }
   };
 
@@ -90,65 +78,49 @@ export default function DocumentStorage() {
 
   return (
     <Card className="bg-white border-none shadow-sm rounded-[30px] overflow-hidden">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg text-primary flex items-center gap-2 font-black">
-          <ImageIcon className="w-5 h-5 text-accent" />
-          আমার গ্যালারি (Photo Gallery)
-        </CardTitle>
+      <CardHeader className="pb-3 border-b border-slate-50">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg text-[#1E3A8A] flex items-center gap-2 font-black">
+            <ImageIcon className="w-5 h-5 text-[#D4AF37]" />
+            ফটো গ্যালারি
+          </CardTitle>
+          <label className="bg-[#1E3A8A] text-white p-2 rounded-full cursor-pointer shadow-lg active:scale-90 transition-transform">
+            <Plus className="w-5 h-5" />
+            <input type="file" className="hidden" onChange={handleUpload} accept="image/*" />
+          </label>
+        </div>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-primary/20 rounded-2xl bg-primary/5 hover:bg-primary/10 transition-colors cursor-pointer group">
-          <div className="flex flex-col items-center justify-center pt-5 pb-6">
-            <div className="p-3 bg-white rounded-full shadow-sm group-active:scale-95 transition-transform mb-2">
-              <Camera className="w-6 h-6 text-primary" />
-            </div>
-            <p className="text-sm font-bold text-primary">ছবি আপলোড করুন</p>
-            <p className="text-[10px] text-muted-foreground mt-1">ক্যামেরা বা গ্যালারি থেকে</p>
+      <CardContent className="pt-6">
+        {docs.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 opacity-20">
+            <ImageIcon className="w-16 h-16 mb-4" />
+            <p className="font-black text-sm uppercase">No Photos Found</p>
           </div>
-          <input type="file" className="hidden" onChange={handleUpload} accept="image/*" />
-        </label>
-
-        <div className="grid grid-cols-2 gap-3 max-h-[500px] overflow-y-auto pr-1">
-          {docs.length === 0 ? (
-            <div className="col-span-2 text-center py-10 opacity-30">
-              <ImageIcon className="w-12 h-12 mx-auto mb-2" />
-              <p className="text-xs font-bold">কোন ছবি রাখা নেই</p>
-            </div>
-          ) : (
-            docs.map(doc => (
-              <div key={doc.id} className="relative group bg-white rounded-[20px] overflow-hidden border border-gray-100 shadow-sm aspect-square">
+        ) : (
+          <div className="grid grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto pr-1">
+            {docs.map(doc => (
+              <div key={doc.id} className="relative group bg-slate-50 rounded-[22px] overflow-hidden border border-slate-100 aspect-square shadow-sm">
                 <img 
                   src={doc.data} 
-                  alt="Stored document" 
-                  className="w-full h-full object-cover"
+                  alt="Gallery" 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
                 
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <Button 
-                    size="icon" 
-                    variant="secondary" 
-                    className="h-8 w-8 rounded-full" 
-                    onClick={(e) => { e.stopPropagation(); downloadDoc(doc); }}
-                  >
-                    <Download className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    size="icon" 
-                    variant="destructive" 
-                    className="h-8 w-8 rounded-full" 
-                    onClick={(e) => { e.stopPropagation(); deleteDoc(doc.id); }}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+                {/* Delete Button always visible on mobile for ease of use */}
+                <button 
+                  className="absolute top-2 right-2 bg-red-500/90 text-white p-2 rounded-full shadow-lg backdrop-blur-sm active:scale-75 transition-transform" 
+                  onClick={() => deleteDoc(doc.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
                 
-                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[8px] px-2 py-1 font-bold">
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent text-white text-[8px] p-3 font-bold">
                   {doc.date}
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
