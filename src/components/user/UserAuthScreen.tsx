@@ -29,6 +29,11 @@ export default function UserAuthScreen() {
     return null;
   };
 
+  // Helper to normalize names for comparison (Removes dots, spaces and makes lowercase)
+  const normalizeName = (name: string) => {
+    return name.toString().toLowerCase().replace(/[^a-z0-9]/g, "").trim();
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth || !db) return;
@@ -39,25 +44,34 @@ export default function UserAuthScreen() {
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
         toast({ title: "স্বাগতম!", description: "ইউজার প্যানেলে লগইন সফল হয়েছে।" });
       } else {
-        // Robust Name Verification (Case-Insensitive)
+        // Smart Name Verification
         const membersRef = collection(db, "members");
         const querySnapshot = await getDocs(membersRef);
         
-        // Get all member names and normalize for comparison
-        const memberList = querySnapshot.docs.map(doc => doc.data().name.toString().toLowerCase().trim());
-        const inputName = formData.fullName.toLowerCase().trim();
+        // Find member with normalized match
+        const inputNameNormalized = normalizeName(formData.fullName);
+        let matchedMemberName = "";
 
-        if (!memberList.includes(inputName)) {
-          throw new Error(`"${formData.fullName}" নামটি ফাউন্ডেশনের সদস্য তালিকায় পাওয়া যায়নি। আপনি কি নিশ্চিত যে অ্যাডমিন এই নামটি ডিরেক্টরিতে অ্যাড করেছেন?`);
+        querySnapshot.docs.forEach(doc => {
+          const dbName = doc.data().name;
+          if (normalizeName(dbName) === inputNameNormalized) {
+            matchedMemberName = dbName; // Store the official name from DB
+          }
+        });
+
+        if (!matchedMemberName) {
+          throw new Error(`"${formData.fullName}" নামটি ফাউন্ডেশনের সদস্য তালিকায় পাওয়া যায়নি। আপনি কি নিশ্চিত যে অ্যাডমিন এই নামটি ডিরেক্টরিতে অ্যাড করেছেন? (ডট বা স্পেসের বানান চেক করুন)`);
         }
 
         const passErr = validatePassword(formData.password);
         if (passErr) throw new Error(passErr);
 
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-        await updateProfile(userCredential.user, { displayName: formData.fullName.trim() });
         
-        toast({ title: "অভিনন্দন!", description: "আপনার মেম্বার প্রোফাইল তৈরি হয়েছে।" });
+        // Always set the profile name to the official version from the database
+        await updateProfile(userCredential.user, { displayName: matchedMemberName });
+        
+        toast({ title: "অভিনন্দন!", description: `আপনার মেম্বার প্রোফাইল তৈরি হয়েছে। অফিসিয়াল নাম: ${matchedMemberName}` });
       }
     } catch (error: any) {
       toast({ 
@@ -114,13 +128,13 @@ export default function UserAuthScreen() {
                   <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100 flex items-start gap-3">
                     <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
                     <p className="text-[11px] text-blue-700 font-bold leading-relaxed">
-                      রেজিস্ট্রেশন করার আগে নিশ্চিত হোন যে অ্যাডমিন আপনার নাম <span className="text-blue-900 underline font-black">"Directory"</span>-তে অ্যাড করেছেন। আপনার সঠিক নামটি লিখুন।
+                      অ্যাডমিন আপনার নামটি <span className="text-blue-900 underline font-black">"Directory"</span>-তে যেভাবে অ্যাড করেছেন সেই নামটি লিখুন। (যেমন: Mr Shahid)
                     </p>
                   </div>
                   <div className="relative group">
                     <User className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                     <Input 
-                      placeholder="আপনার নাম (যেমন: Mr Shahid)" 
+                      placeholder="আপনার নাম" 
                       required 
                       value={formData.fullName} 
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} 
