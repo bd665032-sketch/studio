@@ -1,3 +1,4 @@
+
 import type {Config} from 'tailwindcss';
 
 export default {
@@ -12,6 +13,7 @@ export default {
       fontFamily: {
         body: ['Inter', 'sans-serif'],
         headline: ['Inter', 'sans-serif'],
+        bengali: ['Noto Sans Bengali', 'sans-serif'],
         code: ['monospace'],
       },
       colors: {
@@ -26,24 +28,32 @@ export default {
           foreground: 'hsl(var(--popover-foreground))',
         },
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
+          DEFAULT: '#002366',
+          foreground: '#FFFFFF',
         },
         secondary: {
-          DEFAULT: 'hsl(var(--secondary))',
-          foreground: 'hsl(var(--secondary-foreground))',
+          DEFAULT: '#F0F2F5',
+          foreground: '#002366',
         },
         muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
+          DEFAULT: '#F0F2F5',
+          foreground: '#64748b',
         },
         accent: {
-          DEFAULT: 'hsl(var(--accent))',
-          foreground: 'hsl(var(--accent-foreground))',
+          DEFAULT: '#D4AF37',
+          foreground: '#FFFFFF',
+        },
+        gold: {
+          DEFAULT: '#D4AF37',
+          dark: '#B8960C',
+        },
+        success: {
+          DEFAULT: '#2d6a4f',
+          foreground: '#FFFFFF',
         },
         destructive: {
-          DEFAULT: 'hsl(var(--destructive))',
-          foreground: 'hsl(var(--destructive-foreground))',
+          DEFAULT: '#dc2626',
+          foreground: '#FFFFFF',
         },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
