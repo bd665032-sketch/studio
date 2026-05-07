@@ -22,7 +22,8 @@ import {
   CloudSun,
   MapPin,
   Calendar,
-  Zap
+  Zap,
+  Bell
 } from "lucide-react";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
 import DemandLetterGenerator from "./DemandLetterGenerator";
@@ -43,14 +44,6 @@ export default function DashboardContent() {
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    
-    // Simulating Live Weather Logic
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        setWeather(prev => ({ ...prev, temp: 30 + Math.floor(Math.random() * 5), aqi: 35 + Math.floor(Math.random() * 15) }));
-      });
-    }
-
     return () => clearInterval(timer);
   }, []);
 
@@ -80,9 +73,8 @@ export default function DashboardContent() {
           {activeTab === "home" && (
             <div className="animate-in fade-in slide-in-from-bottom-2 duration-500 space-y-5">
               
-              {/* Luxury Smart Weather & Live Hub */}
-              <div className="luxury-card p-6 bg-gradient-to-br from-[#1E3A8A] via-[#3B82F6] to-[#6366F1] text-white border-none relative overflow-hidden shadow-2xl">
-                <div className="absolute top-[-20px] right-[-20px] w-40 h-40 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+              {/* Luxury Weather Card */}
+              <div className="luxury-card p-6 bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] text-white border-none relative overflow-hidden shadow-2xl">
                 <div className="flex justify-between items-start relative z-10">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-[#D4AF37] font-black text-[10px] uppercase tracking-widest">
@@ -96,95 +88,73 @@ export default function DashboardContent() {
                         <span className="text-[10px] font-black text-white/60 uppercase">{weather.status}</span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 mt-2 bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm">
-                      <Zap className="w-3 h-3 text-[#D4AF37]" />
-                      <span className="text-[9px] font-black uppercase">AQI: {weather.aqi} Excellent</span>
-                    </div>
                   </div>
                   <div className="text-right">
                     <p className="text-[12px] font-black uppercase text-white/70">{currentTime.toLocaleDateString('en-US', { weekday: 'long' })}</p>
-                    <p className="text-[22px] font-black text-[#D4AF37] leading-none mt-1">{currentTime.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</p>
-                    <p className="text-[10px] font-bold text-white/40 mt-1 uppercase tracking-tighter">{currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</p>
+                    <p className="text-[22px] font-black text-[#D4AF37] mt-1">{currentTime.toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Corrected Islamic Calendar (Hajj 2026, Ramadan 27/28) */}
+              {/* Islamic Calendar Hub */}
               <div className="luxury-card p-5 border-l-[6px] border-[#D4AF37] bg-white shadow-lg space-y-4">
                 <div className="flex items-center justify-between px-1">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-5 h-5 text-[#1E40AF]" />
-                    <h3 className="text-[11px] font-black text-[#1E3A8A] uppercase tracking-widest">Islamic Events Hub</h3>
+                    <h3 className="text-[11px] font-black text-[#1E3A8A] uppercase">Islamic Events Hub</h3>
                   </div>
-                  <div className="text-[8px] font-black text-[#D4AF37] uppercase bg-[#D4AF37]/10 px-2 py-0.5 rounded-full">Certified Dates</div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100 shadow-sm">
-                    <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Hajj 2026</p>
-                    <p className="text-[12px] font-black text-[#1E40AF]">May 24</p>
+                  <div className="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
+                    <p className="text-[7px] font-black text-slate-400 uppercase">Hajj 2026</p>
+                    <p className="text-[11px] font-black text-[#1E40AF]">May 24</p>
                   </div>
-                  <div className="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100 shadow-sm">
-                    <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Ramadan 2027</p>
-                    <p className="text-[12px] font-black text-[#1E40AF]">March 09</p>
+                  <div className="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
+                    <p className="text-[7px] font-black text-slate-400 uppercase">Ramadan 27</p>
+                    <p className="text-[11px] font-black text-[#1E40AF]">Mar 09</p>
                   </div>
-                  <div className="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100 shadow-sm">
-                    <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Ramadan 2028</p>
-                    <p className="text-[12px] font-black text-[#1E40AF]">Feb 26</p>
+                  <div className="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100">
+                    <p className="text-[7px] font-black text-slate-400 uppercase">Ramadan 28</p>
+                    <p className="text-[11px] font-black text-[#1E40AF]">Feb 26</p>
                   </div>
                 </div>
               </div>
 
-              {/* Purple-Blue Portfolio Card */}
-              <div className="purple-blue-gold-card p-7 text-white relative overflow-hidden rounded-[32px]">
-                 <div className="absolute top-0 right-0 p-4 opacity-10">
-                   <Zap className="w-20 h-20" />
-                 </div>
-                 <div className="flex justify-between items-end relative z-10">
+              {/* Summary Card */}
+              <div className="luxury-card p-7 bg-gradient-to-br from-[#1E3A8A] to-[#3B82F6] text-white border-l-[8px] border-[#D4AF37]">
+                 <div className="flex justify-between items-end">
                     <div className="space-y-1">
-                      <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Consolidated Balance</p>
+                      <p className="text-[10px] font-bold text-white/60 uppercase">Total Balance</p>
                       <h2 className="text-4xl font-black text-white">৳{totalCollection.toLocaleString()}</h2>
                     </div>
                     <div className="text-right space-y-1">
-                      <p className="text-[10px] font-bold text-white/60 uppercase tracking-widest">Members</p>
+                      <p className="text-[10px] font-bold text-white/60 uppercase">Members</p>
                       <h2 className="text-4xl font-black text-[#D4AF37]">{members.length}</h2>
                     </div>
                  </div>
               </div>
 
-              {/* Action Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <button onClick={() => setActiveTab("members")} className="luxury-card p-5 flex flex-col items-start active:scale-95 transition-all border-l-[6px] border-[#3B82F6] hover:shadow-xl group">
-                  <BookOpen className="w-6 h-6 text-[#1E40AF] mb-3 group-hover:scale-110 transition-transform" />
-                  <h3 className="text-[15px] font-black text-[#1E3A8A]">Members</h3>
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-tighter">{members.length} Active Profiles</p>
-                </button>
-                <button onClick={() => setActiveTab("gallery")} className="luxury-card p-5 flex flex-col items-start active:scale-95 transition-all border-l-[6px] border-[#6366F1] hover:shadow-xl group">
-                  <ClipboardList className="w-6 h-6 text-[#6366F1] mb-3 group-hover:scale-110 transition-transform" />
-                  <h3 className="text-[15px] font-black text-[#1E3A8A]">Gallery</h3>
-                  <p className="text-slate-400 text-[10px] font-bold uppercase tracking-tighter">Cloud Storage</p>
-                </button>
-              </div>
-
+              {/* Tools Section */}
               <div className="space-y-4">
                 <button 
                   onClick={() => setActiveTab("settings")}
-                  className="w-full bg-[#1E3A8A] rounded-[24px] p-5 flex items-center justify-between text-white active:scale-[0.98] transition-all shadow-xl border border-white/10"
+                  className="w-full bg-white rounded-[24px] p-5 flex items-center justify-between shadow-md border border-slate-100 active:scale-95 transition-all"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="bg-white/10 p-3 rounded-2xl backdrop-blur-md">
-                      <FileText className="w-6 h-6 text-[#D4AF37]" />
+                    <div className="bg-[#1E3A8A]/10 p-3 rounded-2xl">
+                      <FileText className="w-6 h-6 text-[#1E3A8A]" />
                     </div>
                     <div className="text-left">
-                      <h3 className="text-[14px] font-black tracking-wide">Demand Letter Drafts</h3>
-                      <p className="text-white/40 text-[9px] font-bold uppercase tracking-widest">Official Documents</p>
+                      <h3 className="text-[14px] font-black text-[#1E3A8A]">Demand Letter Generator</h3>
+                      <p className="text-slate-400 text-[9px] font-bold uppercase">Official PDF Documents</p>
                     </div>
                   </div>
-                  <ChevronRight className="w-5 h-5 text-white/30" />
+                  <ChevronRight className="w-5 h-5 text-slate-300" />
                 </button>
 
-                {/* Relocated PDF Button (Strategic Position) */}
+                {/* Strategic PDF Button */}
                 <button 
-                  className="w-full h-14 bg-white border-2 border-[#D4AF37] text-[#1E3A8A] font-black text-[12px] rounded-[24px] flex items-center justify-center gap-3 shadow-xl hover:bg-[#D4AF37] hover:text-white transition-all active:scale-95" 
+                  className="w-full h-16 bg-white border-2 border-[#D4AF37] text-[#1E3A8A] font-black text-[12px] rounded-[24px] flex items-center justify-center gap-3 shadow-xl hover:bg-[#D4AF37] hover:text-white transition-all active:scale-95" 
                   onClick={() => exportSummaryPDF(filteredTransactions, selectedMonth, totalCollection)}
                 >
                   <Download className="w-5 h-5" /> 
@@ -195,26 +165,26 @@ export default function DashboardContent() {
               {/* Logs Section */}
               <div className="space-y-4 pt-4">
                 <div className="flex items-center justify-between px-2">
-                  <h4 className="font-black text-[#1E3A8A] text-[11px] uppercase tracking-widest">Financial Transactions</h4>
+                  <h4 className="font-black text-[#1E3A8A] text-[11px] uppercase tracking-widest">Financial Logs</h4>
                   <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                    <SelectTrigger className="w-36 bg-white border border-slate-100 shadow-sm rounded-2xl text-[11px] font-black h-10 text-[#1E3A8A]">
+                    <SelectTrigger className="w-36 bg-white border border-slate-100 shadow-sm rounded-2xl text-[11px] font-black h-10">
                       <SelectValue placeholder="All Months" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-none shadow-2xl z-[1000] rounded-2xl overflow-hidden">
-                      <SelectItem value="All" className="text-[12px] font-black py-2">All Logs</SelectItem>
-                      {months.map(m => <SelectItem key={m} value={m} className="text-[12px] font-black py-2">{m}</SelectItem>)}
+                    <SelectContent className="bg-white border-none shadow-2xl rounded-2xl overflow-hidden">
+                      <SelectItem value="All" className="text-[12px] font-black">All Time</SelectItem>
+                      {months.map(m => <SelectItem key={m} value={m} className="text-[12px] font-black">{m}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
 
                 <div className="space-y-3">
                   {filteredTransactions.map(t => (
-                    <div key={t.id} className="luxury-card p-5 flex items-center justify-between border-slate-50 hover:border-[#1E3A8A]/20 transition-all">
+                    <div key={t.id} className="luxury-card p-5 flex items-center justify-between border-slate-50">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-[18px] bg-[#1E3A8A]/5 flex items-center justify-center font-black text-[#1E3A8A] text-[14px] shadow-inner">{t.n.charAt(0)}</div>
+                        <div className="w-12 h-12 rounded-[18px] bg-[#1E3A8A]/5 flex items-center justify-center font-black text-[#1E3A8A]">{t.n.charAt(0)}</div>
                         <div>
                           <p className="font-black text-slate-800 text-[14px]">{t.n}</p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tight">{t.d}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">{t.d}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
@@ -230,9 +200,9 @@ export default function DashboardContent() {
 
           {activeTab === "members" && (
             <div className="animate-in fade-in slide-in-from-right-2 duration-300 space-y-5">
-               <div className="flex items-center gap-3"><Button variant="ghost" size="sm" onClick={() => setActiveTab("home")} className="p-0 h-10 w-10 rounded-full bg-white shadow-md"><ChevronRight className="rotate-180 w-5 h-5" /></Button><h2 className="font-black text-[#1E3A8A] text-sm uppercase tracking-widest">Members Directory</h2></div>
+               <div className="flex items-center gap-3"><Button variant="ghost" size="sm" onClick={() => setActiveTab("home")} className="p-0 h-10 w-10 rounded-full bg-white shadow-md"><ChevronRight className="rotate-180 w-5 h-5" /></Button><h2 className="font-black text-[#1E3A8A] text-sm uppercase">Members Directory</h2></div>
                <div className="luxury-card p-7">
-                  <div className="flex gap-3 mb-8"><Input placeholder="Member Name" value={newMember} onChange={e=>setNewMember(e.target.value)} className="h-14 font-black shadow-inner" /><Button onClick={()=>{if(newMember)addMember(newMember);setNewMember("")}} className="bg-[#1E3A8A] h-14 px-8 rounded-2xl font-black text-xs">ADD</Button></div>
+                  <div className="flex gap-3 mb-8"><Input placeholder="Member Name" value={newMember} onChange={e=>setNewMember(e.target.value)} /><Button onClick={()=>{if(newMember)addMember(newMember);setNewMember("")}} className="bg-[#1E3A8A] h-14 px-8 rounded-2xl font-black text-xs">ADD</Button></div>
                   <div className="space-y-3">{members.map(m=><div key={m} className="flex justify-between items-center p-5 bg-slate-50 rounded-2xl border border-slate-100"><span className="font-black text-[14px] text-slate-700">{m}</span><button onClick={()=>deleteMember(m)} className="p-2 text-slate-300 hover:text-red-500"><Trash2 className="w-5 h-5"/></button></div>)}</div>
                </div>
             </div>
@@ -241,21 +211,21 @@ export default function DashboardContent() {
           {activeTab === "add" && (
             <div className="animate-in fade-in zoom-in-95 duration-300">
                <div className="luxury-card p-8 shadow-2xl border-t-[8px] border-[#D4AF37]">
-                  <h3 className="text-center font-black text-[#1E3A8A] text-xl mb-10 uppercase tracking-[0.2em]">New Financial Entry</h3>
+                  <h3 className="text-center font-black text-[#1E3A8A] text-xl mb-10 uppercase tracking-[0.2em]">Authorize Deposit</h3>
                   <form onSubmit={handleDeposit} className="space-y-8">
                     <div className="space-y-3">
-                      <Label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Select Beneficiary</Label>
+                      <Label className="text-[11px] font-black text-slate-400 uppercase">Select Beneficiary</Label>
                       <Select onValueChange={v=>setDeposit({...deposit, member:v})}>
                         <SelectTrigger className="h-16 font-black text-[#1E3A8A] rounded-[20px] bg-slate-50 shadow-inner"><SelectValue placeholder="Search member name"/></SelectTrigger>
                         <SelectContent className="bg-white z-[1000] rounded-2xl shadow-2xl border-none">{members.map(m=><SelectItem key={m} value={m} className="font-black text-[#1E3A8A] py-3">{m}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-3">
-                      <Label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Transaction Amount (TK)</Label>
+                      <Label className="text-[11px] font-black text-slate-400 uppercase">Amount (TK)</Label>
                       <Input type="number" value={deposit.amount} onChange={e=>setDeposit({...deposit, amount:Number(e.target.value)})} className="h-16 text-xl font-black bg-slate-50 shadow-inner" />
                     </div>
                     <div className="space-y-3">
-                      <Label className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Processing Date</Label>
+                      <Label className="text-[11px] font-black text-slate-400 uppercase">Processing Date</Label>
                       <Input type="date" value={deposit.date} onChange={e=>setDeposit({...deposit, date:e.target.value})} className="h-16 font-black bg-slate-50 shadow-inner" />
                     </div>
                     <Button type="submit" className="w-full h-16 bg-[#1E3A8A] text-white text-[13px] font-black shadow-2xl rounded-[22px] uppercase tracking-[0.2em]">AUTHORIZE DEPOSIT</Button>
@@ -269,13 +239,13 @@ export default function DashboardContent() {
         </div>
       </main>
 
-      {/* Slimmer Nav for better accessibility */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-white h-20 px-8 flex items-center justify-between z-[100] nav-shadow rounded-t-[40px] border-t border-slate-100 transition-all">
-        <button onClick={() => setActiveTab("home")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "home" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Home className="w-6 h-6"/><span className="text-[8px] font-black uppercase tracking-tighter">Home</span></button>
-        <button onClick={() => setActiveTab("members")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "members" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Users className="w-6 h-6"/><span className="text-[8px] font-black uppercase tracking-tighter">Profiles</span></button>
+      {/* Slimmer Nav */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white h-20 px-8 flex items-center justify-between z-[100] nav-shadow rounded-t-[40px] border-t border-slate-100">
+        <button onClick={() => setActiveTab("home")} className={cn("flex flex-col items-center gap-1.5", activeTab === "home" ? "text-[#1E3A8A]" : "text-slate-300")}><Home className="w-6 h-6"/><span className="text-[8px] font-black uppercase">Home</span></button>
+        <button onClick={() => setActiveTab("members")} className={cn("flex flex-col items-center gap-1.5", activeTab === "members" ? "text-[#1E3A8A]" : "text-slate-300")}><Users className="w-6 h-6"/><span className="text-[8px] font-black uppercase">Profiles</span></button>
         <div className="relative -top-10"><button onClick={() => setActiveTab("add")} className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#B8960C] rounded-full flex items-center justify-center text-white shadow-2xl border-[6px] border-[#F0F2F5] active:scale-90 transition-all"><Plus className="w-10 h-10"/></button></div>
-        <button onClick={() => setActiveTab("gallery")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "gallery" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><ImageIcon className="w-6 h-6"/><span className="text-[8px] font-black uppercase tracking-tighter">Cloud</span></button>
-        <div className="flex flex-col items-center gap-1.5 text-slate-800"><div className="w-6 h-6 rounded-full bg-[#1E3A8A] text-white flex items-center justify-center text-[8px] font-black border-2 border-white shadow-lg">ADM</div><span className="text-[8px] font-black uppercase tracking-tighter">System</span></div>
+        <button onClick={() => setActiveTab("gallery")} className={cn("flex flex-col items-center gap-1.5", activeTab === "gallery" ? "text-[#1E3A8A]" : "text-slate-300")}><ImageIcon className="w-6 h-6"/><span className="text-[8px] font-black uppercase">Gallery</span></button>
+        <div className="flex flex-col items-center gap-1.5 text-slate-800"><div className="w-6 h-6 rounded-full bg-[#1E3A8A] text-white flex items-center justify-center text-[8px] font-black border-2 border-white">ADM</div><span className="text-[8px] font-black uppercase">Admin</span></div>
       </nav>
     </div>
   );
