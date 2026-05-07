@@ -18,7 +18,7 @@ import {
   FileText, 
   PlusCircle, 
   Download,
-  Calendar as CalendarIcon
+  UserPlus
 } from "lucide-react";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
 import DemandLetterGenerator from "./DemandLetterGenerator";
@@ -29,12 +29,31 @@ const months = [
   "July", "August", "September", "October", "November", "December"
 ];
 
+const PREDEFINED_MEMBERS = [
+  "Mr. Dulal",
+  "Mr. Omar Faruk",
+  "Mr. Sulaiman badshah",
+  "Mr. Abdul qayum",
+  "Mr. Mohammed Jamshed",
+  "Mr. Milad",
+  "Mr. Ala uddin",
+  "Mr. Shahid",
+  "Mr. Shohag",
+  "Mr. Abul Hussain",
+  "Mr. Sakib",
+  "Mr. Ronnie",
+  "Mr. Jonye",
+  "Mr. Aqib",
+  "Mr. salauddin"
+];
+
 export default function DashboardContent() {
   const { members, transactions, loading, addMember, deleteMember, addTransaction, deleteTransaction } = useMinarData();
   const [selectedMonth, setSelectedMonth] = useState("All");
   const [newMember, setNewMember] = useState("");
   const [deposit, setDeposit] = useState({ member: "", amount: 5000, category: "প্রতি মাসের জমা", date: new Date().toISOString().split('T')[0] });
   const { toast } = useToast();
+  const [isSeeding, setIsSeeding] = useState(false);
 
   const filteredTransactions = transactions.filter(t => {
     if (selectedMonth === "All") return true;
@@ -48,14 +67,38 @@ export default function DashboardContent() {
     e.preventDefault();
     if (!deposit.member) return toast({ variant: "destructive", title: "Error", description: "Select a member" });
     await addTransaction(deposit.member, deposit.amount, deposit.date, deposit.category);
-    toast({ title: "Success", description: "Deposit entry saved." });
+    toast({ title: "সফল!", description: "ডিপোজিট এন্ট্রি সেভ হয়েছে।" });
   };
 
   const handleAddMember = async () => {
     if (!newMember) return;
     await addMember(newMember);
     setNewMember("");
-    toast({ title: "Success", description: "Member added." });
+    toast({ title: "সফল!", description: "নতুন মেম্বার যুক্ত হয়েছে।" });
+  };
+
+  const handleSeedMembers = async () => {
+    setIsSeeding(true);
+    try {
+      // Filter out members that already exist to avoid duplicates
+      const existingNames = new Set(members);
+      const namesToAdd = PREDEFINED_MEMBERS.filter(name => !existingNames.has(name));
+      
+      if (namesToAdd.length === 0) {
+        toast({ title: "তথ্য", description: "সবগুলো মেম্বার ইতিমধ্যে যুক্ত আছে।" });
+        setIsSeeding(false);
+        return;
+      }
+
+      for (const name of namesToAdd) {
+        await addMember(name);
+      }
+      toast({ title: "সফল!", description: `${namesToAdd.length} জন মেম্বার যুক্ত করা হয়েছে।` });
+    } catch (error) {
+      toast({ variant: "destructive", title: "সমস্যা", description: "মেম্বার ইমপোর্ট করতে সমস্যা হয়েছে।" });
+    } finally {
+      setIsSeeding(false);
+    }
   };
 
   const handleGroupCall = () => {
@@ -230,11 +273,21 @@ export default function DashboardContent() {
 
       {/* Member Management */}
       <Card className="bg-white border-none shadow-sm">
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg text-primary flex items-center gap-2">
             <Users className="w-5 h-5" />
             Members
           </CardTitle>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="text-xs h-7 text-primary hover:bg-primary/5 gap-1"
+            onClick={handleSeedMembers}
+            disabled={isSeeding}
+          >
+            <UserPlus className="w-3 h-3" />
+            {isSeeding ? "Importing..." : "Import List"}
+          </Button>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex gap-2">
@@ -247,15 +300,21 @@ export default function DashboardContent() {
               Add
             </Button>
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            {members.map(name => (
-              <div key={name} className="flex items-center justify-between bg-secondary p-2 rounded-md text-xs font-medium">
-                <span className="truncate pr-1">{name}</span>
-                <button onClick={() => { if(confirm('Delete member?')) deleteMember(name); }} className="text-destructive">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+          <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto pr-1">
+            {members.length === 0 ? (
+              <div className="col-span-2 text-center py-4 text-xs text-muted-foreground italic bg-secondary/30 rounded-md">
+                No members found. Use "Import List" to add them.
               </div>
-            ))}
+            ) : (
+              members.map(name => (
+                <div key={name} className="flex items-center justify-between bg-secondary p-2 rounded-md text-xs font-medium border border-gray-100">
+                  <span className="truncate pr-1">{name}</span>
+                  <button onClick={() => { if(confirm('Delete member?')) deleteMember(name); }} className="text-destructive hover:scale-110 transition-transform">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
