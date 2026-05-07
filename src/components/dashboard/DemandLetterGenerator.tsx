@@ -1,31 +1,34 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Wand2, Download, RefreshCw } from "lucide-react";
+import { FileText, Wand2, Download, RefreshCw, Phone, Mail, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { generateDemandLetterDraft } from "@/ai/flows/generate-demand-letter-draft";
-import { exportDemandLetterPDF } from "@/lib/pdf-utils";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 export default function DemandLetterGenerator() {
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
   const [letterData, setLetterData] = useState({
-    letterDate: new Date().toISOString().split('T')[0],
+    letterDate: new Date().toLocaleDateString('bn-BD', { year: 'numeric', month: 'long', day: 'numeric' }) + " খ্রি.",
     toCompany: "",
     subject: "",
     body: "",
-    mobileNumber: "+880 ",
-    emailAddress: "info@minargo.com",
+    mobileNumber: "+8801725277089",
+    emailAddress: "pranuae.farooq@gmail.com",
     language: "bn" as "en" | "bn",
   });
   const [result, setResult] = useState("");
   const { toast } = useToast();
+  const printRef = useRef<HTMLDivElement>(null);
 
   const handleGenerate = async () => {
     if (!letterData.toCompany || !letterData.subject || !letterData.body) {
@@ -38,7 +41,7 @@ export default function DemandLetterGenerator() {
     }
 
     setLoading(true);
-    setResult(""); // Clear previous result
+    setResult("");
     
     try {
       const response = await generateDemandLetterDraft(letterData);
@@ -60,109 +63,209 @@ export default function DemandLetterGenerator() {
     }
   };
 
-  const handleDownload = () => {
-    if (!result) return;
-    exportDemandLetterPDF(result, letterData.letterDate);
-    toast({ title: "PDF ডাউনলোড হচ্ছে", description: "আপনার ডকুমেন্টটি তৈরি করা হয়েছে।" });
+  const handleDownloadPDF = async () => {
+    if (!printRef.current) return;
+    setExporting(true);
+    
+    try {
+      const element = printRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 3, // High quality
+        useCORS: true,
+        logging: false,
+      });
+      
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+      
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Demand_Letter_${new Date().getTime()}.pdf`);
+      
+      toast({ title: "সফল!", description: "PDF ডাউনলোড সম্পন্ন হয়েছে।" });
+    } catch (error) {
+      console.error("PDF Export Error:", error);
+      toast({ variant: "destructive", title: "ত্রুটি", description: "PDF তৈরি করতে সমস্যা হয়েছে।" });
+    } finally {
+      setExporting(false);
+    }
   };
 
   return (
-    <Card className="bg-white border-none shadow-sm">
-      <CardHeader>
-        <CardTitle className="text-lg text-primary flex items-center gap-2 font-extrabold">
-          <FileText className="w-5 h-5" />
-          AI ডিমান্ড লেটার জেনারেটর
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label>লেটারের তারিখ</Label>
-            <Input type="date" value={letterData.letterDate} onChange={(e) => setLetterData({...letterData, letterDate: e.target.value})} />
-          </div>
-          <div className="space-y-1">
-            <Label>ভাষা (Language)</Label>
-            <Select value={letterData.language} onValueChange={(v: any) => setLetterData({...letterData, language: v})}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bn">বাংলা (Bengali)</SelectItem>
-                <SelectItem value="en">English</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="space-y-1">
-          <Label>কোম্পানির নাম (Recipient)</Label>
-          <Input 
-            placeholder="কাকে পাঠাতে চান?" 
-            value={letterData.toCompany} 
-            onChange={(e) => setLetterData({...letterData, toCompany: e.target.value})} 
-            className="h-11"
-          />
-        </div>
-
-        <div className="space-y-1">
-          <Label>বিষয় (Subject)</Label>
-          <Input 
-            placeholder="লেটারের বিষয়বস্তু" 
-            value={letterData.subject} 
-            onChange={(e) => setLetterData({...letterData, subject: e.target.value})} 
-            className="h-11"
-          />
-        </div>
-
-        <div className="space-y-1">
-          <Label>মূল বক্তব্য (Context)</Label>
-          <Textarea 
-            placeholder="আপনার দাবি বা সমস্যাটি সংক্ষেপে লিখুন..." 
-            className="min-h-[100px] border-gray-200"
-            value={letterData.body}
-            onChange={(e) => setLetterData({...letterData, body: e.target.value})}
-          />
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1">
-            <Label>মোবাইল</Label>
-            <Input value={letterData.mobileNumber} onChange={(e) => setLetterData({...letterData, mobileNumber: e.target.value})} />
-          </div>
-          <div className="space-y-1">
-            <Label>ইমেইল</Label>
-            <Input value={letterData.emailAddress} onChange={(e) => setLetterData({...letterData, emailAddress: e.target.value})} />
-          </div>
-        </div>
-
-        <Button 
-          className="w-full bg-accent hover:bg-gold-dark text-white font-bold h-12 shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2"
-          onClick={handleGenerate}
-          disabled={loading}
-        >
-          {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
-          {loading ? "AI ড্রাফট তৈরি হচ্ছে..." : "AI দিয়ে লেটার তৈরি করুন"}
-        </Button>
-
-        {result && (
-          <div className="mt-6 p-4 bg-secondary/50 rounded-xl border border-dashed border-primary/20 space-y-4 animate-in fade-in slide-in-from-top-2">
-            <div className="flex items-center justify-between">
-              <h4 className="text-xs font-bold text-primary uppercase">Draft Preview:</h4>
-              <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full">Ready to Export</span>
+    <div className="space-y-6">
+      <Card className="bg-white border-none shadow-sm">
+        <CardHeader>
+          <CardTitle className="text-lg text-primary flex items-center gap-2 font-extrabold">
+            <FileText className="w-5 h-5" />
+            AI ডিমান্ড লেটার জেনারেটর
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label>লেটারের তারিখ</Label>
+              <Input 
+                placeholder="যেমন: ৩ মে, ২০২৩ খ্রি."
+                value={letterData.letterDate} 
+                onChange={(e) => setLetterData({...letterData, letterDate: e.target.value})} 
+              />
             </div>
-            <div className={`text-sm leading-relaxed whitespace-pre-wrap p-3 bg-white rounded-md border border-gray-100 ${letterData.language === 'bn' ? 'font-bengali' : 'font-body'}`}>
+            <div className="space-y-1">
+              <Label>ভাষা (Language)</Label>
+              <Select value={letterData.language} onValueChange={(v: any) => setLetterData({...letterData, language: v})}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bn">বাংলা (Bengali)</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label>কোম্পানির নাম (Recipient)</Label>
+            <Input 
+              placeholder="কাকে পাঠাতে চান?" 
+              value={letterData.toCompany} 
+              onChange={(e) => setLetterData({...letterData, toCompany: e.target.value})} 
+              className="h-11"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label>বিষয় (Subject)</Label>
+            <Input 
+              placeholder="লেটারের বিষয়বস্তু" 
+              value={letterData.subject} 
+              onChange={(e) => setLetterData({...letterData, subject: e.target.value})} 
+              className="h-11"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label>মূল বক্তব্য (Context)</Label>
+            <Textarea 
+              placeholder="আপনার দাবি বা সমস্যাটি সংক্ষেপে লিখুন..." 
+              className="min-h-[100px] border-gray-200"
+              value={letterData.body}
+              onChange={(e) => setLetterData({...letterData, body: e.target.value})}
+            />
+          </div>
+
+          <Button 
+            className="w-full bg-accent hover:bg-gold-dark text-white font-bold h-12 shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2"
+            onClick={handleGenerate}
+            disabled={loading}
+          >
+            {loading ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
+            {loading ? "AI ড্রাফট তৈরি হচ্ছে..." : "AI দিয়ে লেটার তৈরি করুন"}
+          </Button>
+
+          {result && (
+            <div className="mt-4">
+              <Button 
+                className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 flex items-center justify-center gap-2"
+                onClick={handleDownloadPDF}
+                disabled={exporting}
+              >
+                {exporting ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Download className="w-5 h-5" />}
+                প্রফেশনাল PDF ডাউনলোড করুন
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Hidden Template for PDF Generation */}
+      {result && (
+        <div className="hidden">
+          <div 
+            ref={printRef}
+            className="w-[210mm] bg-white p-[15mm] text-[#333] font-bengali leading-relaxed relative"
+            style={{ minHeight: '297mm' }}
+          >
+            {/* Header Block */}
+            <div className="bg-[#002366] text-white rounded-2xl py-6 px-10 text-center mb-10 shadow-md">
+              <h1 className="text-3xl font-extrabold mb-1">মিনার গো প্রবাসী উন্নয়ন ফাউন্ডেশন</h1>
+              <p className="text-sm font-bold tracking-widest text-[#D4AF37]">
+                MINAR GO EXPATRIATE DEVELOPMENT FOUNDATION
+              </p>
+            </div>
+
+            {/* Date Section */}
+            <div className="text-right mb-6">
+              <p className="font-bold"><span className="text-gray-600">Date:</span> {letterData.letterDate}</p>
+            </div>
+
+            {/* Recipient Section */}
+            <div className="mb-6">
+              <p className="font-extrabold text-lg">To:</p>
+              <p className="text-lg">{letterData.toCompany}</p>
+            </div>
+
+            {/* Subject Section */}
+            <div className="mb-8 border-l-4 border-[#002366] pl-4">
+              <p className="font-extrabold text-lg">
+                Subject: <span className="font-normal underline decoration-[#D4AF37] decoration-2 underline-offset-4">{letterData.subject}</span>
+              </p>
+            </div>
+
+            {/* Body Section */}
+            <div className="mb-12 text-justify text-lg whitespace-pre-wrap min-h-[400px]">
               {result}
             </div>
-            <Button 
-              className="w-full bg-primary hover:bg-primary/90 text-white font-bold h-12 flex items-center justify-center gap-2 shadow-lg"
-              onClick={handleDownload}
-            >
-              <Download className="w-5 h-5" />
-              প্রফেশনাল PDF ডাউনলোড করুন
-            </Button>
+
+            {/* Closing */}
+            <div className="mb-16">
+              <p className="text-lg">Sincerely,</p>
+            </div>
+
+            {/* Signatures */}
+            <div className="flex justify-between items-end mb-16 px-4">
+              <div className="w-64">
+                <div className="border-t-2 border-[#333] pt-2">
+                  <p className="font-extrabold text-sm uppercase">Minar Go Expatriate Development Foundation</p>
+                </div>
+              </div>
+              <div className="w-64">
+                <div className="border-t-2 border-[#333] pt-2">
+                  <p className="font-extrabold text-sm uppercase text-right">{letterData.toCompany}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Contact Info */}
+            <div className="absolute bottom-16 left-0 right-0 px-[15mm]">
+               <div className="flex items-center justify-center gap-6 text-sm text-gray-600 border-t border-gray-100 pt-6">
+                 <div className="flex items-center gap-1">
+                   <Phone className="w-3 h-3 text-[#D4AF37]" />
+                   <span>+8801725277089</span>
+                 </div>
+                 <div className="flex items-center gap-1">
+                   <Mail className="w-3 h-3 text-[#D4AF37]" />
+                   <span>pranuae.farooq@gmail.com</span>
+                 </div>
+                 <div className="flex items-center gap-1">
+                   <Globe className="w-3 h-3 text-[#D4AF37]" />
+                   <span>https://1minargo7.atoms.world</span>
+                 </div>
+               </div>
+            </div>
+
+            {/* Bottom Strip */}
+            <div className="absolute bottom-8 left-0 right-0 px-[15mm] text-center">
+              <div className="bg-[#E7F3EF] text-[#2D6A4F] py-2 px-8 rounded-full inline-block text-xs font-bold border border-[#CDE5DC]">
+                Thank you for your cooperation.
+              </div>
+              <p className="text-[10px] text-gray-400 mt-2">© Minar Go Expatriate Development Foundation</p>
+            </div>
+
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </div>
   );
 }
