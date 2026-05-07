@@ -3,17 +3,19 @@
 @tailwind utilities;
 
 /**
- * Global CSS Styles with Luxury Mobile-First Theme
+ * Global CSS Styles with White & Golden Luxury Mobile Theme
  */
 
 @layer base {
   :root {
     --background: 210 20% 98%;
     --foreground: 221 39% 11%;
-    --primary: 262 83% 58%; /* Purple #7c3aed */
-    --accent: 45 93% 47%;   /* Gold */
+    --primary: 222 47% 20%; /* Navy Blue */
+    --accent: 45 93% 47%;   /* Luxury Gold */
     --secondary: 210 40% 96%;
-    --radius: 1rem;
+    --card: 0 0% 100%;
+    --border: 214 32% 91%;
+    --radius: 1.25rem;
   }
 }
 
@@ -27,29 +29,17 @@
   }
 }
 
-/* Luxury Gradients & Colors */
-.bg-luxury-purple {
-  background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+/* Luxury Card Styling */
+.luxury-card {
+  @apply bg-white border border-slate-100 shadow-sm rounded-[24px];
 }
 
-.bg-luxury-coral {
-  background: linear-gradient(135deg, #fb7185 0%, #e11d48 100%);
-}
-
-.bg-luxury-yellow {
-  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
-}
-
-.bg-luxury-green {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+.gold-gradient {
+  background: linear-gradient(135deg, #D4AF37 0%, #B8960C 100%);
 }
 
 .nav-shadow {
-  box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.04);
-}
-
-.card-shadow {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 -5px 25px rgba(0, 0, 0, 0.04);
 }
 
 .font-bengali {
@@ -58,7 +48,7 @@
 
 /* High Contrast Input Styling */
 input, select, textarea {
-  @apply bg-slate-100 border-none text-slate-900 font-semibold !important;
+  @apply bg-slate-50 border border-slate-200 text-slate-900 font-semibold !important;
 }
 
 ::placeholder {
@@ -67,7 +57,7 @@ input, select, textarea {
 
 /* Mobile-First Adjustments */
 @media (max-width: 640px) {
-  h1 { @apply text-lg; }
-  h2 { @apply text-base; }
-  p { @apply text-xs; }
+  h1 { @apply text-base; }
+  h2 { @apply text-sm; }
+  p { @apply text-[10px]; }
 }
