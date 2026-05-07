@@ -14,7 +14,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
     --border: 214 32% 91%;
-    --radius: 1.5rem;
+    --radius: 1.75rem;
   }
 }
 
@@ -29,18 +29,18 @@
 }
 
 .luxury-card {
-  @apply bg-white border border-slate-100 shadow-[0_15px_45px_-15px_rgba(0,0,0,0.06)] rounded-[32px];
+  @apply bg-white border border-slate-100 shadow-[0_20px_50px_-15px_rgba(0,0,0,0.06)] rounded-[32px];
 }
 
 /* Luxury Gradient with Purple, Blue and Gold touch */
 .purple-blue-gold-card {
   background: linear-gradient(135deg, #6366F1 0%, #3B82F6 100%);
-  border-left: 6px solid #D4AF37;
-  box-shadow: 0 15px 40px -10px rgba(99, 102, 241, 0.4);
+  border-left: 8px solid #D4AF37;
+  box-shadow: 0 20px 50px -10px rgba(99, 102, 241, 0.4);
 }
 
 .nav-shadow {
-  box-shadow: 0 -15px 40px rgba(0, 0, 0, 0.05);
+  @apply shadow-[0_-15px_50px_rgba(0,0,0,0.08)];
 }
 
 .font-bengali {
@@ -49,7 +49,11 @@
 
 input, select, textarea {
   @apply bg-slate-50 border border-slate-100 text-[#1E3A8A] font-black !important;
-  border-radius: 1.25rem !important;
+  border-radius: 1.5rem !important;
+}
+
+input:focus, select:focus, textarea:focus {
+  @apply border-[#1E3A8A]/30 ring-0 outline-none shadow-md transition-all !important;
 }
 
 ::placeholder {
@@ -57,16 +61,11 @@ input, select, textarea {
 }
 
 @media (max-width: 640px) {
-  h1 { @apply text-[20px]; }
-  p { @apply text-[11px]; }
+  h1 { @apply text-[22px]; }
+  p { @apply text-[12px]; }
 }
 
-.pdf-btn-luxury {
-  @apply w-full h-14 bg-white text-[#1E3A8A] border-2 border-[#D4AF37] font-black text-[12px] rounded-[22px] hover:bg-[#D4AF37] hover:text-white transition-all shadow-xl active:scale-95;
-}
-
-/* Custom Notification Style */
+/* Facebook style highlighted notification */
 .facebook-toast {
-  @apply bg-[#1E40AF] text-white border-none shadow-2xl rounded-[24px] p-5 flex items-center gap-4 animate-in slide-in-from-top-full duration-700;
+  @apply bg-gradient-to-r from-[#1E40AF] to-[#3B82F6] text-white border-none shadow-[0_20px_50px_rgba(30,64,175,0.3)] rounded-[24px] p-6 flex items-center gap-5 animate-in slide-in-from-top-full duration-700;
 }
-
