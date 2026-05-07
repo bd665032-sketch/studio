@@ -10,7 +10,8 @@ import {
   Check,
   X,
   ShieldCheck,
-  Settings
+  Settings,
+  Bell
 } from "lucide-react";
 import { useMinarData } from "@/hooks/use-minar-data";
 import { useToast } from "@/hooks/use-toast";
@@ -91,32 +92,32 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-[#F8FAFC] py-3 px-4 flex items-center justify-between border-b border-slate-100">
+    <header className="sticky top-0 z-[100] w-full bg-white/90 backdrop-blur-md py-2 px-4 flex items-center justify-between border-b border-slate-100 shadow-sm h-14">
       <div className="flex items-center gap-2.5">
         <Dialog>
           <DialogTrigger asChild>
-            <div className="flex items-center gap-2.5 cursor-pointer">
+            <div className="flex items-center gap-2.5 cursor-pointer hover:opacity-80 transition-opacity">
               <div className="relative">
-                <Avatar className="w-9 h-9 border-2 border-white shadow-sm">
+                <Avatar className="w-8 h-8 border-2 border-slate-50 shadow-sm">
                   {logo ? (
                     <AvatarImage src={logo} className="object-cover" />
                   ) : (
-                    <AvatarFallback className="bg-luxury-purple text-white font-bold text-xs">MG</AvatarFallback>
+                    <AvatarFallback className="bg-blue-600 text-white font-black text-[10px]">MG</AvatarFallback>
                   )}
                 </Avatar>
                 <div className="absolute -bottom-0.5 -right-0.5 bg-green-500 rounded-full p-0.5 border border-white">
                   <ShieldCheck className="w-2.5 h-2.5 text-white" />
                 </div>
               </div>
-              <div>
-                <h1 className="font-black text-xs text-slate-800 leading-tight">{foundationName}</h1>
-                <p className="text-[8px] text-slate-400 font-bold uppercase">Admin Panel</p>
+              <div className="flex flex-col">
+                <h1 className="font-black text-[11px] text-slate-800 leading-none uppercase">{foundationName}</h1>
+                <p className="text-[7px] text-slate-400 font-bold uppercase mt-0.5">Admin Panel</p>
               </div>
             </div>
           </DialogTrigger>
           <DialogContent className="sm:max-w-xs bg-white rounded-[24px]">
             <DialogHeader>
-              <DialogTitle className="text-primary font-black text-sm flex items-center gap-2">
+              <DialogTitle className="text-blue-600 font-black text-sm flex items-center gap-2">
                 <Settings className="w-4 h-4" />
                 Profile Settings
               </DialogTitle>
@@ -124,8 +125,8 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
             <div className="space-y-4 py-2">
               <div className="flex flex-col items-center gap-3">
                 <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center overflow-hidden border-2 border-slate-50 relative group shadow-inner">
-                  {logo ? <img src={logo} alt="Preview" className="w-full h-full object-cover" /> : <span className="text-primary font-bold text-lg">MG</span>}
-                  <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 active:opacity-100 transition-opacity cursor-pointer text-white text-[9px] font-bold">
+                  {logo ? <img src={logo} alt="Preview" className="w-full h-full object-cover" /> : <span className="text-blue-600 font-bold text-lg">MG</span>}
+                  <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white text-[9px] font-bold">
                     <Camera className="w-5 h-5 mb-1" /> Change
                     <input type="file" className="hidden" accept="image/*" onChange={handleLogoUpload} />
                   </label>
@@ -149,10 +150,18 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
       </div>
       
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="w-8 h-8 bg-white shadow-sm rounded-lg text-primary" onClick={handleBackup} disabled={backupLoading}>
+        {/* Notification Bell Icon */}
+        <div className="relative">
+          <Button variant="ghost" size="icon" className="w-8 h-8 bg-blue-50 text-blue-600 rounded-lg">
+            <Bell className="w-4 h-4" />
+          </Button>
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 border border-white rounded-full"></span>
+        </div>
+
+        <Button variant="ghost" size="icon" className="w-8 h-8 bg-slate-50 shadow-sm rounded-lg text-blue-600" onClick={handleBackup} disabled={backupLoading}>
           {backupLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CloudUpload className="w-3.5 h-3.5" />}
         </Button>
-        <Button variant="ghost" size="icon" className="w-8 h-8 bg-red-50 text-red-500 rounded-lg" onClick={onLogout}>
+        <Button variant="ghost" size="icon" className="w-8 h-8 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors" onClick={onLogout}>
           <LogOut className="w-3.5 h-3.5" />
         </Button>
       </div>

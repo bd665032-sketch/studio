@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /**
- * Global CSS Styles with Premium Royal Blue, Purple & Gold Theme
+ * Global CSS Styles with Premium Light Purple, Royal Blue & Gold Theme
  */
 
 @layer base {
@@ -12,7 +12,7 @@
     --foreground: 222 47% 11%;
     --primary: 221 83% 53%; /* Royal Blue */
     --accent: 45 93% 47%;   /* Luxury Gold */
-    --secondary: 262 83% 58%; /* Light Purple / Indigo */
+    --secondary: 262 83% 58%; /* Light Purple */
     --card: 0 0% 100%;
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
@@ -35,18 +35,11 @@
   @apply bg-white border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] rounded-[24px];
 }
 
-.blue-purple-gradient {
-  background: linear-gradient(135deg, #1E40AF 0%, #818CF8 100%);
-}
-
-.blue-gold-card {
-  background: linear-gradient(135deg, #002366 0%, #1E40AF 100%);
+/* Updated Luxury Gradient with Purple, Blue and Gold touch */
+.purple-blue-gold-card {
+  background: linear-gradient(135deg, #6366F1 0%, #3B82F6 100%);
   border-left: 6px solid #D4AF37;
-}
-
-.purple-gold-card {
-  background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
-  border-left: 6px solid #D4AF37;
+  box-shadow: 0 10px 30px -5px rgba(99, 102, 241, 0.3);
 }
 
 .nav-shadow {
@@ -69,4 +62,8 @@ input, select, textarea {
 @media (max-width: 640px) {
   h1 { @apply text-[18px]; }
   p { @apply text-[10px]; }
+}
+
+.pdf-btn-luxury {
+  @apply w-full h-12 bg-white text-blue-700 border-2 border-[#D4AF37] font-black text-[11px] rounded-[18px] hover:bg-[#D4AF37] hover:text-white transition-all shadow-md active:scale-95;
 }
