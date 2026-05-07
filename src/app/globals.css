@@ -3,21 +3,21 @@
 @tailwind utilities;
 
 /**
- * Global CSS Styles with White & Golden Luxury Mobile Theme
+ * Global CSS Styles with Premium Royal Blue Theme
  */
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 221 39% 11%;
-    --primary: 222 47% 20%; /* Navy Blue */
-    --accent: 45 93% 47%;   /* Luxury Gold */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --primary: 221 83% 53%; /* Premium Royal Blue */
+    --accent: 45 93% 47%;   /* Luxury Gold (for highlights) */
     --secondary: 210 40% 96%;
     --card: 0 0% 100%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 20%;
+    --popover-foreground: 222 47% 11%;
     --border: 214 32% 91%;
-    --radius: 1.5rem;
+    --radius: 1.2rem;
   }
 }
 
@@ -31,13 +31,12 @@
   }
 }
 
-/* Luxury Styling from Screenshot */
 .luxury-card {
-  @apply bg-white border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] rounded-[32px];
+  @apply bg-white border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] rounded-[24px];
 }
 
-.gold-gradient {
-  background: linear-gradient(135deg, #D4AF37 0%, #B8960C 100%);
+.blue-gradient {
+  background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
 }
 
 .nav-shadow {
@@ -48,7 +47,6 @@
   font-family: 'Noto Sans Bengali', sans-serif;
 }
 
-/* High Contrast Input Styling */
 input, select, textarea {
   @apply bg-slate-50 border border-slate-100 text-slate-900 font-bold !important;
   border-radius: 1rem !important;
