@@ -41,16 +41,13 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const [mutationLoading, setMutationLoading] = useState(false);
   const [selectedOfficialName, setSelectedOfficialName] = useState("");
 
-  // Sync Settings from Admin's Firestore
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
   const { data: settings, loading: settingsLoading } = useDoc(settingsRef);
 
-  // Fetch official members for profile recovery
   const { data: membersList } = useCollection(
     db ? query(collection(db, "members"), orderBy("name")) : null
   );
 
-  // Fetch User's personal transactions
   const txQuery = useMemo(() => {
     if (!user?.displayName || !db) return null;
     return query(
@@ -62,17 +59,19 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   
   const { data: myTransactions, loading: txLoading } = useCollection(txQuery);
 
-  // REAL-TIME FILTERED DATA FOR SUMMARY
+  const getMonthFromDateStr = (dateStr: string) => {
+    if (!dateStr) return "";
+    const parts = dateStr.split('-');
+    if (parts.length < 2) return "";
+    const monthIndex = parseInt(parts[1], 10) - 1;
+    return months[monthIndex + 1]; // Offset for "All" at index 0
+  };
+
   const filteredTransactions = useMemo(() => {
     if (!myTransactions) return [];
     return myTransactions.filter(t => {
       if (selectedSummaryMonth === "All") return true;
-      try {
-        const date = new Date(t.date);
-        return date.toLocaleString('en-US', { month: 'long' }) === selectedSummaryMonth;
-      } catch (e) {
-        return false;
-      }
+      return getMonthFromDateStr(t.date) === selectedSummaryMonth;
     });
   }, [myTransactions, selectedSummaryMonth]);
 
@@ -168,7 +167,9 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
             </SelectTrigger>
             <SelectContent className="bg-[#2D1B69] border-white/10 text-white rounded-[24px]">
               {membersList?.map((m: any) => (
-                <SelectItem key={m.id} value={m.name} className="py-4 font-black">{m.name}</SelectItem>
+                <SelectItem key={m.id} value={m.name} className="py-4 font-black text-white focus:text-white">
+                  {m.name}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -215,7 +216,11 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
                 <Select value={selectedSummaryMonth} onValueChange={setSelectedSummaryMonth}>
                    <SelectTrigger className="w-32 h-9 bg-white/10 border-none text-[10px] font-black rounded-full text-[#D4AF37]"><SelectValue placeholder="মাস নির্বাচন" /></SelectTrigger>
                    <SelectContent className="bg-[#2D1B69] border-white/10 text-white rounded-2xl">
-                     {months.map(m => <SelectItem key={m} value={m} className="text-xs font-black">{m}</SelectItem>)}
+                     {months.map(m => (
+                       <SelectItem key={m} value={m} className="text-xs font-black text-white focus:text-white">
+                         {m}
+                       </SelectItem>
+                     ))}
                    </SelectContent>
                 </Select>
               </div>
@@ -283,7 +288,11 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
                <Select value={selectedSummaryMonth} onValueChange={setSelectedSummaryMonth}>
                  <SelectTrigger className="w-24 h-10 bg-white/5 border-white/10 text-[10px] font-black rounded-xl text-[#D4AF37]"><SelectValue placeholder="Filter" /></SelectTrigger>
                  <SelectContent className="bg-[#2D1B69] border-white/10 text-white">
-                   {months.map(m => <SelectItem key={m} value={m} className="text-xs font-black">{m}</SelectItem>)}
+                   {months.map(m => (
+                     <SelectItem key={m} value={m} className="text-xs font-black text-white focus:text-white">
+                       {m}
+                     </SelectItem>
+                   ))}
                  </SelectContent>
                </Select>
                {filteredTransactions.length > 0 && (
