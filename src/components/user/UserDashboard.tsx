@@ -30,11 +30,11 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [mutationLoading, setMutationLoading] = useState(false);
 
-  // ১. অ্যাডমিন প্যানেল থেকে লোগো ও ফাউন্ডেশনের নাম সিঙ্ক করা
+  // ১. অ্যাডমিন প্যানেল থেকে লোগো ও ফাউন্ডেশনের নাম রিয়েল-টাইমে সিঙ্ক করা
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  // ২. শুধুমাত্র ইউজারের নিজস্ব ট্রানজেকশন লোড করা
+  // ২. শুধুমাত্র ইউজারের নিজস্ব ট্রানজেকশন লোড করা (displayName এর ওপর ভিত্তি করে)
   const txQuery = useMemo(() => {
     if (!user?.displayName || !db) return null;
     return query(
@@ -46,6 +46,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   
   const { data: myTransactions, loading: txLoading } = useCollection(txQuery);
 
+  // ৩. ইউজারের নিজস্ব মোট জমার হিসাব
   const totalBalance = useMemo(() => {
     if (!myTransactions) return 0;
     return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
@@ -56,10 +57,15 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     return () => clearInterval(timer);
   }, []);
 
-  // ৩. টাকা জমা দিলে সেটি সরাসরি অ্যাডমিন প্যানেলের Transactions-এ জমা হবে
+  // ৪. টাকা জমা দেওয়া (সরাসরি অ্যাডমিন প্যানেলের কানেকশন)
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.displayName || !db) return;
+    if (!user?.displayName) {
+      toast({ variant: "destructive", title: "ত্রুটি", description: "আপনার লগইন তথ্য পাওয়া যাচ্ছে না। আবার লগইন করুন।" });
+      return;
+    }
+    if (!db) return;
+    
     setMutationLoading(true);
     try {
       await addDoc(collection(db, "transactions"), {
@@ -90,7 +96,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
       
       {activeTab === "home" && (
         <main className="flex-1 overflow-y-auto pb-32 animate-in fade-in duration-700">
-          {/* Header Section - Screenshot Style */}
+          {/* Header Section */}
           <div className="relative bg-[#1A1140] pt-14 pb-24 px-6 text-center border-b-[10px] border-[#D4AF37]/10">
             <button onClick={onLogout} className="absolute top-6 right-6 bg-red-600/90 px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase shadow-lg">LOG OUT</button>
             <div className="flex justify-center mb-6">
@@ -103,7 +109,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               </div>
             </div>
             <h1 className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.3em] mb-2">{settings?.name || "MINAR GO FOUNDATION"}</h1>
-            <h2 className="text-3xl font-black tracking-tight">{user?.displayName || "Member"}</h2>
+            <h2 className="text-3xl font-black tracking-tight">{user?.displayName || "Loading Name..."}</h2>
           </div>
 
           <div className="px-6 space-y-6 -mt-10 relative z-20">
@@ -113,7 +119,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               <h3 className="text-4xl font-black">৳{totalBalance.toLocaleString()}</h3>
             </div>
 
-            {/* Hajj/Ramadan Cards from Screenshot */}
+            {/* Event Cards */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-[#2D2D4D] p-5 rounded-[30px] border border-white/5 text-center shadow-lg">
                 <span className="text-xl">🕋</span>
@@ -158,7 +164,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               <div className="space-y-2">
                 <Label className="text-[#D4AF37] text-[10px] font-black uppercase tracking-widest ml-2">অ্যাকাউন্ট হোল্ডার</Label>
                 <div className="h-16 bg-white/10 rounded-2xl flex items-center justify-between px-6 border border-white/5">
-                  <span className="font-black text-lg">{user?.displayName}</span>
+                  <span className="font-black text-lg">{user?.displayName || "Loading..."}</span>
                   <ShieldCheck className="w-7 h-7 text-[#D4AF37]" />
                 </div>
               </div>
@@ -176,10 +182,10 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
           <h2 className="font-black text-2xl mb-8 flex items-center gap-3"><History className="text-[#D4AF37]" /> জমার রিপোর্ট</h2>
           <div className="space-y-4">
             {(!myTransactions || myTransactions.length === 0) ? (
-              <div className="text-center py-24 opacity-20"><History className="w-16 h-16 mx-auto mb-3" /><p className="font-black text-xs">NO RECORDS</p></div>
+              <div className="text-center py-24 opacity-20"><History className="w-16 h-16 mx-auto mb-3" /><p className="font-black text-xs">কোনো ডাটা পাওয়া যায়নি</p></div>
             ) : (
               myTransactions.map((t, i) => (
-                <div key={i} className="bg-white/5 p-6 rounded-[30px] flex items-center justify-between border border-white/5">
+                <div key={i} className="bg-white/5 p-6 rounded-[30px] flex items-center justify-between border border-white/5 shadow-inner">
                   <div>
                     <p className="font-black text-xl">৳{t.amount.toLocaleString()}</p>
                     <p className="text-[10px] text-white/40 font-black uppercase mt-0.5">{t.date}</p>

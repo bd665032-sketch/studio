@@ -22,6 +22,7 @@ export default function UserAuthScreen() {
   const auth = useAuth();
   const db = useFirestore();
 
+  // নামের বানান ভুল বা স্পেস থাকলেও যাতে খুঁজে পায়
   const normalize = (str: string) => {
     return str.toString().toLowerCase().replace(/[^a-z0-9]/g, "").trim();
   };
@@ -36,7 +37,7 @@ export default function UserAuthScreen() {
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
         toast({ title: "স্বাগতম!", description: "আপনার মেম্বার ড্যাশবোর্ড লোড হচ্ছে।" });
       } else {
-        // 1. অ্যাডমিন ডিরেক্টরি থেকে নাম ভেরিফিকেশন
+        // ১. অ্যাডমিন ডিরেক্টরি থেকে নাম ভেরিফিকেশন
         const membersRef = collection(db, "members");
         const querySnapshot = await getDocs(membersRef);
         
@@ -51,17 +52,21 @@ export default function UserAuthScreen() {
         });
 
         if (!officialName) {
-          throw new Error(`"${formData.fullName}" নামটি অ্যাডমিন ডিরেক্টরিতে নেই। সঠিক অফিসিয়াল নামটি লিখুন।`);
+          throw new Error(`"${formData.fullName}" এই নামটি অ্যাডমিন ডিরেক্টরিতে নেই। সঠিক অফিসিয়াল নামটি লিখুন।`);
         }
 
-        // 2. ইউজার তৈরি করা
+        // ২. ইউজার তৈরি করা
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         
-        // 3. অফিসিয়াল নামটি প্রোফাইলে সেট করা
+        // ৩. অফিসিয়াল নামটি প্রোফাইলে সেট করা
         await updateProfile(userCredential.user, { displayName: officialName });
         
-        toast({ title: "সফল!", description: `অফিসিয়াল মেম্বার প্রোফাইল তৈরি হয়েছে: ${officialName}` });
-        window.location.reload();
+        toast({ title: "সফল!", description: `অফিসিয়াল প্রোফাইল তৈরি হয়েছে: ${officialName}` });
+        
+        // প্রোফাইল আপডেট হওয়ার পর একটু সময় দিয়ে রিলোড করা যাতে ডিসপ্লে নেম পাওয়া যায়
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
       }
     } catch (error: any) {
       toast({ 
@@ -86,7 +91,7 @@ export default function UserAuthScreen() {
               <span className="text-white text-2xl font-black italic">MG</span>
             </div>
           </div>
-          <h1 className="text-[18px] font-black text-[#1E3A8A] uppercase tracking-widest leading-none">MEMBER AUTHENTICATION</h1>
+          <h1 className="text-[18px] font-black text-[#1E3A8A] uppercase tracking-widest leading-none">MEMBER ACCESS</h1>
         </div>
 
         <div className="px-8 pb-10">
