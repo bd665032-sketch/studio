@@ -1,7 +1,6 @@
 
 "use client";
 
-import { useState } from "react";
 import UserAuthScreen from "@/components/user/UserAuthScreen";
 import UserDashboard from "@/components/user/UserDashboard";
 import { useUser, useAuth } from "@/firebase";
@@ -17,8 +16,8 @@ export default function UserPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#1A1140]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent"></div>
       </div>
     );
   }
