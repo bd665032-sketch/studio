@@ -16,13 +16,12 @@ import {
   Calendar,
   Home,
   FileText,
-  Loader2,
-  ChevronRight
+  Loader2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
-  const { user, loading: userLoading } = useUser();
+  const { user } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("home");
@@ -31,11 +30,11 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [mutationLoading, setMutationLoading] = useState(false);
 
-  // 1. Sync Foundation Settings (Logo and Name) from Admin
+  // 1. Sync Foundation Settings (Logo and Name) from Admin's Firestore
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
-  const { data: settings, loading: settingsLoading } = useDoc(settingsRef);
+  const { data: settings } = useDoc(settingsRef);
 
-  // 2. Fetch User's personal transactions
+  // 2. Fetch User's personal transactions using their displayName
   const txQuery = useMemo(() => {
     if (!user?.displayName || !db) return null;
     return query(
@@ -47,7 +46,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   
   const { data: myTransactions, loading: txLoading } = useCollection(txQuery);
 
-  // 3. Calculation of total balance
+  // 3. Calculation of total personal balance
   const totalBalance = useMemo(() => {
     if (!myTransactions) return 0;
     return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
@@ -62,12 +61,13 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.displayName || !db) {
-      toast({ variant: "destructive", title: "ত্রুটি", description: "ইউজার প্রোফাইল লোড হচ্ছে, কিছুক্ষণ অপেক্ষা করুন।" });
+      toast({ variant: "destructive", title: "ত্রুটি", description: "প্রোফাইল লোড হচ্ছে, কিছুক্ষণ অপেক্ষা করুন।" });
       return;
     }
     
     setMutationLoading(true);
     try {
+      // Writing to the SHARED transactions collection that admin also sees
       await addDoc(collection(db, "transactions"), {
         memberName: user.displayName,
         amount: Number(depositAmount),
@@ -75,7 +75,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
         category: "মেম্বার জমা (Mobile App)",
         timestamp: serverTimestamp()
       });
-      toast({ title: "সফল!", description: "জমা নিশ্চিত হয়েছে এবং অ্যাডমিন প্যানেলে পাঠানো হয়েছে।" });
+      toast({ title: "সফল!", description: "জমা নিশ্চিত হয়েছে এবং অ্যাডমিন প্যানেলে সিঙ্ক করা হয়েছে।" });
       setDepositAmount(5000);
       setActiveTab("home");
     } catch (e: any) {
@@ -89,10 +89,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   }).format(currentTime);
 
-  // Determine global loading state
-  const isInitialLoading = userLoading || (user && !user.displayName && txLoading);
-
-  if (isInitialLoading) {
+  if (txLoading && !myTransactions) {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center gap-6">
         <div className="relative">
@@ -160,7 +157,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
             <div className="bg-[#2D2D4D]/60 p-8 rounded-[40px] border border-white/5 relative overflow-hidden group">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><FileText className="w-12 h-12" /></div>
               <p className="text-[#D4AF37] text-[13px] font-black mb-2 uppercase tracking-widest">জরুরি বিজ্ঞপ্তি:</p>
-              <p className="text-white/80 text-[15px] leading-relaxed">কি অবস্থা কেমন আছেন সবাই, নিয়মিত কিস্তি পরিশোধ করুন। ফাউন্ডেশনের উন্নয়নে আপনার সহযোগিতা কাম্য।</p>
+              <p className="text-white/80 text-[15px] leading-relaxed">ফাউন্ডেশনের পক্ষ থেকে স্বাগতম। আপনার কিস্তি সময়মতো পরিশোধ করে উন্নয়ন কাজে সহযোগিতা করুন।</p>
             </div>
           </div>
         </main>
@@ -182,7 +179,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               <div className="space-y-3">
                 <Label className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.3em] ml-3">অ্যাকাউন্ট হোল্ডার</Label>
                 <div className="h-18 bg-white/10 rounded-[25px] flex items-center justify-between px-8 border border-white/5 shadow-inner">
-                  <span className="font-black text-xl truncate pr-4">{user?.displayName || "Loading Name..."}</span>
+                  <span className="font-black text-xl truncate pr-4">{user?.displayName || "Loading..."}</span>
                   <ShieldCheck className="w-8 h-8 text-[#D4AF37] shrink-0" />
                 </div>
               </div>
@@ -211,7 +208,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               </div>
             ) : (
               myTransactions.map((t: any, i: number) => (
-                <div key={i} className="bg-white/5 p-8 rounded-[40px] flex items-center justify-between border border-white/5 shadow-2xl backdrop-blur-sm group hover:bg-white/10 transition-all">
+                <div key={t.id} className="bg-white/5 p-8 rounded-[40px] flex items-center justify-between border border-white/5 shadow-2xl backdrop-blur-sm group hover:bg-white/10 transition-all">
                   <div className="space-y-1">
                     <p className="font-black text-2xl tracking-tighter">৳{t.amount.toLocaleString()}</p>
                     <p className="text-[11px] text-white/40 font-black uppercase tracking-widest">{t.date}</p>

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth, useFirestore, useCollection } from "@/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { collection, query, orderBy } from "firebase/firestore";
-import { Mail, Lock, User, Loader2, ShieldCheck } from "lucide-react";
+import { Mail, Lock, User, Loader2 } from "lucide-react";
 
 export default function UserAuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -37,10 +37,10 @@ export default function UserAuthScreen() {
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
-        toast({ title: "স্বাগতম!", description: "আপনার মেম্বার ড্যাশবোর্ড লোড হচ্ছে।" });
+        toast({ title: "স্বাগতম!", description: "সিকিউর মেম্বার এক্সেস সফল হয়েছে।" });
       } else {
         if (!formData.fullName) {
-          throw new Error("দয়া করে আপনার অফিসিয়াল নামটি সিলেক্ট করুন।");
+          throw new Error("দয়া করে ড্রপডাউন থেকে আপনার অফিসিয়াল নাম সিলেক্ট করুন।");
         }
 
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
@@ -50,12 +50,12 @@ export default function UserAuthScreen() {
           displayName: formData.fullName 
         });
         
-        toast({ title: "সফল!", description: `অফিসিয়াল প্রোফাইল তৈরি হয়েছে: ${formData.fullName}` });
+        toast({ title: "সফল!", description: `প্রোফাইল তৈরি হয়েছে: ${formData.fullName}` });
         
-        // Force reload to ensure profile is synced
+        // Small delay to ensure profile is synced before dashboard loads
         setTimeout(() => {
           window.location.reload();
-        }, 1500);
+        }, 1000);
       }
     } catch (error: any) {
       toast({ 
