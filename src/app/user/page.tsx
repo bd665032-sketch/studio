@@ -79,11 +79,11 @@ export default function UserPage() {
   const [selectedSummaryMonth, setSelectedSummaryMonth] = useState("All");
 
   // --- DATA FETCHING ---
-  // Sync Foundation Settings (Logo, Name)
+  // Sync Foundation Settings (Logo, Name) from Admin's settings/foundation
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  // Fetch Official Members List for Registration
+  // Fetch Official Members List for Registration from Admin's members collection
   const membersQuery = useMemo(() => (db ? query(collection(db, "members"), orderBy("name")) : null), [db]);
   const { data: membersList, loading: membersLoading } = useCollection(membersQuery);
 
@@ -118,6 +118,7 @@ export default function UserPage() {
     if (selectedSummaryMonth === "All") return myTransactions;
     return myTransactions.filter(t => {
       try {
+        // Robust month matching for April/May issue
         const date = new Date(t.date);
         const monthName = date.toLocaleString('en-US', { month: 'long' });
         return monthName === selectedSummaryMonth;
@@ -191,7 +192,7 @@ export default function UserPage() {
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center gap-6">
         <title>MG Member</title>
         <div className="w-20 h-20 rounded-full border-4 border-white/5 border-t-[#D4AF37] animate-spin"></div>
-        <p className="text-white font-black text-xs uppercase tracking-[0.3em] animate-pulse">Syncing Secure Data...</p>
+        <p className="text-white font-black text-xs uppercase tracking-[0.3em] animate-pulse">Establishing Secure Node...</p>
       </div>
     );
   }
@@ -348,6 +349,7 @@ export default function UserPage() {
             </div>
           </div>
 
+          {/* Monthly Summary Card inside Report Tab */}
           <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-12 rounded-[45px] border border-white/10 text-center shadow-2xl mb-10">
             <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.3em] mb-3">
               {selectedSummaryMonth === "All" ? "মোট জমার পরিমাণ" : `${selectedSummaryMonth.toUpperCase()} মাসের মোট জমা`}
@@ -395,4 +397,3 @@ export default function UserPage() {
     </div>
   );
 }
-    
