@@ -20,11 +20,10 @@ import {
   AlertCircle,
   UserCheck,
   Download
-} from "lucide-center";
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
 import UserAuthScreen from "@/components/user/UserAuthScreen";
-import { LucideIcon, Home as HomeLucide, FileText as FileLucide, Plus as PlusLucide, History as HistoryLucide, Download as DownloadLucide, LogOut as LogOutLucide, AlertCircle as AlertLucide, UserCheck as UserCheckLucide } from "lucide-react";
 
 const months = ["All", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -147,7 +146,6 @@ export default function UserPage() {
       <>
         <title>MG Member</title>
         <meta name="apple-mobile-web-app-title" content="MG Member" />
-        <link rel="apple-touch-icon" href={settings?.logo || "/favicon.ico"} />
         <UserAuthScreen />
       </>
     );
@@ -157,9 +155,8 @@ export default function UserPage() {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center p-8 text-center font-body">
         <title>MG Member</title>
-        <meta name="apple-mobile-web-app-title" content="MG Member" />
         <div className="w-24 h-24 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-10 shadow-2xl">
-          <AlertLucide className="w-12 h-12 text-[#D4AF37]" />
+          <AlertCircle className="w-12 h-12 text-[#D4AF37]" />
         </div>
         <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tight">Activate Your Profile</h2>
         <div className="w-full max-w-sm space-y-6">
@@ -192,13 +189,12 @@ export default function UserPage() {
     <div className="flex flex-col min-h-screen bg-[#1A1140] font-bengali text-white overflow-hidden">
       <title>MG Member</title>
       <meta name="apple-mobile-web-app-title" content="MG Member" />
-      <link rel="apple-touch-icon" href={settings?.logo || "/favicon.ico"} />
       
       {activeTab === "home" && (
         <main className="flex-1 overflow-y-auto pb-32 animate-in fade-in duration-700">
           <div className="relative pt-16 pb-28 px-8 text-center border-b-[12px] border-[#D4AF37]/10">
             <button onClick={handleLogout} className="absolute top-8 right-8 bg-white/5 p-3 rounded-full text-white/40 hover:text-white transition-colors">
-              <LogOutLucide className="w-5 h-5" />
+              <LogOut className="w-5 h-5" />
             </button>
             <div className="flex justify-center mb-8">
               <div className="w-32 h-32 rounded-full border-[6px] border-[#D4AF37]/20 p-1 bg-white shadow-2xl overflow-hidden flex items-center justify-center">
@@ -233,7 +229,7 @@ export default function UserPage() {
               </div>
             </div>
             <div className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] p-5 rounded-full text-black flex items-center justify-center gap-4 font-black text-sm shadow-xl">
-              <HomeLucide className="w-6 h-6" /> {bengaliDate}
+              <HomeIcon className="w-6 h-6" /> {bengaliDate}
             </div>
           </div>
         </main>
@@ -264,7 +260,7 @@ export default function UserPage() {
         <main className="flex-1 overflow-y-auto pb-32 px-6 pt-16 animate-in slide-in-from-right-10 duration-500">
           <div className="flex items-center justify-between mb-8 px-2">
             <h2 className="font-black text-2xl flex items-center gap-4">
-              <HistoryLucide className="text-[#D4AF37] w-8 h-8" /> জমার রিপোর্ট
+              <History className="text-[#D4AF37] w-8 h-8" /> জমার রিপোর্ট
             </h2>
             <div className="flex gap-2">
                <Select value={selectedSummaryMonth} onValueChange={setSelectedSummaryMonth}>
@@ -280,7 +276,7 @@ export default function UserPage() {
                  </SelectContent>
                </Select>
                <Button onClick={() => exportSummaryPDF(filteredTransactions.map(t=>({n:t.memberName, d:t.date, a:t.amount})), `Report_${user.displayName}`, monthlyTotal)} variant="ghost" className="bg-[#D4AF37] text-black h-12 rounded-2xl gap-2 font-black px-5 shadow-lg active:scale-95 transition-all">
-                  <DownloadLucide className="w-5 h-5" /> PDF
+                  <Download className="w-5 h-5" /> PDF
                 </Button>
             </div>
           </div>
@@ -311,15 +307,15 @@ export default function UserPage() {
 
       <nav className="fixed bottom-0 left-0 right-0 bg-[#2D1B69]/90 backdrop-blur-3xl h-28 px-10 flex items-center justify-between z-[100] rounded-t-[50px] border-t border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
         <button onClick={()=>setActiveTab("home")} className={cn("flex flex-col items-center gap-2 transition-all", activeTab==="home" ? "text-[#D4AF37] scale-110" : "text-white/30")}>
-          <HomeLucide className="w-8 h-8" /><span className="text-[10px] font-black uppercase">HOME</span>
+          <HomeIcon className="w-8 h-8" /><span className="text-[10px] font-black uppercase">HOME</span>
         </button>
         <button onClick={()=>setActiveTab("add")} className="relative -top-12">
           <div className={cn("w-20 h-20 rounded-full flex items-center justify-center border-[8px] border-[#1A1140] shadow-2xl transition-all", activeTab==="add" ? "bg-[#D4AF37] text-black" : "bg-[#2D1B69] text-white/40")}>
-            <PlusLucide className="w-10 h-10" />
+            <Plus className="w-10 h-10" />
           </div>
         </button>
         <button onClick={()=>setActiveTab("history")} className={cn("flex flex-col items-center gap-2 transition-all", activeTab==="history" ? "text-[#D4AF37] scale-110" : "text-white/30")}>
-          <FileLucide className="w-8 h-8" /><span className="text-[10px] font-black uppercase">REPORT</span>
+          <FileText className="w-8 h-8" /><span className="text-[10px] font-black uppercase">REPORT</span>
         </button>
       </nav>
     </div>
