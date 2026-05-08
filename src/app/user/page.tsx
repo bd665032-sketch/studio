@@ -2,13 +2,38 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useUser, useAuth, useFirestore, useDoc, useCollection } from "@/firebase";
-import { signOut, updateProfile } from "firebase/auth";
-import { collection, query, where, addDoc, serverTimestamp, doc, orderBy } from "firebase/firestore";
+import { 
+  useUser, 
+  useAuth, 
+  useFirestore, 
+  useDoc, 
+  useCollection 
+} from "@/firebase";
+import { 
+  signOut, 
+  updateProfile, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword 
+} from "firebase/auth";
+import { 
+  collection, 
+  query, 
+  where, 
+  addDoc, 
+  serverTimestamp, 
+  doc, 
+  orderBy 
+} from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { 
   History, 
@@ -19,37 +44,45 @@ import {
   Loader2,
   AlertCircle,
   UserCheck,
-  Download
+  Download,
+  Mail,
+  Lock,
+  User
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
-import UserAuthScreen from "@/components/user/UserAuthScreen";
 
 const months = ["All", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export default function UserPage() {
+  // Firebase Hooks
   const { user, loading: userLoading } = useUser();
   const auth = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
   
+  // UI State
   const [activeTab, setActiveTab] = useState("home");
+  const [isLogin, setIsLogin] = useState(true);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [mutationLoading, setMutationLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  
+  // Form State
+  const [authData, setAuthData] = useState({ email: "", password: "", fullName: "" });
   const [depositAmount, setDepositAmount] = useState(5000);
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSummaryMonth, setSelectedSummaryMonth] = useState("All");
-  const [mutationLoading, setMutationLoading] = useState(false);
-  const [selectedOfficialName, setSelectedOfficialName] = useState("");
 
-  // Sync Global Settings from Admin
+  // Sync Global Settings from Admin (Logo and Foundation Name)
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  // Fetch official members
+  // Fetch official members for registration verification
   const membersQuery = useMemo(() => (db ? query(collection(db, "members"), orderBy("name")) : null), [db]);
-  const { data: membersList } = useCollection(membersQuery);
+  const { data: membersList, loading: membersLoading } = useCollection(membersQuery);
 
-  // Fetch transactions for logged in user
+  // Fetch transactions for logged-in user
   const txQuery = useMemo(() => {
     if (!user?.displayName || !db) return null;
     return query(
@@ -60,6 +93,7 @@ export default function UserPage() {
   
   const { data: rawTransactions, loading: txLoading } = useCollection(txQuery);
 
+  // Logic: Calculate Transactions
   const myTransactions = useMemo(() => {
     if (!rawTransactions) return [];
     return [...rawTransactions].sort((a, b) => {
@@ -87,29 +121,38 @@ export default function UserPage() {
     return filteredTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
   }, [filteredTransactions]);
 
+  // Effects
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const handleLogout = () => {
-    if (auth) signOut(auth);
-  };
-
-  const handleFixProfile = async () => {
-    if (!selectedOfficialName || !user) return;
-    setMutationLoading(true);
+  // Handlers: Authentication
+  const handleAuthSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!auth) return;
+    setAuthLoading(true);
     try {
-      await updateProfile(user, { displayName: selectedOfficialName });
-      toast({ title: "সফল!", description: "আপনার প্রোফাইল আপডেট হয়েছে।" });
-      window.location.reload();
-    } catch (e) {
-      toast({ variant: "destructive", title: "ত্রুটি", description: "আবার চেষ্টা করুন।" });
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, authData.email, authData.password);
+        toast({ title: "স্বাগতম!", description: "লগইন সফল হয়েছে।" });
+      } else {
+        if (!authData.fullName) throw new Error("আপনার অফিসিয়াল নাম সিলেক্ট করুন।");
+        const userCred = await createUserWithEmailAndPassword(auth, authData.email, authData.password);
+        await updateProfile(userCred.user, { displayName: authData.fullName });
+        toast({ title: "সফল!", description: "অ্যাকাউন্ট তৈরি হয়েছে।" });
+        window.location.reload();
+      }
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "ত্রুটি", description: error.message });
     } finally {
-      setMutationLoading(false);
+      setAuthLoading(false);
     }
   };
 
+  const handleLogout = () => { if (auth) signOut(auth); };
+
+  // Handlers: Deposit
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.displayName || !db) return;
@@ -119,76 +162,94 @@ export default function UserPage() {
         memberName: user.displayName,
         amount: Number(depositAmount),
         date: depositDate,
-        category: "Mobile Deposit",
+        category: "Mobile App Deposit",
         timestamp: serverTimestamp()
       });
       toast({ title: "সফল!", description: "টাকা জমা দেওয়া হয়েছে।" });
       setDepositAmount(5000);
       setActiveTab("home");
-    } catch (e) {
+    } catch (e: any) {
       toast({ variant: "destructive", title: "ত্রুটি", description: "আবার চেষ্টা করুন।" });
     } finally {
       setMutationLoading(false);
     }
   };
 
+  // Render: Loading Screen
   if (userLoading || txLoading) {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center gap-6">
+        <title>MG Member</title>
         <div className="w-20 h-20 rounded-full border-4 border-white/5 border-t-[#D4AF37] animate-spin"></div>
-        <p className="text-white font-black text-xs uppercase tracking-widest animate-pulse">Establishing Secure Node...</p>
+        <p className="text-white font-black text-xs uppercase tracking-[0.3em] animate-pulse">Establishing Secure Node...</p>
       </div>
     );
   }
 
+  // Render: Auth Screen
   if (!user) {
     return (
-      <>
-        <title>MG Member</title>
-        <meta name="apple-mobile-web-app-title" content="MG Member" />
-        <UserAuthScreen />
-      </>
-    );
-  }
-
-  if (!user.displayName) {
-    return (
-      <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center p-8 text-center font-body">
-        <title>MG Member</title>
-        <div className="w-24 h-24 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-10 shadow-2xl">
-          <AlertCircle className="w-12 h-12 text-[#D4AF37]" />
-        </div>
-        <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tight">Activate Your Profile</h2>
-        <div className="w-full max-w-sm space-y-6">
-          <Select onValueChange={setSelectedOfficialName}>
-            <SelectTrigger className="h-18 rounded-[24px] bg-white/5 border-white/10 text-white font-black text-base">
-              <SelectValue placeholder="সিলেক্ট অফিসিয়াল নাম" />
-            </SelectTrigger>
-            <SelectContent className="bg-white border-none shadow-2xl rounded-[24px] z-[500]">
-              {membersList?.map((m: any) => (
-                <SelectItem key={m.id} value={m.name} className="py-4 font-black text-[#1E3A8A]">
-                  {m.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button onClick={handleFixProfile} disabled={!selectedOfficialName || mutationLoading} className="w-full h-18 bg-[#D4AF37] text-black font-black rounded-[24px] shadow-xl">
-            {mutationLoading ? <Loader2 className="animate-spin" /> : "প্রোফাইল একটিভ করুন"}
-          </Button>
-          <button onClick={handleLogout} className="text-white/40 text-xs font-bold uppercase tracking-widest mt-8">লগআউট</button>
+      <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center p-4 font-body relative overflow-hidden">
+        <title>MG Member Login</title>
+        <div className="absolute top-[-5%] right-[-5%] w-[300px] h-[300px] bg-white/5 rounded-full blur-[80px]"></div>
+        <div className="w-full max-w-[400px] bg-white/95 backdrop-blur-3xl rounded-[45px] shadow-2xl overflow-hidden relative z-10 border border-white/20">
+          <div className="py-10 flex flex-col items-center text-center px-6">
+            <div className="bg-white p-4 rounded-full shadow-lg border-2 border-blue-50 mb-5 w-24 h-24 flex items-center justify-center overflow-hidden">
+              {settings?.logo ? (
+                <img src={settings.logo} alt="Logo" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-14 h-14 bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] rounded-full flex items-center justify-center shadow-inner">
+                  <span className="text-white text-2xl font-black italic">MG</span>
+                </div>
+              )}
+            </div>
+            <h1 className="text-[18px] font-black text-[#1E3A8A] uppercase tracking-widest">{settings?.name || "MEMBER PORTAL"}</h1>
+          </div>
+          <div className="px-8 pb-10">
+            <div className="flex bg-slate-100 p-1.5 rounded-[28px] mb-8 shadow-inner">
+              <button type="button" onClick={() => setIsLogin(true)} className={`flex-1 py-4 rounded-[24px] text-[11px] font-black uppercase transition-all duration-500 ${isLogin ? 'bg-[#1E3A8A] text-white shadow-lg' : 'text-slate-400'}`}>লগইন</button>
+              <button type="button" onClick={() => setIsLogin(false)} className={`flex-1 py-4 rounded-[24px] text-[11px] font-black uppercase transition-all duration-500 ${!isLogin ? 'bg-[#1E3A8A] text-white shadow-lg' : 'text-slate-400'}`}>রেজিস্ট্রেশন</button>
+            </div>
+            <form onSubmit={handleAuthSubmit} className="space-y-4">
+              {!isLogin && (
+                <div className="relative group">
+                  <User className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10" />
+                  <Select onValueChange={(v) => setAuthData({ ...authData, fullName: v })}>
+                    <SelectTrigger className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none font-black text-sm text-[#1E3A8A]">
+                      <SelectValue placeholder="আপনার অফিসিয়াল নাম" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-white rounded-[24px] border-none shadow-2xl z-[500]">
+                      {membersLoading ? <Loader2 className="animate-spin" /> : membersList?.map((m: any) => (
+                        <SelectItem key={m.id} value={m.name} className="font-black py-4 text-[#1E3A8A]">{m.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="relative group">
+                <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1E3A8A]" />
+                <Input type="email" placeholder="ইমেইল অ্যাড্রেস" required value={authData.email} onChange={(e) => setAuthData({ ...authData, email: e.target.value })} className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none font-black text-sm" />
+              </div>
+              <div className="relative group">
+                <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1E3A8A]" />
+                <Input type="password" placeholder="পাসওয়ার্ড" required value={authData.password} onChange={(e) => setAuthData({ ...authData, password: e.target.value })} className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none font-black text-sm" />
+              </div>
+              <Button type="submit" disabled={authLoading} className="w-full h-16 rounded-[24px] bg-[#1E3A8A] text-white font-black text-xs uppercase tracking-widest shadow-xl active:scale-95 transition-all mt-4">
+                {authLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLogin ? "SECURE LOGIN" : "AUTHORIZE MEMBER")}
+              </Button>
+            </form>
+          </div>
         </div>
       </div>
     );
   }
 
-  const bengaliDate = new Intl.DateTimeFormat('bn-BD', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
-  }).format(currentTime);
+  // Render: Main Dashboard
+  const bengaliDate = new Intl.DateTimeFormat('bn-BD', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(currentTime);
 
   return (
     <div className="flex flex-col min-h-screen bg-[#1A1140] font-bengali text-white overflow-hidden">
-      <title>MG Member</title>
-      <meta name="apple-mobile-web-app-title" content="MG Member" />
+      <title>MG Member Dashboard</title>
       
       {activeTab === "home" && (
         <main className="flex-1 overflow-y-auto pb-32 animate-in fade-in duration-700">
@@ -198,19 +259,12 @@ export default function UserPage() {
             </button>
             <div className="flex justify-center mb-8">
               <div className="w-32 h-32 rounded-full border-[6px] border-[#D4AF37]/20 p-1 bg-white shadow-2xl overflow-hidden flex items-center justify-center">
-                {settings?.logo ? (
-                  <img src={settings.logo} alt="Logo" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-5xl text-[#1E3A8A] font-black italic">MG</span>
-                )}
+                {settings?.logo ? <img src={settings.logo} alt="Logo" className="w-full h-full object-cover" /> : <span className="text-5xl text-[#1E3A8A] font-black italic">MG</span>}
               </div>
             </div>
-            <h1 className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.4em] mb-3">
-              {settings?.name || "MINAR GO FOUNDATION"}
-            </h1>
+            <h1 className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.4em] mb-3">{settings?.name || "MINAR GO FOUNDATION"}</h1>
             <h2 className="text-4xl font-black tracking-tight">{user.displayName}</h2>
           </div>
-
           <div className="px-6 space-y-6 -mt-12 relative z-20">
             <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-12 rounded-[45px] border border-white/10 text-center shadow-2xl">
               <p className="text-[#D4AF37]/70 text-[11px] font-black uppercase tracking-[0.3em] mb-3">সর্বমোট জমার পরিমাণ</p>
@@ -259,17 +313,17 @@ export default function UserPage() {
       {activeTab === "history" && (
         <main className="flex-1 overflow-y-auto pb-32 px-6 pt-16 animate-in slide-in-from-right-10 duration-500">
           <div className="flex items-center justify-between mb-8 px-2">
-            <h2 className="font-black text-2xl flex items-center gap-4">
+            <h2 className="font-black text-2xl flex items-center gap-4 uppercase tracking-tighter">
               <History className="text-[#D4AF37] w-8 h-8" /> জমার রিপোর্ট
             </h2>
             <div className="flex gap-2">
                <Select value={selectedSummaryMonth} onValueChange={setSelectedSummaryMonth}>
-                 <SelectTrigger className="w-32 h-12 bg-white/10 border-white/20 text-white font-black rounded-2xl text-[11px] uppercase">
-                   <SelectValue placeholder="Month" />
+                 <SelectTrigger className="w-32 h-12 bg-white/10 border-white/20 text-white font-black rounded-2xl text-[11px] uppercase tracking-widest">
+                   <SelectValue placeholder="মাস সিলেক্ট" />
                  </SelectTrigger>
                  <SelectContent className="bg-white border-none shadow-2xl rounded-2xl z-[500]">
                    {months.map(m => (
-                     <SelectItem key={m} value={m} className="font-black py-4 text-xs text-[#1E3A8A]">
+                     <SelectItem key={m} value={m} className="font-black py-4 text-[#1E3A8A]">
                        {m.toUpperCase()}
                      </SelectItem>
                    ))}
@@ -293,11 +347,11 @@ export default function UserPage() {
               <div key={t.id} className="bg-white/5 p-8 rounded-[40px] flex items-center justify-between border border-white/5 shadow-2xl backdrop-blur-sm">
                 <div className="space-y-1">
                   <p className="font-black text-2xl text-[#D4AF37]">৳{t.amount.toLocaleString()}</p>
-                  <p className="text-[11px] text-white/40 font-black uppercase">{t.date}</p>
+                  <p className="text-[11px] text-white/40 font-black uppercase tracking-widest">{t.date}</p>
                 </div>
                 <div className="bg-[#D4AF37]/10 px-5 py-2.5 rounded-full border border-[#D4AF37]/20 flex items-center gap-2">
                   <div className="w-2 h-2 bg-[#D4AF37] rounded-full animate-pulse"></div>
-                  <span className="text-[10px] font-black text-[#D4AF37] uppercase">VERIFIED</span>
+                  <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">VERIFIED</span>
                 </div>
               </div>
             ))}
@@ -305,17 +359,19 @@ export default function UserPage() {
         </main>
       )}
 
+      {/* Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-[#2D1B69]/90 backdrop-blur-3xl h-28 px-10 flex items-center justify-between z-[100] rounded-t-[50px] border-t border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
         <button onClick={()=>setActiveTab("home")} className={cn("flex flex-col items-center gap-2 transition-all", activeTab==="home" ? "text-[#D4AF37] scale-110" : "text-white/30")}>
-          <HomeIcon className="w-8 h-8" /><span className="text-[10px] font-black uppercase">HOME</span>
+          <HomeIcon className="w-8 h-8" /><span className="text-[10px] font-black uppercase tracking-tighter">HOME</span>
         </button>
         <button onClick={()=>setActiveTab("add")} className="relative -top-12">
           <div className={cn("w-20 h-20 rounded-full flex items-center justify-center border-[8px] border-[#1A1140] shadow-2xl transition-all", activeTab==="add" ? "bg-[#D4AF37] text-black" : "bg-[#2D1B69] text-white/40")}>
             <Plus className="w-10 h-10" />
           </div>
+          <span className={cn("absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-tighter", activeTab==="add" ? "text-[#D4AF37]" : "text-white/30")}>DEPOSIT</span>
         </button>
         <button onClick={()=>setActiveTab("history")} className={cn("flex flex-col items-center gap-2 transition-all", activeTab==="history" ? "text-[#D4AF37] scale-110" : "text-white/30")}>
-          <FileText className="w-8 h-8" /><span className="text-[10px] font-black uppercase">REPORT</span>
+          <FileText className="w-8 h-8" /><span className="text-[10px] font-black uppercase tracking-tighter">REPORT</span>
         </button>
       </nav>
     </div>
