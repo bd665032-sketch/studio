@@ -145,8 +145,9 @@ export default function UserPage() {
   if (!user) {
     return (
       <>
-        <title>Minar Go Member</title>
+        <title>MG Member</title>
         <meta name="apple-mobile-web-app-title" content="MG Member" />
+        <link rel="apple-touch-icon" href={settings?.logo || "/favicon.ico"} />
         <UserAuthScreen />
       </>
     );
@@ -155,6 +156,8 @@ export default function UserPage() {
   if (!user.displayName) {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center p-8 text-center font-body">
+        <title>MG Member</title>
+        <meta name="apple-mobile-web-app-title" content="MG Member" />
         <div className="w-24 h-24 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-10 shadow-2xl">
           <AlertLucide className="w-12 h-12 text-[#D4AF37]" />
         </div>
@@ -187,8 +190,9 @@ export default function UserPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#1A1140] font-bengali text-white overflow-hidden">
-      <title>Minar Go Member</title>
+      <title>MG Member</title>
       <meta name="apple-mobile-web-app-title" content="MG Member" />
+      <link rel="apple-touch-icon" href={settings?.logo || "/favicon.ico"} />
       
       {activeTab === "home" && (
         <main className="flex-1 overflow-y-auto pb-32 animate-in fade-in duration-700">

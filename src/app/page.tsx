@@ -50,7 +50,7 @@ export default function Home() {
   if (!user || !isAdmin) {
     return (
       <>
-        <title>Minar Go Admin</title>
+        <title>MG Admin</title>
         <meta name="apple-mobile-web-app-title" content="MG Admin" />
         <AuthScreen />
       </>
@@ -59,7 +59,7 @@ export default function Home() {
 
   return (
     <>
-      <title>Minar Go Admin</title>
+      <title>MG Admin</title>
       <meta name="apple-mobile-web-app-title" content="MG Admin" />
       <div className="min-h-screen flex flex-col">
         <Header onLogout={handleLogout} />

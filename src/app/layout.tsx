@@ -1,3 +1,4 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import {Toaster} from '@/components/ui/toaster';
@@ -5,7 +6,7 @@ import { FirebaseClientProvider } from '@/firebase';
 import { GlobalNotificationListener } from '@/components/GlobalNotificationListener';
 
 export const metadata: Metadata = {
-  title: 'Minar Go - Foundation',
+  title: 'Minar Go - Management',
   description: 'Management app for Minar Go Expatriate Development Foundation',
 };
 
