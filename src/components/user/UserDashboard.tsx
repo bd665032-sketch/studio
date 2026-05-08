@@ -20,9 +20,11 @@ import {
   FileText,
   Loader2,
   AlertCircle,
-  UserCheck
+  UserCheck,
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { exportSummaryPDF } from "@/lib/pdf-utils";
 
 export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const { user } = useUser();
@@ -103,6 +105,22 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     }
   };
 
+  const handleDownloadPDF = () => {
+    if (!myTransactions || myTransactions.length === 0) {
+      toast({ variant: "destructive", title: "ত্রুটি", description: "ডাউনলোড করার মতো কোনো রিপোর্ট পাওয়া যায়নি।" });
+      return;
+    }
+    
+    const pdfData = myTransactions.map((t: any) => ({
+      n: t.memberName,
+      d: t.date,
+      a: t.amount
+    }));
+    
+    exportSummaryPDF(pdfData, `Report_${user?.displayName}`, totalBalance);
+    toast({ title: "সফল!", description: "আপনার জমার রিপোর্ট ডাউনলোড করা হচ্ছে।" });
+  };
+
   const bengaliDate = new Intl.DateTimeFormat('bn-BD', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   }).format(currentTime);
@@ -116,7 +134,6 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     );
   }
 
-  // FIXED: Recovery screen if displayName is missing
   if (!user?.displayName) {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center p-8 text-center font-body">
@@ -230,9 +247,21 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
 
       {activeTab === "history" && (
         <main className="flex-1 overflow-y-auto pb-32 px-6 pt-16 animate-in slide-in-from-right-10 duration-500">
-          <h2 className="font-black text-2xl mb-10 flex items-center gap-4 px-2 uppercase tracking-tight">
-            <History className="text-[#D4AF37] w-8 h-8" /> জমার রিপোর্ট
-          </h2>
+          <div className="flex items-center justify-between mb-10 px-2">
+            <h2 className="font-black text-2xl flex items-center gap-4 uppercase tracking-tight">
+              <History className="text-[#D4AF37] w-8 h-8" /> জমার রিপোর্ট
+            </h2>
+            {myTransactions && myTransactions.length > 0 && (
+              <Button 
+                onClick={handleDownloadPDF} 
+                variant="ghost" 
+                className="bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 h-12 rounded-2xl gap-2 font-black px-4"
+              >
+                <Download className="w-5 h-5" /> PDF
+              </Button>
+            )}
+          </div>
+          
           <div className="space-y-5">
             {(!myTransactions || myTransactions.length === 0) ? (
               <div className="text-center py-32 opacity-20">
