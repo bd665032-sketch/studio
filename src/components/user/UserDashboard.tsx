@@ -16,7 +16,8 @@ import {
   Calendar,
   Home,
   FileText,
-  Loader2
+  Loader2,
+  ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,11 +31,11 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [mutationLoading, setMutationLoading] = useState(false);
 
-  // ১. অ্যাডমিন প্যানেল থেকে লোগো ও ফাউন্ডেশনের নাম রিয়েল-টাইমে সিঙ্ক করা
+  // ১. অ্যাডমিন সেটিংস সিঙ্ক
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  // ২. শুধুমাত্র ইউজারের নিজস্ব ট্রানজেকশন লোড করা (displayName এর ওপর ভিত্তি করে)
+  // ২. নিজস্ব ট্রানজেকশন কুয়েরি
   const txQuery = useMemo(() => {
     if (!user?.displayName || !db) return null;
     return query(
@@ -44,9 +45,9 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     );
   }, [user?.displayName, db]);
   
-  const { data: myTransactions, loading: txLoading } = useCollection(txQuery);
+  const { data: myTransactions } = useCollection(txQuery);
 
-  // ৩. ইউজারের নিজস্ব মোট জমার হিসাব
+  // ৩. ব্যালেন্স সামারি
   const totalBalance = useMemo(() => {
     if (!myTransactions) return 0;
     return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
@@ -57,14 +58,10 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     return () => clearInterval(timer);
   }, []);
 
-  // ৪. টাকা জমা দেওয়া (সরাসরি অ্যাডমিন প্যানেলের কানেকশন)
+  // ৪. টাকা জমা দেওয়া (অ্যাডমিন প্যানেলে সিঙ্ক হবে)
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.displayName) {
-      toast({ variant: "destructive", title: "ত্রুটি", description: "আপনার লগইন তথ্য পাওয়া যাচ্ছে না। আবার লগইন করুন।" });
-      return;
-    }
-    if (!db) return;
+    if (!user?.displayName || !db) return;
     
     setMutationLoading(true);
     try {
@@ -96,102 +93,100 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
       
       {activeTab === "home" && (
         <main className="flex-1 overflow-y-auto pb-32 animate-in fade-in duration-700">
-          {/* Header Section */}
-          <div className="relative bg-[#1A1140] pt-14 pb-24 px-6 text-center border-b-[10px] border-[#D4AF37]/10">
-            <button onClick={onLogout} className="absolute top-6 right-6 bg-red-600/90 px-4 py-1.5 rounded-2xl text-[10px] font-black uppercase shadow-lg">LOG OUT</button>
-            <div className="flex justify-center mb-6">
-              <div className="w-28 h-28 rounded-full border-[5px] border-[#D4AF37]/20 p-1 bg-white shadow-2xl overflow-hidden flex items-center justify-center">
+          <div className="relative bg-[#1A1140] pt-16 pb-28 px-8 text-center border-b-[12px] border-[#D4AF37]/10">
+            <button onClick={onLogout} className="absolute top-8 right-8 bg-red-600/90 px-5 py-2 rounded-2xl text-[10px] font-black uppercase shadow-xl active:scale-95 transition-all">LOG OUT</button>
+            <div className="flex justify-center mb-8">
+              <div className="w-32 h-32 rounded-full border-[6px] border-[#D4AF37]/20 p-1.5 bg-white shadow-2xl overflow-hidden flex items-center justify-center">
                 {settings?.logo ? (
                   <img src={settings.logo} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-4xl text-[#1E3A8A] font-black italic">MG</span>
+                  <span className="text-5xl text-[#1E3A8A] font-black italic">MG</span>
                 )}
               </div>
             </div>
-            <h1 className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.3em] mb-2">{settings?.name || "MINAR GO FOUNDATION"}</h1>
-            <h2 className="text-3xl font-black tracking-tight">{user?.displayName || "Loading Name..."}</h2>
+            <h1 className="text-[#D4AF37] text-[12px] font-black uppercase tracking-[0.4em] mb-3">{settings?.name || "MINAR GO FOUNDATION"}</h1>
+            <h2 className="text-4xl font-black tracking-tight">{user?.displayName || "Loading Name..."}</h2>
           </div>
 
-          <div className="px-6 space-y-6 -mt-10 relative z-20">
-            {/* Real-time Summary Card */}
-            <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-8 rounded-[35px] border border-white/10 text-center shadow-xl">
-              <p className="text-[#D4AF37]/70 text-[10px] font-black uppercase tracking-widest mb-1">মোট জমার পরিমাণ (Summary)</p>
-              <h3 className="text-4xl font-black">৳{totalBalance.toLocaleString()}</h3>
+          <div className="px-6 space-y-6 -mt-12 relative z-20">
+            <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-10 rounded-[45px] border border-white/10 text-center shadow-2xl">
+              <p className="text-[#D4AF37]/70 text-[11px] font-black uppercase tracking-[0.2em] mb-2">আপনার মোট জমার পরিমাণ</p>
+              <h3 className="text-5xl font-black">৳{totalBalance.toLocaleString()}</h3>
             </div>
 
-            {/* Event Cards */}
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-[#2D2D4D] p-5 rounded-[30px] border border-white/5 text-center shadow-lg">
-                <span className="text-xl">🕋</span>
-                <p className="text-[#D4AF37] text-[10px] font-black mt-2 uppercase tracking-widest">পরবর্তী হজ</p>
-                <p className="text-[13px] font-bold">২৭ মে, ২০২৬</p>
+              <div className="bg-[#2D2D4D] p-6 rounded-[35px] border border-white/5 text-center shadow-xl">
+                <span className="text-2xl">🕋</span>
+                <p className="text-[#D4AF37] text-[10px] font-black mt-3 uppercase tracking-widest">পরবর্তী হজ</p>
+                <p className="text-[14px] font-bold mt-1">২৭ মে, ২০২৬</p>
               </div>
-              <div className="bg-[#2D2D4D] p-5 rounded-[30px] border border-white/5 text-center shadow-lg">
-                <span className="text-xl">🌙</span>
-                <p className="text-[#D4AF37] text-[10px] font-black mt-2 uppercase tracking-widest">রমজান</p>
-                <p className="text-[13px] font-bold">১৮ ফেব্রু., ২০২৬</p>
+              <div className="bg-[#2D2D4D] p-6 rounded-[35px] border border-white/5 text-center shadow-xl">
+                <span className="text-2xl">🌙</span>
+                <p className="text-[#D4AF37] text-[10px] font-black mt-3 uppercase tracking-widest">রমজান</p>
+                <p className="text-[14px] font-bold mt-1">১৮ ফেব্রু., ২০২৬</p>
               </div>
             </div>
 
-            {/* Date Banner */}
-            <div className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] p-4 rounded-full text-black flex items-center justify-center gap-3 font-black text-xs shadow-lg">
-              <Calendar className="w-5 h-5" /> আজকের তারিখ: {bengaliDate}
+            <div className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] p-5 rounded-full text-black flex items-center justify-center gap-4 font-black text-sm shadow-xl">
+              <Calendar className="w-6 h-6" /> {bengaliDate}
             </div>
 
-            {/* Announcement Box */}
-            <div className="bg-[#2D2D4D]/60 p-6 rounded-[35px] border border-white/5">
-              <p className="text-[#D4AF37] text-[12px] font-black mb-1">জরুরি বিজ্ঞপ্তি:</p>
-              <p className="text-white/80 text-sm">কি অবস্থা কেমন আছেন সবাই, নিয়মিত কিস্তি পরিশোধ করুন।</p>
+            <div className="bg-[#2D2D4D]/60 p-8 rounded-[40px] border border-white/5 relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><FileText className="w-12 h-12" /></div>
+              <p className="text-[#D4AF37] text-[13px] font-black mb-2 uppercase tracking-widest">জরুরি বিজ্ঞপ্তি:</p>
+              <p className="text-white/80 text-[15px] leading-relaxed">কি অবস্থা কেমন আছেন সবাই, নিয়মিত কিস্তি পরিশোধ করুন। ফাউন্ডেশনের উন্নয়নে আপনার সহযোগিতা কাম্য।</p>
             </div>
           </div>
         </main>
       )}
 
-      {/* Deposit Form Section */}
       {activeTab === "add" && (
-        <main className="flex-1 overflow-y-auto pb-32 px-6 pt-12 animate-in slide-in-from-bottom-10">
-          <div className="bg-[#2D1B69] p-10 rounded-[45px] shadow-2xl border-t-[8px] border-[#D4AF37]">
-            <h3 className="text-center font-black text-2xl mb-12 uppercase tracking-widest">টাকা জমা দিন</h3>
-            <form onSubmit={handleDeposit} className="space-y-8">
-              <div className="space-y-2">
-                <Label className="text-[#D4AF37] text-[10px] font-black uppercase tracking-widest ml-2">জমার পরিমাণ (TK)</Label>
-                <Input type="number" value={depositAmount} onChange={(e)=>setDepositAmount(Number(e.target.value))} className="h-20 text-4xl font-black bg-white/5 border-none text-center rounded-3xl text-white" />
+        <main className="flex-1 overflow-y-auto pb-32 px-6 pt-16 animate-in slide-in-from-bottom-10 duration-500">
+          <div className="bg-[#2D1B69] p-12 rounded-[50px] shadow-2xl border-t-[10px] border-[#D4AF37]">
+            <h3 className="text-center font-black text-3xl mb-12 uppercase tracking-[0.2em]">টাকা জমা দিন</h3>
+            <form onSubmit={handleDeposit} className="space-y-10">
+              <div className="space-y-3">
+                <Label className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.3em] ml-3">জমার পরিমাণ (TK)</Label>
+                <Input type="number" value={depositAmount} onChange={(e)=>setDepositAmount(Number(e.target.value))} className="h-24 text-5xl font-black bg-white/5 border-none text-center rounded-[30px] text-white shadow-inner" />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[#D4AF37] text-[10px] font-black uppercase tracking-widest ml-2">জমার তারিখ</Label>
-                <Input type="date" value={depositDate} onChange={(e)=>setDepositDate(e.target.value)} className="h-16 font-black bg-white/5 border-none rounded-2xl px-6 text-white" />
+              <div className="space-y-3">
+                <Label className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.3em] ml-3">জমার তারিখ</Label>
+                <Input type="date" value={depositDate} onChange={(e)=>setDepositDate(e.target.value)} className="h-18 font-black bg-white/5 border-none rounded-[25px] px-8 text-white text-lg shadow-inner" />
               </div>
-              <div className="space-y-2">
-                <Label className="text-[#D4AF37] text-[10px] font-black uppercase tracking-widest ml-2">অ্যাকাউন্ট হোল্ডার</Label>
-                <div className="h-16 bg-white/10 rounded-2xl flex items-center justify-between px-6 border border-white/5">
-                  <span className="font-black text-lg">{user?.displayName || "Loading..."}</span>
-                  <ShieldCheck className="w-7 h-7 text-[#D4AF37]" />
+              <div className="space-y-3">
+                <Label className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.3em] ml-3">অ্যাকাউন্ট হোল্ডার</Label>
+                <div className="h-18 bg-white/10 rounded-[25px] flex items-center justify-between px-8 border border-white/5 shadow-inner">
+                  <span className="font-black text-xl">{user?.displayName || "Loading..."}</span>
+                  <ShieldCheck className="w-8 h-8 text-[#D4AF37]" />
                 </div>
               </div>
-              <Button type="submit" disabled={mutationLoading} className="w-full h-18 bg-[#D4AF37] text-black font-black text-lg rounded-3xl shadow-xl active:scale-95 transition-all mt-6">
-                {mutationLoading ? "প্রসেসিং হচ্ছে..." : "সাবমিট করুন"}
+              <Button type="submit" disabled={mutationLoading} className="w-full h-20 bg-gradient-to-r from-[#D4AF37] to-[#B8960C] text-black font-black text-xl rounded-[30px] shadow-[0_15px_40px_rgba(212,175,55,0.3)] active:scale-95 transition-all mt-8 uppercase tracking-[0.1em]">
+                {mutationLoading ? <Loader2 className="w-7 h-7 animate-spin" /> : "সাবমিট করুন"}
               </Button>
             </form>
           </div>
         </main>
       )}
 
-      {/* Real-time Report/History Section */}
       {activeTab === "history" && (
-        <main className="flex-1 overflow-y-auto pb-32 px-6 pt-10 animate-in slide-in-from-right-10">
-          <h2 className="font-black text-2xl mb-8 flex items-center gap-3"><History className="text-[#D4AF37]" /> জমার রিপোর্ট</h2>
-          <div className="space-y-4">
+        <main className="flex-1 overflow-y-auto pb-32 px-6 pt-16 animate-in slide-in-from-right-10 duration-500">
+          <h2 className="font-black text-3xl mb-10 flex items-center gap-4 px-2 uppercase tracking-tight"><History className="text-[#D4AF37] w-8 h-8" /> জমার রিপোর্ট</h2>
+          <div className="space-y-5">
             {(!myTransactions || myTransactions.length === 0) ? (
-              <div className="text-center py-24 opacity-20"><History className="w-16 h-16 mx-auto mb-3" /><p className="font-black text-xs">কোনো ডাটা পাওয়া যায়নি</p></div>
+              <div className="text-center py-32 opacity-20"><History className="w-24 h-24 mx-auto mb-5" /><p className="font-black text-sm uppercase tracking-widest">No Records Found</p></div>
             ) : (
               myTransactions.map((t, i) => (
-                <div key={i} className="bg-white/5 p-6 rounded-[30px] flex items-center justify-between border border-white/5 shadow-inner">
-                  <div>
-                    <p className="font-black text-xl">৳{t.amount.toLocaleString()}</p>
-                    <p className="text-[10px] text-white/40 font-black uppercase mt-0.5">{t.date}</p>
+                <div key={i} className="bg-white/5 p-8 rounded-[40px] flex items-center justify-between border border-white/5 shadow-2xl backdrop-blur-sm group hover:bg-white/10 transition-all">
+                  <div className="space-y-1">
+                    <p className="font-black text-2xl tracking-tighter">৳{t.amount.toLocaleString()}</p>
+                    <p className="text-[11px] text-white/40 font-black uppercase tracking-widest">{t.date}</p>
                   </div>
-                  <div className="bg-[#D4AF37]/10 px-4 py-1.5 rounded-full border border-[#D4AF37]/20">
-                    <span className="text-[9px] font-black text-[#D4AF37] uppercase">VERIFIED</span>
+                  <div className="flex flex-col items-end gap-2">
+                    <div className="bg-[#D4AF37]/10 px-5 py-2 rounded-full border border-[#D4AF37]/20 flex items-center gap-2">
+                      <div className="w-2 h-2 bg-[#D4AF37] rounded-full animate-pulse"></div>
+                      <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">VERIFIED</span>
+                    </div>
+                    <p className="text-[9px] text-white/20 font-black uppercase tracking-tighter">Minar Go Secure</p>
                   </div>
                 </div>
               ))
@@ -200,21 +195,20 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
         </main>
       )}
 
-      {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-[#2D1B69]/95 backdrop-blur-2xl h-24 px-10 flex items-center justify-between z-[100] rounded-t-[45px] border-t border-white/5 shadow-2xl">
-        <button onClick={()=>setActiveTab("home")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab==="home" ? "text-[#D4AF37] scale-110" : "text-white/20")}>
-          <Home className="w-7 h-7" />
-          <span className="text-[9px] font-black uppercase tracking-tighter">HOME</span>
+      <nav className="fixed bottom-0 left-0 right-0 bg-[#2D1B69]/90 backdrop-blur-3xl h-28 px-10 flex items-center justify-between z-[100] rounded-t-[50px] border-t border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
+        <button onClick={()=>setActiveTab("home")} className={cn("flex flex-col items-center gap-2 transition-all duration-300", activeTab==="home" ? "text-[#D4AF37] scale-110" : "text-white/30 hover:text-white/50")}>
+          <Home className="w-8 h-8" />
+          <span className="text-[10px] font-black uppercase tracking-tighter">HOME</span>
         </button>
-        <button onClick={()=>setActiveTab("add")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab==="add" ? "text-[#D4AF37] scale-110" : "text-white/20")}>
-          <div className={cn("w-14 h-14 rounded-full flex items-center justify-center -mt-10 border-4 border-[#1A1140] shadow-xl", activeTab==="add" ? "bg-[#D4AF37] text-black" : "bg-[#2D1B69] text-white/20")}>
-            <Plus className="w-8 h-8" />
+        <button onClick={()=>setActiveTab("add")} className="relative -top-12 group">
+          <div className={cn("w-20 h-20 rounded-full flex items-center justify-center border-[8px] border-[#1A1140] shadow-2xl transition-all duration-500", activeTab==="add" ? "bg-[#D4AF37] text-black rotate-90" : "bg-[#2D1B69] text-white/40 group-hover:text-white group-hover:scale-105")}>
+            <Plus className="w-10 h-10" />
           </div>
-          <span className="text-[9px] font-black uppercase tracking-tighter">DEPOSIT</span>
+          <span className={cn("absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-tighter transition-colors", activeTab==="add" ? "text-[#D4AF37]" : "text-white/30")}>DEPOSIT</span>
         </button>
-        <button onClick={()=>setActiveTab("history")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab==="history" ? "text-[#D4AF37] scale-110" : "text-white/20")}>
-          <FileText className="w-7 h-7" />
-          <span className="text-[9px] font-black uppercase tracking-tighter">REPORT</span>
+        <button onClick={()=>setActiveTab("history")} className={cn("flex flex-col items-center gap-2 transition-all duration-300", activeTab==="history" ? "text-[#D4AF37] scale-110" : "text-white/30 hover:text-white/50")}>
+          <FileText className="w-8 h-8" />
+          <span className="text-[10px] font-black uppercase tracking-tighter">REPORT</span>
         </button>
       </nav>
     </div>
