@@ -46,8 +46,7 @@ import {
   Mail,
   Lock,
   User,
-  UserCheck,
-  AlertCircle
+  UserCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
@@ -106,7 +105,7 @@ export default function UserPage() {
     return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
   }, [myTransactions]);
 
-  // FIX: Robust month filtering for April, May, etc.
+  // Robust month filtering for April, May, etc.
   const filteredTransactions = useMemo(() => {
     if (selectedSummaryMonth === "All") return myTransactions;
     return myTransactions.filter(t => {
