@@ -16,7 +16,8 @@ import {
   Calendar,
   Home,
   FileText,
-  Loader2
+  Loader2,
+  AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,11 +31,11 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [mutationLoading, setMutationLoading] = useState(false);
 
-  // 1. Sync Foundation Settings (Logo and Name) from Admin's Firestore
+  // Sync Settings from Admin's Firestore
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
-  const { data: settings } = useDoc(settingsRef);
+  const { data: settings, loading: settingsLoading } = useDoc(settingsRef);
 
-  // 2. Fetch User's personal transactions using their displayName
+  // Fetch User's personal transactions using their displayName
   const txQuery = useMemo(() => {
     if (!user?.displayName || !db) return null;
     return query(
@@ -46,7 +47,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   
   const { data: myTransactions, loading: txLoading } = useCollection(txQuery);
 
-  // 3. Calculation of total personal balance
+  // Total personal balance calculation
   const totalBalance = useMemo(() => {
     if (!myTransactions) return 0;
     return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
@@ -57,29 +58,27 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     return () => clearInterval(timer);
   }, []);
 
-  // 4. Handle Deposit Submission
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.displayName || !db) {
-      toast({ variant: "destructive", title: "ত্রুটি", description: "প্রোফাইল লোড হচ্ছে, কিছুক্ষণ অপেক্ষা করুন।" });
+      toast({ variant: "destructive", title: "Error", description: "Profile not loaded properly." });
       return;
     }
     
     setMutationLoading(true);
     try {
-      // Writing to the SHARED transactions collection that admin also sees
       await addDoc(collection(db, "transactions"), {
         memberName: user.displayName,
         amount: Number(depositAmount),
         date: depositDate,
-        category: "মেম্বার জমা (Mobile App)",
+        category: "Member Deposit (Mobile)",
         timestamp: serverTimestamp()
       });
-      toast({ title: "সফল!", description: "জমা নিশ্চিত হয়েছে এবং অ্যাডমিন প্যানেলে সিঙ্ক করা হয়েছে।" });
+      toast({ title: "সফল!", description: "টাকা জমা দেওয়া সম্পন্ন হয়েছে।" });
       setDepositAmount(5000);
       setActiveTab("home");
     } catch (e: any) {
-      toast({ variant: "destructive", title: "ত্রুটি", description: e.message || "ডাটাবেস কানেকশন সমস্যা।" });
+      toast({ variant: "destructive", title: "ত্রুটি", description: e.message });
     } finally {
       setMutationLoading(false);
     }
@@ -89,7 +88,8 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   }).format(currentTime);
 
-  if (txLoading && !myTransactions) {
+  // Global loading state for the whole dashboard
+  if (txLoading || settingsLoading) {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center gap-6">
         <div className="relative">
@@ -100,8 +100,20 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
         </div>
         <div className="text-center">
           <p className="text-white font-black text-sm uppercase tracking-[0.3em] animate-pulse">Establishing Secure Node</p>
-          <p className="text-white/40 text-[9px] font-bold mt-2 uppercase">Please wait while we sync with foundation</p>
+          <p className="text-white/40 text-[9px] font-bold mt-2 uppercase">Syncing Foundation Records</p>
         </div>
+      </div>
+    );
+  }
+
+  // If user has no displayName, something went wrong with registration
+  if (!user?.displayName) {
+    return (
+      <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center p-8 text-center">
+        <AlertCircle className="w-16 h-16 text-[#D4AF37] mb-6" />
+        <h2 className="text-2xl font-black text-white mb-2 uppercase">Profile Incomplete</h2>
+        <p className="text-white/60 text-sm mb-8 leading-relaxed">আপনার নামের সাথে ফাউন্ডেশনের ডাটা সিঙ্ক করা সম্ভব হয়নি। দয়া করে লগআউট করে আবার চেষ্টা করুন।</p>
+        <Button onClick={onLogout} className="bg-red-600 px-10 h-14 rounded-full font-black text-white">LOG OUT</Button>
       </div>
     );
   }
@@ -128,7 +140,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               </div>
             </div>
             <h1 className="text-[#D4AF37] text-[12px] font-black uppercase tracking-[0.4em] mb-3">{settings?.name || "MINAR GO FOUNDATION"}</h1>
-            <h2 className="text-4xl font-black tracking-tight">{user?.displayName || "Member"}</h2>
+            <h2 className="text-4xl font-black tracking-tight">{user.displayName}</h2>
           </div>
 
           <div className="px-6 space-y-6 -mt-12 relative z-20">
@@ -155,9 +167,9 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
             </div>
 
             <div className="bg-[#2D2D4D]/60 p-8 rounded-[40px] border border-white/5 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><FileText className="w-12 h-12" /></div>
+              <div className="absolute top-0 right-0 p-4 opacity-10"><FileText className="w-12 h-12" /></div>
               <p className="text-[#D4AF37] text-[13px] font-black mb-2 uppercase tracking-widest">জরুরি বিজ্ঞপ্তি:</p>
-              <p className="text-white/80 text-[15px] leading-relaxed">ফাউন্ডেশনের পক্ষ থেকে স্বাগতম। আপনার কিস্তি সময়মতো পরিশোধ করে উন্নয়ন কাজে সহযোগিতা করুন।</p>
+              <p className="text-white/80 text-[15px] leading-relaxed">আপনার কিস্তি সময়মতো পরিশোধ করে ফাউন্ডেশনের উন্নয়ন কাজে সহযোগিতা করুন।</p>
             </div>
           </div>
         </main>
@@ -179,7 +191,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               <div className="space-y-3">
                 <Label className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.3em] ml-3">অ্যাকাউন্ট হোল্ডার</Label>
                 <div className="h-18 bg-white/10 rounded-[25px] flex items-center justify-between px-8 border border-white/5 shadow-inner">
-                  <span className="font-black text-xl truncate pr-4">{user?.displayName || "Loading..."}</span>
+                  <span className="font-black text-xl truncate pr-4">{user?.displayName}</span>
                   <ShieldCheck className="w-8 h-8 text-[#D4AF37] shrink-0" />
                 </div>
               </div>
@@ -207,7 +219,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
                 <p className="font-black text-sm uppercase tracking-widest">No Records Found</p>
               </div>
             ) : (
-              myTransactions.map((t: any, i: number) => (
+              myTransactions.map((t: any) => (
                 <div key={t.id} className="bg-white/5 p-8 rounded-[40px] flex items-center justify-between border border-white/5 shadow-2xl backdrop-blur-sm group hover:bg-white/10 transition-all">
                   <div className="space-y-1">
                     <p className="font-black text-2xl tracking-tighter">৳{t.amount.toLocaleString()}</p>
@@ -218,7 +230,6 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
                       <div className="w-2 h-2 bg-[#D4AF37] rounded-full animate-pulse"></div>
                       <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">VERIFIED</span>
                     </div>
-                    <p className="text-[9px] text-white/20 font-black uppercase tracking-tighter">Minar Go Secure</p>
                   </div>
                 </div>
               ))

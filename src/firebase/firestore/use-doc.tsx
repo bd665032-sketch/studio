@@ -11,7 +11,10 @@ export function useDoc<T = DocumentData>(ref: DocumentReference<T> | null) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!ref) return;
+    if (!ref) {
+      setLoading(false);
+      return;
+    }
 
     const unsubscribe = onSnapshot(
       ref,
