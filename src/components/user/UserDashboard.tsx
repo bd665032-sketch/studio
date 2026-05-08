@@ -17,25 +17,26 @@ import {
   Calendar,
   Wallet,
   Home,
-  FileText
+  FileText,
+  AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
-  const { user } = useUser();
+  const { user, loading: userLoading } = useUser();
   const db = useFirestore();
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("home");
   const [currentTime, setCurrentTime] = useState(new Date());
   const [depositAmount, setDepositAmount] = useState(5000);
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
-  const [loading, setLoading] = useState(false);
+  const [mutationLoading, setMutationLoading] = useState(false);
 
-  // 1. SYNC LOGO & NAME FROM ADMIN SETTINGS
+  // Get shared settings (Logo & Name) from Admin panel
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  // 2. FETCH PERSONAL TRANSACTIONS (Strict Sync with Admin)
+  // Unified Collection: same "transactions" as admin
   const txQuery = useMemo(() => {
     if (!user?.displayName || !db) return null;
     return query(
@@ -46,7 +47,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   }, [user?.displayName, db]);
   const { data: myTransactions } = useCollection(txQuery);
 
-  // 3. CALCULATE REAL-TIME PERSONAL SUMMARY
+  // Real-time calculation of total summary
   const totalBalance = useMemo(() => {
     if (!myTransactions) return 0;
     return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
@@ -59,37 +60,56 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
 
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.displayName || !db) {
-      toast({ variant: "destructive", title: "ত্রুটি", description: "লগইন তথ্য পাওয়া যায়নি।" });
+    
+    // CRITICAL FIX: Ensure user profile is fully loaded and has a name
+    const memberName = user?.displayName || user?.email?.split('@')[0];
+    
+    if (!memberName || !db) {
+      toast({ 
+        variant: "destructive", 
+        title: "ক্রুটি", 
+        description: "লগইন তথ্য পাওয়া যায়নি। দয়া করে আবার লগইন করুন।" 
+      });
       return;
     }
-    setLoading(true);
+
+    setMutationLoading(true);
 
     try {
+      // Direct integration: same document schema as admin panel
       await addDoc(collection(db, "transactions"), {
-        memberName: user.displayName,
+        memberName: memberName,
         amount: Number(depositAmount),
         date: depositDate,
-        category: "মেম্বার জমা (User Panel)",
+        category: "মেম্বার জমা (User App)",
         timestamp: serverTimestamp()
       });
       
       toast({ 
         title: "জমা সফল!", 
-        description: "আপনার জমাটি অ্যাডমিন প্যানেলে সিঙ্ক করা হয়েছে।" 
+        description: "আপনার জমাটি অ্যাডমিন প্যানেলে এবং আপনার রিপোর্টে যুক্ত হয়েছে।" 
       });
       setDepositAmount(5000);
       setActiveTab("home");
     } catch (e: any) {
+      console.error("Deposit failed", e);
       toast({ variant: "destructive", title: "ত্রুটি", description: "ডাটাবেসে কানেক্ট করা যায়নি।" });
     } finally {
-      setLoading(false);
+      setMutationLoading(false);
     }
   };
 
   const bengaliDate = new Intl.DateTimeFormat('bn-BD', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   }).format(currentTime);
+
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#1A1140]">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#D4AF37]"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#1A1140] font-bengali overflow-hidden text-white">
@@ -167,13 +187,16 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
                 </div>
                 <div className="space-y-3">
                    <Label className="text-[11px] font-black text-[#D4AF37] uppercase tracking-widest">অ্যাকাউন্ট হোল্ডার</Label>
-                   <div className="h-18 px-8 bg-white/10 rounded-[30px] flex items-center justify-between border border-white/10">
-                      <span className="font-black text-xl text-white">{user?.displayName}</span>
-                      <ShieldCheck className="w-8 h-8 text-[#D4AF37]" />
+                   <div className={cn("h-18 px-8 bg-white/10 rounded-[30px] flex items-center justify-between border transition-colors", user?.displayName ? "border-white/10" : "border-red-500/50")}>
+                      <span className={cn("font-black text-xl", user?.displayName ? "text-white" : "text-red-400")}>
+                        {user?.displayName || "নাম লোড হচ্ছে..."}
+                      </span>
+                      {user?.displayName ? <ShieldCheck className="w-8 h-8 text-[#D4AF37]" /> : <AlertCircle className="w-8 h-8 text-red-500" />}
                    </div>
+                   {!user?.displayName && <p className="text-[9px] text-red-400 font-bold text-center mt-2">আপনার প্রোফাইল নাম পাওয়া যায়নি। অ্যাডমিনকে জানান।</p>}
                 </div>
-                <Button type="submit" disabled={loading} className="w-full h-20 bg-[#D4AF37] text-black font-black text-xl rounded-[30px] shadow-2xl active:scale-95 transition-all mt-8 uppercase">
-                  {loading ? "প্রসেসিং..." : "জমা নিশ্চিত করুন"}
+                <Button type="submit" disabled={mutationLoading || !user?.displayName} className="w-full h-20 bg-[#D4AF37] text-black font-black text-xl rounded-[30px] shadow-2xl active:scale-95 transition-all mt-8 uppercase">
+                  {mutationLoading ? "প্রসেসিং..." : "জমা নিশ্চিত করুন"}
                 </Button>
               </form>
             </div>
