@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useUser, useFirestore, useCollection, useDoc } from "@/firebase";
-import { collection, query, where, orderBy, addDoc, serverTimestamp, doc } from "firebase/firestore";
+import { collection, query, where, addDoc, serverTimestamp, doc } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,26 +45,40 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const { data: settings, loading: settingsLoading } = useDoc(settingsRef);
 
   const { data: membersList } = useCollection(
-    db ? query(collection(db, "members"), orderBy("name")) : null
+    db ? query(collection(db, "members")) : null
   );
 
+  // Simplified query without orderBy to avoid index requirement
   const txQuery = useMemo(() => {
     if (!user?.displayName || !db) return null;
     return query(
       collection(db, "transactions"),
-      where("memberName", "==", user.displayName),
-      orderBy("timestamp", "desc")
+      where("memberName", "==", user.displayName)
     );
   }, [user?.displayName, db]);
   
-  const { data: myTransactions, loading: txLoading } = useCollection(txQuery);
+  const { data: rawTransactions, loading: txLoading } = useCollection(txQuery);
+
+  // Process and sort transactions in memory
+  const myTransactions = useMemo(() => {
+    if (!rawTransactions) return [];
+    return [...rawTransactions].sort((a, b) => {
+      const timeA = a.timestamp?.seconds || 0;
+      const timeB = b.timestamp?.seconds || 0;
+      return timeB - timeA;
+    });
+  }, [rawTransactions]);
 
   const getMonthFromDateStr = (dateStr: string) => {
     if (!dateStr) return "";
     const parts = dateStr.split('-');
-    if (parts.length < 2) return "";
-    const monthIndex = parseInt(parts[1], 10) - 1;
-    return months[monthIndex + 1];
+    if (parts.length >= 2) {
+      const monthIndex = parseInt(parts[1], 10);
+      if (!isNaN(monthIndex) && monthIndex >= 1 && monthIndex <= 12) {
+        return months[monthIndex];
+      }
+    }
+    return "";
   };
 
   // Lifetime total for Home screen
@@ -154,7 +168,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center gap-6">
         <div className="w-20 h-20 rounded-full border-4 border-white/5 border-t-[#D4AF37] animate-spin"></div>
-        <p className="text-white font-black text-xs uppercase tracking-widest animate-pulse">Syncing Foundation records...</p>
+        <p className="text-white font-black text-xs uppercase tracking-widest animate-pulse">Establishing Secure Node...</p>
       </div>
     );
   }
@@ -165,17 +179,17 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
         <div className="w-20 h-20 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-8">
           <AlertCircle className="w-10 h-10 text-[#D4AF37]" />
         </div>
-        <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tight">Profile Setup Required</h2>
-        <p className="text-white/60 text-sm mb-10 leading-relaxed">আপনার নামের সাথে ফাউন্ডেশনের ডাটা সিঙ্ক করার জন্য নিচের তালিকা থেকে আপনার সঠিক অফিসিয়াল নামটি সিলেক্ট করুন।</p>
+        <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tight">Profile Sync Required</h2>
+        <p className="text-white/60 text-sm mb-10 leading-relaxed">অ্যাডমিন প্যানেলের মেম্বার লিস্টের সাথে আপনার প্রোফাইল কানেক্ট করার জন্য আপনার অফিসিয়াল নামটি সিলেক্ট করুন।</p>
         
         <div className="w-full max-w-sm space-y-6">
           <Select onValueChange={setSelectedOfficialName}>
             <SelectTrigger className="h-16 rounded-[24px] bg-white/5 border-white/10 text-white font-black text-base">
-              <SelectValue placeholder="সিলেক্ট আপনার নাম" />
+              <SelectValue placeholder="আপনার নাম সিলেক্ট করুন" />
             </SelectTrigger>
             <SelectContent className="bg-[#2D1B69] border-white/10 text-white rounded-[24px]">
               {membersList?.map((m: any) => (
-                <SelectItem key={m.id} value={m.name} className="py-4 font-black text-white focus:text-white">
+                <SelectItem key={m.id} value={m.name} className="py-4 font-black text-white hover:bg-white/10 focus:text-white">
                   {m.name}
                 </SelectItem>
               ))}
@@ -187,10 +201,10 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
             disabled={!selectedOfficialName || mutationLoading}
             className="w-full h-16 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-black rounded-[24px] shadow-xl"
           >
-            {mutationLoading ? <Loader2 className="animate-spin" /> : "সম্পন্ন করুন"}
+            {mutationLoading ? <Loader2 className="animate-spin" /> : "প্রোফাইল একটিভ করুন"}
           </Button>
           
-          <button onClick={onLogout} className="text-white/40 text-xs font-bold uppercase tracking-widest pt-4">লগআউট করুন</button>
+          <button onClick={onLogout} className="text-white/40 text-xs font-bold uppercase tracking-widest pt-4">লগআউট</button>
         </div>
       </div>
     );
@@ -221,7 +235,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
           <div className="px-6 space-y-6 -mt-12 relative z-20">
             <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-10 rounded-[45px] border border-white/10 text-center shadow-2xl relative">
               <p className="text-[#D4AF37]/70 text-[11px] font-black uppercase tracking-[0.2em] mb-2">
-                আপনার মোট জমার পরিমাণ
+                সর্বমোট জমার পরিমাণ
               </p>
               <h3 className="text-5xl font-black">৳{lifetimeTotal.toLocaleString()}</h3>
             </div>
@@ -282,13 +296,13 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
             </h2>
             <div className="flex gap-2">
                <Select value={selectedSummaryMonth} onValueChange={setSelectedSummaryMonth}>
-                 <SelectTrigger className="w-24 h-10 bg-white/10 border-white/10 text-[10px] font-black rounded-xl text-white">
-                   <SelectValue placeholder="Filter" />
+                 <SelectTrigger className="w-32 h-12 bg-white/10 border-white/20 text-white font-black rounded-2xl text-[11px] uppercase tracking-widest focus:ring-2 focus:ring-[#D4AF37]">
+                   <SelectValue placeholder="Month" />
                  </SelectTrigger>
-                 <SelectContent className="bg-[#2D1B69] border-white/10">
+                 <SelectContent className="bg-[#2D1B69] border-white/10 shadow-2xl rounded-2xl overflow-hidden z-[500]">
                    {months.map(m => (
-                     <SelectItem key={m} value={m} className="text-xs font-black text-white hover:bg-white/10 focus:bg-white/10 focus:text-white">
-                       {m}
+                     <SelectItem key={m} value={m} className="text-white font-black py-4 text-xs hover:bg-white/10 focus:bg-white/10 focus:text-white border-b border-white/5 last:border-none">
+                       {m.toUpperCase()}
                      </SelectItem>
                    ))}
                  </SelectContent>
@@ -297,7 +311,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
                 <Button 
                   onClick={handleDownloadPDF} 
                   variant="ghost" 
-                  className="bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 h-10 rounded-xl gap-2 font-black px-4"
+                  className="bg-[#D4AF37] text-black hover:bg-[#D4AF37]/90 h-12 rounded-2xl gap-2 font-black px-5 shadow-lg active:scale-95 transition-all"
                 >
                   <Download className="w-5 h-5" /> PDF
                 </Button>
@@ -305,11 +319,11 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
             </div>
           </div>
 
-          <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-8 rounded-[40px] border border-white/10 text-center shadow-xl mb-10">
-            <p className="text-[#D4AF37]/70 text-[11px] font-black uppercase tracking-[0.2em] mb-2">
-              {selectedSummaryMonth === "All" ? "মোট জমার পরিমাণ" : `${selectedSummaryMonth} মাসের মোট জমা`}
+          <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-10 rounded-[45px] border border-white/10 text-center shadow-2xl mb-10">
+            <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.3em] mb-3">
+              {selectedSummaryMonth === "All" ? "মোট জমার পরিমাণ" : `${selectedSummaryMonth.toUpperCase()} মাসের মোট জমা`}
             </p>
-            <h3 className="text-4xl font-black">৳{monthlyTotal.toLocaleString()}</h3>
+            <h3 className="text-5xl font-black">৳{monthlyTotal.toLocaleString()}</h3>
           </div>
           
           <div className="space-y-5">
@@ -320,12 +334,12 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               </div>
             ) : (
               filteredTransactions.map((t: any) => (
-                <div key={t.id} className="bg-white/5 p-8 rounded-[40px] flex items-center justify-between border border-white/5 shadow-2xl backdrop-blur-sm">
+                <div key={t.id} className="bg-white/5 p-8 rounded-[40px] flex items-center justify-between border border-white/5 shadow-2xl backdrop-blur-sm group hover:bg-white/10 transition-all">
                   <div className="space-y-1">
-                    <p className="font-black text-2xl tracking-tighter">৳{t.amount.toLocaleString()}</p>
+                    <p className="font-black text-2xl tracking-tighter text-[#D4AF37]">৳{t.amount.toLocaleString()}</p>
                     <p className="text-[11px] text-white/40 font-black uppercase tracking-widest">{t.date}</p>
                   </div>
-                  <div className="bg-[#D4AF37]/10 px-5 py-2 rounded-full border border-[#D4AF37]/20 flex items-center gap-2">
+                  <div className="bg-[#D4AF37]/10 px-5 py-2.5 rounded-full border border-[#D4AF37]/20 flex items-center gap-2">
                     <div className="w-2 h-2 bg-[#D4AF37] rounded-full animate-pulse"></div>
                     <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">VERIFIED</span>
                   </div>
@@ -353,4 +367,3 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     </div>
   );
 }
-
