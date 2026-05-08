@@ -6,7 +6,6 @@ import {
   useUser, 
   useAuth, 
   useFirestore, 
-  useDoc, 
   useCollection 
 } from "@/firebase";
 import { 
@@ -43,7 +42,6 @@ import {
   Home as HomeIcon,
   FileText,
   Loader2,
-  AlertCircle,
   Download,
   Mail,
   Lock,
@@ -200,7 +198,7 @@ export default function UserPage() {
               {settings?.logo ? (
                 <img src={settings.logo} alt="Logo" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-14 h-14 bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] rounded-full flex items-center justify-center">
+                <div className="w-14 h-14 bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] rounded-full flex items-center justify-center shadow-inner">
                   <span className="text-white text-2xl font-black italic">MG</span>
                 </div>
               )}
