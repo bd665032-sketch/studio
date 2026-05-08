@@ -7,7 +7,6 @@ import DashboardContent from "@/components/dashboard/DashboardContent";
 import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import Head from "next/head";
 
 // Authorized Admin Names
 const AUTHORIZED_ADMIN_NAMES = ["dulal", "omar faruk", "shahid", "mr shahid"];

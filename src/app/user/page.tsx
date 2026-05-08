@@ -31,7 +31,13 @@ export default function UserPage() {
   }
 
   if (!user) {
-    return <UserAuthScreen />;
+    return (
+      <>
+        <title>Minar Go Member</title>
+        <meta name="apple-mobile-web-app-title" content="MG Member" />
+        <UserAuthScreen />
+      </>
+    );
   }
 
   return (

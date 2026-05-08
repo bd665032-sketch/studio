@@ -11,10 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { 
   History, 
-  ShieldCheck,
   LogOut,
   Plus,
-  Calendar,
   Home as HomeIcon,
   FileText,
   Loader2,
@@ -41,7 +39,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
 
   // Sync Global Settings (Logo and Foundation Name)
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
-  const { data: settings, loading: settingsLoading } = useDoc(settingsRef);
+  const { data: settings } = useDoc(settingsRef);
 
   const { data: membersList } = useCollection(
     db ? query(collection(db, "members")) : null
@@ -61,23 +59,12 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const myTransactions = useMemo(() => {
     if (!rawTransactions) return [];
     return [...rawTransactions].sort((a, b) => {
-      const timeA = a.timestamp?.seconds || 0;
-      const timeB = b.timestamp?.seconds || 0;
+      // Sort by timestamp if available, else by date string
+      const timeA = a.timestamp?.seconds || new Date(a.date).getTime() / 1000;
+      const timeB = b.timestamp?.seconds || new Date(b.date).getTime() / 1000;
       return timeB - timeA;
     });
   }, [rawTransactions]);
-
-  const getMonthFromDateStr = (dateStr: string) => {
-    if (!dateStr) return "";
-    try {
-      const parts = dateStr.split('-');
-      if (parts.length < 2) return "";
-      const monthIndex = parseInt(parts[1]);
-      return months[monthIndex];
-    } catch (e) {
-      return "";
-    }
-  };
 
   const lifetimeTotal = useMemo(() => {
     if (!myTransactions) return 0;
@@ -87,7 +74,15 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const filteredTransactions = useMemo(() => {
     if (!myTransactions) return [];
     if (selectedSummaryMonth === "All") return myTransactions;
-    return myTransactions.filter(t => getMonthFromDateStr(t.date) === selectedSummaryMonth);
+    return myTransactions.filter(t => {
+      try {
+        const date = new Date(t.date);
+        const monthName = date.toLocaleString('en-US', { month: 'long' });
+        return monthName === selectedSummaryMonth;
+      } catch (e) {
+        return false;
+      }
+    });
   }, [myTransactions, selectedSummaryMonth]);
 
   const monthlyTotal = useMemo(() => {
@@ -154,13 +149,13 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   }).format(currentTime);
 
-  if (txLoading || settingsLoading) {
+  if (txLoading) {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center gap-6">
         <div className="w-20 h-20 rounded-full border-4 border-white/5 border-t-[#D4AF37] animate-spin"></div>
         <div className="text-center">
           <p className="text-white font-black text-xs uppercase tracking-[0.3em] animate-pulse">Establishing Secure Node</p>
-          <p className="text-white/40 text-[9px] font-bold mt-2 uppercase">Please wait while we sync with foundation</p>
+          <p className="text-white/40 text-[9px] font-bold mt-2 uppercase">Syncing Cloud Data</p>
         </div>
       </div>
     );
@@ -172,13 +167,13 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
         <div className="w-20 h-20 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-8">
           <AlertCircle className="w-10 h-10 text-[#D4AF37]" />
         </div>
-        <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tight">Profile Sync Required</h2>
+        <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tight">Profile Setup Required</h2>
         <div className="w-full max-w-sm space-y-6">
           <Select onValueChange={setSelectedOfficialName}>
             <SelectTrigger className="h-16 rounded-[24px] bg-white/5 border-white/10 text-white font-black text-base">
-              <SelectValue placeholder="আপনার নাম সিলেক্ট করুন" />
+              <SelectValue placeholder="আপনার অফিসিয়াল নাম" />
             </SelectTrigger>
-            <SelectContent className="bg-[#2D1B69] border-white/10 text-white rounded-[24px]">
+            <SelectContent className="bg-[#2D1B69] border-white/10 text-white rounded-[24px] z-[500]">
               {membersList?.map((m: any) => (
                 <SelectItem key={m.id} value={m.name} className="py-4 font-black text-white hover:bg-white/10 focus:text-white">
                   {m.name}
@@ -236,7 +231,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               </div>
             </div>
             <div className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] p-5 rounded-full text-black flex items-center justify-center gap-4 font-black text-sm shadow-xl">
-              <Calendar className="w-6 h-6" /> {bengaliDate}
+              <HomeIcon className="w-6 h-6" /> {bengaliDate}
             </div>
           </div>
         </main>
