@@ -64,9 +64,16 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     const parts = dateStr.split('-');
     if (parts.length < 2) return "";
     const monthIndex = parseInt(parts[1], 10) - 1;
-    return months[monthIndex + 1]; // Offset for "All" at index 0
+    return months[monthIndex + 1];
   };
 
+  // Lifetime total for Home screen
+  const lifetimeTotal = useMemo(() => {
+    if (!myTransactions) return 0;
+    return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+  }, [myTransactions]);
+
+  // Filtered transactions for Report screen
   const filteredTransactions = useMemo(() => {
     if (!myTransactions) return [];
     return myTransactions.filter(t => {
@@ -75,7 +82,8 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     });
   }, [myTransactions, selectedSummaryMonth]);
 
-  const totalBalance = useMemo(() => {
+  // Total for the selected month in Report screen
+  const monthlyTotal = useMemo(() => {
     return filteredTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
   }, [filteredTransactions]);
 
@@ -134,7 +142,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     }));
     
     const titleSuffix = selectedSummaryMonth === "All" ? "" : `_${selectedSummaryMonth}`;
-    exportSummaryPDF(pdfData, `Report_${user?.displayName}${titleSuffix}`, totalBalance);
+    exportSummaryPDF(pdfData, `Report_${user?.displayName}${titleSuffix}`, monthlyTotal);
     toast({ title: "সফল!", description: "আপনার জমার রিপোর্ট ডাউনলোড করা হচ্ছে।" });
   };
 
@@ -212,22 +220,10 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
 
           <div className="px-6 space-y-6 -mt-12 relative z-20">
             <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-10 rounded-[45px] border border-white/10 text-center shadow-2xl relative">
-              <div className="absolute top-6 right-6">
-                <Select value={selectedSummaryMonth} onValueChange={setSelectedSummaryMonth}>
-                   <SelectTrigger className="w-32 h-9 bg-white/10 border-none text-[10px] font-black rounded-full text-[#D4AF37]"><SelectValue placeholder="মাস নির্বাচন" /></SelectTrigger>
-                   <SelectContent className="bg-[#2D1B69] border-white/10 text-white rounded-2xl">
-                     {months.map(m => (
-                       <SelectItem key={m} value={m} className="text-xs font-black text-white focus:text-white">
-                         {m}
-                       </SelectItem>
-                     ))}
-                   </SelectContent>
-                </Select>
-              </div>
               <p className="text-[#D4AF37]/70 text-[11px] font-black uppercase tracking-[0.2em] mb-2">
-                {selectedSummaryMonth === "All" ? "আপনার মোট জমার পরিমাণ" : `${selectedSummaryMonth} মাসের মোট জমা`}
+                আপনার মোট জমার পরিমাণ
               </p>
-              <h3 className="text-5xl font-black">৳{totalBalance.toLocaleString()}</h3>
+              <h3 className="text-5xl font-black">৳{lifetimeTotal.toLocaleString()}</h3>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -280,16 +276,18 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
 
       {activeTab === "history" && (
         <main className="flex-1 overflow-y-auto pb-32 px-6 pt-16 animate-in slide-in-from-right-10 duration-500">
-          <div className="flex items-center justify-between mb-10 px-2">
+          <div className="flex items-center justify-between mb-8 px-2">
             <h2 className="font-black text-2xl flex items-center gap-4 uppercase tracking-tight">
               <History className="text-[#D4AF37] w-8 h-8" /> জমার রিপোর্ট
             </h2>
             <div className="flex gap-2">
                <Select value={selectedSummaryMonth} onValueChange={setSelectedSummaryMonth}>
-                 <SelectTrigger className="w-24 h-10 bg-white/5 border-white/10 text-[10px] font-black rounded-xl text-[#D4AF37]"><SelectValue placeholder="Filter" /></SelectTrigger>
-                 <SelectContent className="bg-[#2D1B69] border-white/10 text-white">
+                 <SelectTrigger className="w-24 h-10 bg-white/10 border-white/10 text-[10px] font-black rounded-xl text-white">
+                   <SelectValue placeholder="Filter" />
+                 </SelectTrigger>
+                 <SelectContent className="bg-[#2D1B69] border-white/10">
                    {months.map(m => (
-                     <SelectItem key={m} value={m} className="text-xs font-black text-white focus:text-white">
+                     <SelectItem key={m} value={m} className="text-xs font-black text-white hover:bg-white/10 focus:bg-white/10 focus:text-white">
                        {m}
                      </SelectItem>
                    ))}
@@ -305,6 +303,13 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
                 </Button>
               )}
             </div>
+          </div>
+
+          <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-8 rounded-[40px] border border-white/10 text-center shadow-xl mb-10">
+            <p className="text-[#D4AF37]/70 text-[11px] font-black uppercase tracking-[0.2em] mb-2">
+              {selectedSummaryMonth === "All" ? "মোট জমার পরিমাণ" : `${selectedSummaryMonth} মাসের মোট জমা`}
+            </p>
+            <h3 className="text-4xl font-black">৳{monthlyTotal.toLocaleString()}</h3>
           </div>
           
           <div className="space-y-5">
@@ -348,3 +353,4 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     </div>
   );
 }
+
