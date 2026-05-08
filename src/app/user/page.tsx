@@ -1,31 +1,145 @@
+
 "use client";
 
+import { useState, useEffect, useMemo } from "react";
+import { useUser, useAuth, useFirestore, useDoc, useCollection } from "@/firebase";
+import { signOut, updateProfile } from "firebase/auth";
+import { collection, query, where, addDoc, serverTimestamp, doc, orderBy } from "firebase/firestore";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  History, 
+  LogOut,
+  Plus,
+  Home as HomeIcon,
+  FileText,
+  Loader2,
+  AlertCircle,
+  UserCheck,
+  Download,
+  Mail,
+  Lock,
+  User
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { exportSummaryPDF } from "@/lib/pdf-utils";
 import UserAuthScreen from "@/components/user/UserAuthScreen";
-import UserDashboard from "@/components/user/UserDashboard";
-import { useUser, useAuth } from "@/firebase";
-import { signOut } from "firebase/auth";
+
+const months = ["All", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export default function UserPage() {
-  const { user, loading } = useUser();
+  const { user, loading: userLoading } = useUser();
   const auth = useAuth();
+  const db = useFirestore();
+  const { toast } = useToast();
+  
+  const [activeTab, setActiveTab] = useState("home");
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [depositAmount, setDepositAmount] = useState(5000);
+  const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedSummaryMonth, setSelectedSummaryMonth] = useState("All");
+  const [mutationLoading, setMutationLoading] = useState(false);
+  const [selectedOfficialName, setSelectedOfficialName] = useState("");
+
+  // Sync Global Settings from Admin
+  const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
+  const { data: settings } = useDoc(settingsRef);
+
+  // Fetch official members
+  const membersQuery = useMemo(() => (db ? query(collection(db, "members"), orderBy("name")) : null), [db]);
+  const { data: membersList } = useCollection(membersQuery);
+
+  // Fetch transactions for logged in user
+  const txQuery = useMemo(() => {
+    if (!user?.displayName || !db) return null;
+    return query(
+      collection(db, "transactions"),
+      where("memberName", "==", user.displayName)
+    );
+  }, [user?.displayName, db]);
+  
+  const { data: rawTransactions, loading: txLoading } = useCollection(txQuery);
+
+  const myTransactions = useMemo(() => {
+    if (!rawTransactions) return [];
+    return [...rawTransactions].sort((a, b) => {
+      const timeA = a.timestamp?.seconds || new Date(a.date).getTime() / 1000;
+      const timeB = b.timestamp?.seconds || new Date(b.date).getTime() / 1000;
+      return timeB - timeA;
+    });
+  }, [rawTransactions]);
+
+  const lifetimeTotal = useMemo(() => {
+    return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+  }, [myTransactions]);
+
+  const filteredTransactions = useMemo(() => {
+    if (selectedSummaryMonth === "All") return myTransactions;
+    return myTransactions.filter(t => {
+      try {
+        const date = new Date(t.date);
+        return date.toLocaleString('en-US', { month: 'long' }) === selectedSummaryMonth;
+      } catch (e) { return false; }
+    });
+  }, [myTransactions, selectedSummaryMonth]);
+
+  const monthlyTotal = useMemo(() => {
+    return filteredTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+  }, [filteredTransactions]);
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   const handleLogout = () => {
     if (auth) signOut(auth);
   };
 
-  if (loading) {
+  const handleFixProfile = async () => {
+    if (!selectedOfficialName || !user) return;
+    setMutationLoading(true);
+    try {
+      await updateProfile(user, { displayName: selectedOfficialName });
+      toast({ title: "সফল!", description: "আপনার প্রোফাইল আপডেট হয়েছে।" });
+      window.location.reload();
+    } catch (e) {
+      toast({ variant: "destructive", title: "ত্রুটি", description: "আবার চেষ্টা করুন।" });
+    } finally {
+      setMutationLoading(false);
+    }
+  };
+
+  const handleDeposit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.displayName || !db) return;
+    setMutationLoading(true);
+    try {
+      await addDoc(collection(db, "transactions"), {
+        memberName: user.displayName,
+        amount: Number(depositAmount),
+        date: depositDate,
+        category: "Mobile Deposit",
+        timestamp: serverTimestamp()
+      });
+      toast({ title: "সফল!", description: "টাকা জমা দেওয়া হয়েছে।" });
+      setDepositAmount(5000);
+      setActiveTab("home");
+    } catch (e) {
+      toast({ variant: "destructive", title: "ত্রুটি", description: "আবার চেষ্টা করুন।" });
+    } finally {
+      setMutationLoading(false);
+    }
+  };
+
+  if (userLoading || txLoading) {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center gap-6">
-        <div className="relative">
-          <div className="w-20 h-20 rounded-full border-4 border-white/5 border-t-[#D4AF37] animate-spin"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="text-white font-black text-xs">MG</span>
-          </div>
-        </div>
-        <div className="text-center">
-          <p className="text-white font-black text-xs uppercase tracking-[0.3em] animate-pulse">Establishing Secure Node</p>
-          <p className="text-white/40 text-[9px] font-bold mt-2 uppercase">Please wait while we sync with foundation</p>
-        </div>
+        <div className="w-20 h-20 rounded-full border-4 border-white/5 border-t-[#D4AF37] animate-spin"></div>
+        <p className="text-white font-black text-xs uppercase tracking-widest animate-pulse">Syncing Cloud Node...</p>
       </div>
     );
   }
@@ -34,19 +148,177 @@ export default function UserPage() {
     return (
       <>
         <title>Minar Go Member</title>
-        <meta name="apple-mobile-web-app-title" content="MG Member" />
         <UserAuthScreen />
       </>
     );
   }
 
-  return (
-    <>
-      <title>Minar Go Member</title>
-      <meta name="apple-mobile-web-app-title" content="MG Member" />
-      <div className="min-h-screen flex flex-col">
-        <UserDashboard onLogout={handleLogout} />
+  if (!user.displayName) {
+    return (
+      <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center p-8 text-center font-body">
+        <div className="w-24 h-24 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-10 shadow-2xl">
+          <AlertCircle className="w-12 h-12 text-[#D4AF37]" />
+        </div>
+        <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tight">Active Your Profile</h2>
+        <div className="w-full max-w-sm space-y-6">
+          <Select onValueChange={setSelectedOfficialName}>
+            <SelectTrigger className="h-18 rounded-[24px] bg-white/5 border-white/10 text-white font-black text-base">
+              <SelectValue placeholder="সিলেক্ট অফিসিয়াল নাম" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#2D1B69] border-white/10 text-white rounded-[24px] z-[500]">
+              {membersList?.map((m: any) => (
+                <SelectItem key={m.id} value={m.name} className="py-4 font-black text-white focus:text-white">
+                  {m.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button onClick={handleFixProfile} disabled={!selectedOfficialName || mutationLoading} className="w-full h-18 bg-[#D4AF37] text-black font-black rounded-[24px] shadow-xl">
+            {mutationLoading ? <Loader2 className="animate-spin" /> : "প্রোফাইল একটিভ করুন"}
+          </Button>
+          <button onClick={handleLogout} className="text-white/40 text-xs font-bold uppercase tracking-widest mt-8">লগআউট</button>
+        </div>
       </div>
-    </>
+    );
+  }
+
+  const bengaliDate = new Intl.DateTimeFormat('bn-BD', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  }).format(currentTime);
+
+  return (
+    <div className="flex flex-col min-h-screen bg-[#1A1140] font-bengali text-white overflow-hidden">
+      <title>Minar Go Member</title>
+      
+      {activeTab === "home" && (
+        <main className="flex-1 overflow-y-auto pb-32 animate-in fade-in duration-700">
+          <div className="relative pt-16 pb-28 px-8 text-center border-b-[12px] border-[#D4AF37]/10">
+            <button onClick={handleLogout} className="absolute top-8 right-8 bg-white/5 p-3 rounded-full text-white/40 hover:text-white transition-colors">
+              <LogOut className="w-5 h-5" />
+            </button>
+            <div className="flex justify-center mb-8">
+              <div className="w-32 h-32 rounded-full border-[6px] border-[#D4AF37]/20 p-1 bg-white shadow-2xl overflow-hidden flex items-center justify-center">
+                {settings?.logo ? (
+                  <img src={settings.logo} alt="Logo" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-5xl text-[#1E3A8A] font-black italic">MG</span>
+                )}
+              </div>
+            </div>
+            <h1 className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.4em] mb-3">
+              {settings?.name || "MINAR GO FOUNDATION"}
+            </h1>
+            <h2 className="text-4xl font-black tracking-tight">{user.displayName}</h2>
+          </div>
+
+          <div className="px-6 space-y-6 -mt-12 relative z-20">
+            <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-12 rounded-[45px] border border-white/10 text-center shadow-2xl">
+              <p className="text-[#D4AF37]/70 text-[11px] font-black uppercase tracking-[0.3em] mb-3">সর্বমোট জমার পরিমাণ</p>
+              <h3 className="text-5xl font-black">৳{lifetimeTotal.toLocaleString()}</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-[#2D2D4D] p-6 rounded-[35px] border border-white/5 text-center shadow-xl">
+                <span className="text-2xl">🕋</span>
+                <p className="text-[#D4AF37] text-[10px] font-black mt-3 uppercase tracking-widest">পরবর্তী হজ</p>
+                <p className="text-[14px] font-bold mt-1 text-white/90">২৭ মে, ২০২৬</p>
+              </div>
+              <div className="bg-[#2D2D4D] p-6 rounded-[35px] border border-white/5 text-center shadow-xl">
+                <span className="text-2xl">🌙</span>
+                <p className="text-[#D4AF37] text-[10px] font-black mt-3 uppercase tracking-widest">রমজান</p>
+                <p className="text-[14px] font-bold mt-1 text-white/90">১৮ ফেব্রু., ২০২৬</p>
+              </div>
+            </div>
+            <div className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] p-5 rounded-full text-black flex items-center justify-center gap-4 font-black text-sm shadow-xl">
+              <HomeIcon className="w-6 h-6" /> {bengaliDate}
+            </div>
+          </div>
+        </main>
+      )}
+
+      {activeTab === "add" && (
+        <main className="flex-1 overflow-y-auto pb-32 px-6 pt-16 animate-in slide-in-from-bottom-10 duration-500">
+          <div className="bg-[#2D1B69] p-12 rounded-[50px] shadow-2xl border-t-[10px] border-[#D4AF37]">
+            <h3 className="text-center font-black text-2xl mb-12 uppercase tracking-[0.2em]">টাকা জমা দিন</h3>
+            <form onSubmit={handleDeposit} className="space-y-10">
+              <div className="space-y-3">
+                <Label className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.3em] ml-3">জমার পরিমাণ (TK)</Label>
+                <Input type="number" value={depositAmount} onChange={(e)=>setDepositAmount(Number(e.target.value))} className="h-24 text-5xl font-black bg-white/5 border-none text-center rounded-[30px] text-white shadow-inner" />
+              </div>
+              <div className="space-y-3">
+                <Label className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.3em] ml-3">জমার তারিখ</Label>
+                <Input type="date" value={depositDate} onChange={(e)=>setDepositDate(e.target.value)} className="h-18 font-black bg-white/5 border-none rounded-[25px] px-8 text-white text-lg shadow-inner" />
+              </div>
+              <Button type="submit" disabled={mutationLoading} className="w-full h-20 bg-gradient-to-r from-[#D4AF37] to-[#B8960C] text-black font-black text-xl rounded-[30px] shadow-xl active:scale-95 transition-all mt-8">
+                {mutationLoading ? <Loader2 className="w-7 h-7 animate-spin" /> : "সাবমিট করুন"}
+              </Button>
+            </form>
+          </div>
+        </main>
+      )}
+
+      {activeTab === "history" && (
+        <main className="flex-1 overflow-y-auto pb-32 px-6 pt-16 animate-in slide-in-from-right-10 duration-500">
+          <div className="flex items-center justify-between mb-8 px-2">
+            <h2 className="font-black text-2xl flex items-center gap-4">
+              <History className="text-[#D4AF37] w-8 h-8" /> জমার রিপোর্ট
+            </h2>
+            <div className="flex gap-2">
+               <Select value={selectedSummaryMonth} onValueChange={setSelectedSummaryMonth}>
+                 <SelectTrigger className="w-32 h-12 bg-white/10 border-white/20 text-white font-black rounded-2xl text-[11px] uppercase">
+                   <SelectValue placeholder="Month" />
+                 </SelectTrigger>
+                 <SelectContent className="bg-[#2D1B69] border-white/10 text-white rounded-2xl z-[500]">
+                   {months.map(m => (
+                     <SelectItem key={m} value={m} className="font-black py-4 text-xs text-white">
+                       {m.toUpperCase()}
+                     </SelectItem>
+                   ))}
+                 </SelectContent>
+               </Select>
+               <Button onClick={() => exportSummaryPDF(filteredTransactions.map(t=>({n:t.memberName, d:t.date, a:t.amount})), `Report_${user.displayName}`, monthlyTotal)} variant="ghost" className="bg-[#D4AF37] text-black h-12 rounded-2xl gap-2 font-black px-5 shadow-lg active:scale-95 transition-all">
+                  <Download className="w-5 h-5" /> PDF
+                </Button>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-12 rounded-[45px] border border-white/10 text-center shadow-2xl mb-10">
+            <p className="text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.3em] mb-3">
+              {selectedSummaryMonth === "All" ? "মোট জমার পরিমাণ" : `${selectedSummaryMonth.toUpperCase()} মাসের মোট জমা`}
+            </p>
+            <h3 className="text-5xl font-black">৳{monthlyTotal.toLocaleString()}</h3>
+          </div>
+          
+          <div className="space-y-5">
+            {filteredTransactions.map((t: any) => (
+              <div key={t.id} className="bg-white/5 p-8 rounded-[40px] flex items-center justify-between border border-white/5 shadow-2xl backdrop-blur-sm">
+                <div className="space-y-1">
+                  <p className="font-black text-2xl text-[#D4AF37]">৳{t.amount.toLocaleString()}</p>
+                  <p className="text-[11px] text-white/40 font-black uppercase">{t.date}</p>
+                </div>
+                <div className="bg-[#D4AF37]/10 px-5 py-2.5 rounded-full border border-[#D4AF37]/20 flex items-center gap-2">
+                  <div className="w-2 h-2 bg-[#D4AF37] rounded-full animate-pulse"></div>
+                  <span className="text-[10px] font-black text-[#D4AF37] uppercase">VERIFIED</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </main>
+      )}
+
+      <nav className="fixed bottom-0 left-0 right-0 bg-[#2D1B69]/90 backdrop-blur-3xl h-28 px-10 flex items-center justify-between z-[100] rounded-t-[50px] border-t border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
+        <button onClick={()=>setActiveTab("home")} className={cn("flex flex-col items-center gap-2 transition-all", activeTab==="home" ? "text-[#D4AF37] scale-110" : "text-white/30")}>
+          <HomeIcon className="w-8 h-8" /><span className="text-[10px] font-black uppercase">HOME</span>
+        </button>
+        <button onClick={()=>setActiveTab("add")} className="relative -top-12">
+          <div className={cn("w-20 h-20 rounded-full flex items-center justify-center border-[8px] border-[#1A1140] shadow-2xl transition-all", activeTab==="add" ? "bg-[#D4AF37] text-black" : "bg-[#2D1B69] text-white/40")}>
+            <Plus className="w-10 h-10" />
+          </div>
+        </button>
+        <button onClick={()=>setActiveTab("history")} className={cn("flex flex-col items-center gap-2 transition-all", activeTab==="history" ? "text-[#D4AF37] scale-110" : "text-white/30")}>
+          <FileText className="w-8 h-8" /><span className="text-[10px] font-black uppercase">REPORT</span>
+        </button>
+      </nav>
+    </div>
   );
 }
+
