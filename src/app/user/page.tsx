@@ -52,37 +52,42 @@ import {
 import { cn } from "@/lib/utils";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
 
-const months = ["All", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+// Months for filtering
+const months = [
+  "All", "January", "February", "March", "April", "May", "June", 
+  "July", "August", "September", "October", "November", "December"
+];
 
 export default function UserPage() {
-  // Firebase Hooks
+  // --- FIREBASE HOOKS ---
   const { user, loading: userLoading } = useUser();
   const auth = useAuth();
   const db = useFirestore();
   const { toast } = useToast();
   
-  // UI State
+  // --- UI STATE ---
   const [activeTab, setActiveTab] = useState("home");
   const [isLogin, setIsLogin] = useState(true);
   const [authLoading, setAuthLoading] = useState(false);
   const [mutationLoading, setMutationLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   
-  // Form State
+  // --- FORM STATE ---
   const [authData, setAuthData] = useState({ email: "", password: "", fullName: "" });
   const [depositAmount, setDepositAmount] = useState(5000);
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSummaryMonth, setSelectedSummaryMonth] = useState("All");
 
-  // Sync Global Settings from Admin (Logo and Foundation Name)
+  // --- DATA FETCHING ---
+  // Sync Foundation Settings (Logo, Name)
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  // Fetch official members for registration verification
+  // Fetch Official Members List for Registration
   const membersQuery = useMemo(() => (db ? query(collection(db, "members"), orderBy("name")) : null), [db]);
   const { data: membersList, loading: membersLoading } = useCollection(membersQuery);
 
-  // Fetch transactions for logged-in user
+  // Fetch Transactions for Logged-in Member
   const txQuery = useMemo(() => {
     if (!user?.displayName || !db) return null;
     return query(
@@ -90,10 +95,10 @@ export default function UserPage() {
       where("memberName", "==", user.displayName)
     );
   }, [user?.displayName, db]);
-  
   const { data: rawTransactions, loading: txLoading } = useCollection(txQuery);
 
-  // Logic: Calculate Transactions
+  // --- LOGIC: CALCULATIONS ---
+  // Sorted Transactions
   const myTransactions = useMemo(() => {
     if (!rawTransactions) return [];
     return [...rawTransactions].sort((a, b) => {
@@ -103,31 +108,37 @@ export default function UserPage() {
     });
   }, [rawTransactions]);
 
+  // Lifetime Total for Home Dashboard
   const lifetimeTotal = useMemo(() => {
     return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
   }, [myTransactions]);
 
+  // Filtered Transactions for Report Tab
   const filteredTransactions = useMemo(() => {
     if (selectedSummaryMonth === "All") return myTransactions;
     return myTransactions.filter(t => {
       try {
         const date = new Date(t.date);
-        return date.toLocaleString('en-US', { month: 'long' }) === selectedSummaryMonth;
-      } catch (e) { return false; }
+        const monthName = date.toLocaleString('en-US', { month: 'long' });
+        return monthName === selectedSummaryMonth;
+      } catch (e) { 
+        return false; 
+      }
     });
   }, [myTransactions, selectedSummaryMonth]);
 
+  // Monthly Total for Report Summary
   const monthlyTotal = useMemo(() => {
     return filteredTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
   }, [filteredTransactions]);
 
-  // Effects
+  // --- EFFECTS ---
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Handlers: Authentication
+  // --- HANDLERS ---
   const handleAuthSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth) return;
@@ -135,12 +146,12 @@ export default function UserPage() {
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, authData.email, authData.password);
-        toast({ title: "স্বাগতম!", description: "লগইন সফল হয়েছে।" });
+        toast({ title: "স্বাগতম!", description: "সিকিউর লগইন সফল হয়েছে।" });
       } else {
-        if (!authData.fullName) throw new Error("আপনার অফিসিয়াল নাম সিলেক্ট করুন।");
+        if (!authData.fullName) throw new Error("অফিসিয়াল নাম সিলেক্ট করুন।");
         const userCred = await createUserWithEmailAndPassword(auth, authData.email, authData.password);
         await updateProfile(userCred.user, { displayName: authData.fullName });
-        toast({ title: "সফল!", description: "অ্যাকাউন্ট তৈরি হয়েছে।" });
+        toast({ title: "সফল!", description: "রেজিস্ট্রেশন সম্পন্ন হয়েছে।" });
         window.location.reload();
       }
     } catch (error: any) {
@@ -150,9 +161,6 @@ export default function UserPage() {
     }
   };
 
-  const handleLogout = () => { if (auth) signOut(auth); };
-
-  // Handlers: Deposit
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.displayName || !db) return;
@@ -162,10 +170,10 @@ export default function UserPage() {
         memberName: user.displayName,
         amount: Number(depositAmount),
         date: depositDate,
-        category: "Mobile App Deposit",
+        category: "Mobile Deposit",
         timestamp: serverTimestamp()
       });
-      toast({ title: "সফল!", description: "টাকা জমা দেওয়া হয়েছে।" });
+      toast({ title: "সফল!", description: "জমা সম্পন্ন হয়েছে।" });
       setDepositAmount(5000);
       setActiveTab("home");
     } catch (e: any) {
@@ -175,35 +183,40 @@ export default function UserPage() {
     }
   };
 
-  // Render: Loading Screen
+  const handleLogout = () => { if (auth) signOut(auth); };
+
+  // --- RENDER: LOADING ---
   if (userLoading || txLoading) {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center gap-6">
         <title>MG Member</title>
         <div className="w-20 h-20 rounded-full border-4 border-white/5 border-t-[#D4AF37] animate-spin"></div>
-        <p className="text-white font-black text-xs uppercase tracking-[0.3em] animate-pulse">Establishing Secure Node...</p>
+        <p className="text-white font-black text-xs uppercase tracking-[0.3em] animate-pulse">Syncing Secure Data...</p>
       </div>
     );
   }
 
-  // Render: Auth Screen
+  // --- RENDER: AUTH ---
   if (!user) {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center p-4 font-body relative overflow-hidden">
-        <title>MG Member Login</title>
+        <title>MG Member Portal</title>
         <div className="absolute top-[-5%] right-[-5%] w-[300px] h-[300px] bg-white/5 rounded-full blur-[80px]"></div>
-        <div className="w-full max-w-[400px] bg-white/95 backdrop-blur-3xl rounded-[45px] shadow-2xl overflow-hidden relative z-10 border border-white/20">
+        <div className="w-full max-w-[400px] bg-white/95 backdrop-blur-3xl rounded-[45px] shadow-2xl border border-white/20 relative z-10">
           <div className="py-10 flex flex-col items-center text-center px-6">
             <div className="bg-white p-4 rounded-full shadow-lg border-2 border-blue-50 mb-5 w-24 h-24 flex items-center justify-center overflow-hidden">
               {settings?.logo ? (
                 <img src={settings.logo} alt="Logo" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-14 h-14 bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] rounded-full flex items-center justify-center shadow-inner">
+                <div className="w-14 h-14 bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] rounded-full flex items-center justify-center">
                   <span className="text-white text-2xl font-black italic">MG</span>
                 </div>
               )}
             </div>
-            <h1 className="text-[18px] font-black text-[#1E3A8A] uppercase tracking-widest">{settings?.name || "MEMBER PORTAL"}</h1>
+            <h1 className="text-[18px] font-black text-[#1E3A8A] uppercase tracking-widest leading-none">
+              {settings?.name || "MEMBER PORTAL"}
+            </h1>
+            <p className="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-[0.2em]">Secure Member Access</p>
           </div>
           <div className="px-8 pb-10">
             <div className="flex bg-slate-100 p-1.5 rounded-[28px] mb-8 shadow-inner">
@@ -219,7 +232,7 @@ export default function UserPage() {
                       <SelectValue placeholder="আপনার অফিসিয়াল নাম" />
                     </SelectTrigger>
                     <SelectContent className="bg-white rounded-[24px] border-none shadow-2xl z-[500]">
-                      {membersLoading ? <Loader2 className="animate-spin" /> : membersList?.map((m: any) => (
+                      {membersLoading ? <Loader2 className="animate-spin p-2" /> : membersList?.map((m: any) => (
                         <SelectItem key={m.id} value={m.name} className="font-black py-4 text-[#1E3A8A]">{m.name}</SelectItem>
                       ))}
                     </SelectContent>
@@ -244,7 +257,7 @@ export default function UserPage() {
     );
   }
 
-  // Render: Main Dashboard
+  // --- RENDER: MAIN DASHBOARD ---
   const bengaliDate = new Intl.DateTimeFormat('bn-BD', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(currentTime);
 
   return (
@@ -313,13 +326,13 @@ export default function UserPage() {
       {activeTab === "history" && (
         <main className="flex-1 overflow-y-auto pb-32 px-6 pt-16 animate-in slide-in-from-right-10 duration-500">
           <div className="flex items-center justify-between mb-8 px-2">
-            <h2 className="font-black text-2xl flex items-center gap-4 uppercase tracking-tighter">
+            <h2 className="font-black text-2xl flex items-center gap-4 uppercase tracking-tight">
               <History className="text-[#D4AF37] w-8 h-8" /> জমার রিপোর্ট
             </h2>
             <div className="flex gap-2">
                <Select value={selectedSummaryMonth} onValueChange={setSelectedSummaryMonth}>
                  <SelectTrigger className="w-32 h-12 bg-white/10 border-white/20 text-white font-black rounded-2xl text-[11px] uppercase tracking-widest">
-                   <SelectValue placeholder="মাস সিলেক্ট" />
+                   <SelectValue placeholder="মাস" />
                  </SelectTrigger>
                  <SelectContent className="bg-white border-none shadow-2xl rounded-2xl z-[500]">
                    {months.map(m => (
@@ -343,7 +356,12 @@ export default function UserPage() {
           </div>
           
           <div className="space-y-5">
-            {filteredTransactions.map((t: any) => (
+            {filteredTransactions.length === 0 ? (
+              <div className="text-center py-20 opacity-20">
+                <History className="w-20 h-20 mx-auto mb-4" />
+                <p className="font-black text-xs uppercase tracking-widest">No Records Found</p>
+              </div>
+            ) : filteredTransactions.map((t: any) => (
               <div key={t.id} className="bg-white/5 p-8 rounded-[40px] flex items-center justify-between border border-white/5 shadow-2xl backdrop-blur-sm">
                 <div className="space-y-1">
                   <p className="font-black text-2xl text-[#D4AF37]">৳{t.amount.toLocaleString()}</p>
@@ -377,3 +395,4 @@ export default function UserPage() {
     </div>
   );
 }
+    
