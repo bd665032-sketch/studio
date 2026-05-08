@@ -46,12 +46,12 @@ import {
   Mail,
   Lock,
   User,
-  UserCheck
+  AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
 
-// Months for filtering
+// Months for filtering - ensuring zero-based indexing fix
 const months = [
   "All", "January", "February", "March", "April", "May", "June", 
   "July", "August", "September", "October", "November", "December"
@@ -73,11 +73,11 @@ export default function UserPage() {
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSummaryMonth, setSelectedSummaryMonth] = useState("All");
   
-  // Real-time Settings Sync (Logo and Name) from Admin
+  // Real-time Settings Sync (Logo and Name) from Admin Firestore
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  // Fetch Official Members List for Registration
+  // Fetch Official Members List for Registration dropdown
   const membersQuery = useMemo(() => (db ? query(collection(db, "members"), orderBy("name")) : null), [db]);
   const { data: membersList, loading: membersLoading } = useCollection(membersQuery);
 
@@ -91,7 +91,7 @@ export default function UserPage() {
   }, [user?.displayName, db]);
   const { data: rawTransactions, loading: txLoading } = useCollection(txQuery);
 
-  // Sorting & Calculations
+  // Sorting Transactions
   const myTransactions = useMemo(() => {
     if (!rawTransactions) return [];
     return [...rawTransactions].sort((a, b) => {
@@ -105,14 +105,14 @@ export default function UserPage() {
     return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
   }, [myTransactions]);
 
-  // Robust month filtering for April, May, etc.
+  // Robust Filtering for April, May and others by splitting string YYYY-MM-DD
   const filteredTransactions = useMemo(() => {
     if (selectedSummaryMonth === "All") return myTransactions;
     return myTransactions.filter(t => {
       try {
         const parts = t.date.split('-'); // Format: YYYY-MM-DD
-        const monthIndex = parseInt(parts[1]) - 1;
-        return months[monthIndex + 1] === selectedSummaryMonth;
+        const monthNum = parseInt(parts[1], 10);
+        return months[monthNum] === selectedSummaryMonth;
       } catch (e) { return false; }
     });
   }, [myTransactions, selectedSummaryMonth]);
@@ -172,12 +172,12 @@ export default function UserPage() {
 
   const handleDownloadPDF = () => {
     if (filteredTransactions.length === 0) {
-      toast({ variant: "destructive", title: "দুঃখিত", description: "কোনো জমার রেকর্ড পাওয়া যায়নি।" });
+      toast({ variant: "destructive", title: "দুঃখিত", description: "কোনো রেকর্ড পাওয়া যায়নি।" });
       return;
     }
     exportSummaryPDF(
       filteredTransactions.map(t => ({ n: t.memberName, d: t.date, a: t.amount })),
-      `Report_${user?.displayName}_${selectedSummaryMonth}`,
+      `MemberReport_${user?.displayName}_${selectedSummaryMonth}`,
       monthlyTotal
     );
   };
@@ -187,15 +187,16 @@ export default function UserPage() {
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center gap-6">
         <title>MG Member</title>
         <div className="w-20 h-20 rounded-full border-4 border-white/5 border-t-[#D4AF37] animate-spin"></div>
-        <p className="text-white font-black text-xs uppercase tracking-[0.3em] animate-pulse">Establishing Secure Node...</p>
+        <p className="text-white font-black text-xs uppercase tracking-[0.3em] animate-pulse">Syncing Secure Data...</p>
       </div>
     );
   }
 
+  // Auth Screen if not logged in
   if (!user) {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center p-4 font-body relative overflow-hidden">
-        <title>MG Member - Login</title>
+        <title>MG Member - Access</title>
         <div className="absolute top-[-5%] right-[-5%] w-[300px] h-[300px] bg-white/5 rounded-full blur-[80px]"></div>
         <div className="w-full max-w-[400px] bg-white/95 backdrop-blur-3xl rounded-[45px] shadow-2xl border border-white/20 relative z-10">
           <div className="py-10 flex flex-col items-center text-center px-6">
@@ -211,7 +212,7 @@ export default function UserPage() {
             <h1 className="text-[18px] font-black text-[#1E3A8A] uppercase tracking-widest leading-none">
               {settings?.name || "MEMBER PORTAL"}
             </h1>
-            <p className="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-[0.2em]">Secure Member Access</p>
+            <p className="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-[0.2em]">Official Secure Access</p>
           </div>
           <div className="px-8 pb-10">
             <div className="flex bg-slate-100 p-1.5 rounded-[28px] mb-8 shadow-inner">
@@ -330,7 +331,7 @@ export default function UserPage() {
                  </SelectTrigger>
                  <SelectContent className="bg-[#2D1B69] border-white/10 shadow-2xl rounded-2xl z-[500]">
                    {months.map(m => (
-                     <SelectItem key={m} value={m} className="font-black py-4 text-white uppercase text-xs">
+                     <SelectItem key={m} value={m} className="font-black py-4 text-white uppercase text-xs focus:bg-white/10 focus:text-white">
                        {m}
                      </SelectItem>
                    ))}
@@ -388,4 +389,3 @@ export default function UserPage() {
     </div>
   );
 }
-    
