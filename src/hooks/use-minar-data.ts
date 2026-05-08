@@ -7,8 +7,8 @@ import { useMemo } from "react";
 
 /**
  * useMinarData Hook
- * This file handles all the database (Firebase) logic for the Admin Panel.
- * Standardized field names: memberName, amount, date, category, timestamp
+ * This file handles all the shared database (Firebase) logic.
+ * Unified collection: "transactions"
  */
 
 export interface Transaction {
@@ -30,7 +30,7 @@ export const useMinarData = () => {
   const { data: membersDocs } = useCollection(membersQuery);
   const members = useMemo(() => (membersDocs || []).map(d => d.name as string), [membersDocs]);
 
-  // Fetching Transactions List (Synced across app)
+  // Fetching ALL Transactions (Shared across Admin and Member views)
   const transactionsQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, "transactions"), orderBy("date", "desc"));
