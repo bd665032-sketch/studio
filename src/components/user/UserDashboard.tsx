@@ -21,8 +21,7 @@ import {
   Loader2,
   AlertCircle,
   UserCheck,
-  Download,
-  Filter
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
@@ -41,6 +40,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const [mutationLoading, setMutationLoading] = useState(false);
   const [selectedOfficialName, setSelectedOfficialName] = useState("");
 
+  // Sync Global Settings (Logo and Foundation Name)
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
   const { data: settings, loading: settingsLoading } = useDoc(settingsRef);
 
@@ -48,7 +48,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     db ? query(collection(db, "members")) : null
   );
 
-  // Simplified query without orderBy to avoid index requirement
+  // Fetch transactions for the logged in user
   const txQuery = useMemo(() => {
     if (!user?.displayName || !db) return null;
     return query(
@@ -59,7 +59,6 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   
   const { data: rawTransactions, loading: txLoading } = useCollection(txQuery);
 
-  // Process and sort transactions in memory
   const myTransactions = useMemo(() => {
     if (!rawTransactions) return [];
     return [...rawTransactions].sort((a, b) => {
@@ -71,23 +70,15 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
 
   const getMonthFromDateStr = (dateStr: string) => {
     if (!dateStr) return "";
-    const parts = dateStr.split('-');
-    if (parts.length >= 2) {
-      const monthIndex = parseInt(parts[1], 10);
-      if (!isNaN(monthIndex) && monthIndex >= 1 && monthIndex <= 12) {
-        return months[monthIndex];
-      }
-    }
-    return "";
+    const date = new Date(dateStr);
+    return months[date.getMonth() + 1];
   };
 
-  // Lifetime total for Home screen
   const lifetimeTotal = useMemo(() => {
     if (!myTransactions) return 0;
     return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
   }, [myTransactions]);
 
-  // Filtered transactions for Report screen
   const filteredTransactions = useMemo(() => {
     if (!myTransactions) return [];
     return myTransactions.filter(t => {
@@ -96,7 +87,6 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     });
   }, [myTransactions, selectedSummaryMonth]);
 
-  // Total for the selected month in Report screen
   const monthlyTotal = useMemo(() => {
     return filteredTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
   }, [filteredTransactions]);
@@ -148,16 +138,13 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
       toast({ variant: "destructive", title: "ত্রুটি", description: "ডাউনলোড করার মতো কোনো রিপোর্ট পাওয়া যায়নি।" });
       return;
     }
-    
     const pdfData = filteredTransactions.map((t: any) => ({
       n: t.memberName,
       d: t.date,
       a: t.amount
     }));
-    
     const titleSuffix = selectedSummaryMonth === "All" ? "" : `_${selectedSummaryMonth}`;
     exportSummaryPDF(pdfData, `Report_${user?.displayName}${titleSuffix}`, monthlyTotal);
-    toast({ title: "সফল!", description: "আপনার জমার রিপোর্ট ডাউনলোড করা হচ্ছে।" });
   };
 
   const bengaliDate = new Intl.DateTimeFormat('bn-BD', {
@@ -180,8 +167,6 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
           <AlertCircle className="w-10 h-10 text-[#D4AF37]" />
         </div>
         <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tight">Profile Sync Required</h2>
-        <p className="text-white/60 text-sm mb-10 leading-relaxed">অ্যাডমিন প্যানেলের মেম্বার লিস্টের সাথে আপনার প্রোফাইল কানেক্ট করার জন্য আপনার অফিসিয়াল নামটি সিলেক্ট করুন।</p>
-        
         <div className="w-full max-w-sm space-y-6">
           <Select onValueChange={setSelectedOfficialName}>
             <SelectTrigger className="h-16 rounded-[24px] bg-white/5 border-white/10 text-white font-black text-base">
@@ -195,15 +180,9 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               ))}
             </SelectContent>
           </Select>
-
-          <Button 
-            onClick={handleFixProfile} 
-            disabled={!selectedOfficialName || mutationLoading}
-            className="w-full h-16 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-black rounded-[24px] shadow-xl"
-          >
+          <Button onClick={handleFixProfile} disabled={!selectedOfficialName || mutationLoading} className="w-full h-16 bg-[#D4AF37] hover:bg-[#D4AF37]/90 text-black font-black rounded-[24px] shadow-xl">
             {mutationLoading ? <Loader2 className="animate-spin" /> : "প্রোফাইল একটিভ করুন"}
           </Button>
-          
           <button onClick={onLogout} className="text-white/40 text-xs font-bold uppercase tracking-widest pt-4">লগআউট</button>
         </div>
       </div>
@@ -212,7 +191,6 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#1A1140] font-bengali text-white overflow-hidden">
-      
       {activeTab === "home" && (
         <main className="flex-1 overflow-y-auto pb-32 animate-in fade-in duration-700">
           <div className="relative pt-16 pb-28 px-8 text-center border-b-[12px] border-[#D4AF37]/10">
@@ -222,24 +200,23 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
             <div className="flex justify-center mb-8">
               <div className="w-32 h-32 rounded-full border-[6px] border-[#D4AF37]/20 p-1.5 bg-white shadow-2xl overflow-hidden flex items-center justify-center">
                 {settings?.logo ? (
-                  <img src={settings.logo} className="w-full h-full object-cover" />
+                  <img src={settings.logo} alt="Foundation Logo" className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-5xl text-[#1E3A8A] font-black italic">MG</span>
                 )}
               </div>
             </div>
-            <h1 className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.4em] mb-3">{settings?.name || "MINAR GO FOUNDATION"}</h1>
+            <h1 className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.4em] mb-3">
+              {settings?.name || "MINAR GO FOUNDATION"}
+            </h1>
             <h2 className="text-4xl font-black tracking-tight">{user.displayName}</h2>
           </div>
 
           <div className="px-6 space-y-6 -mt-12 relative z-20">
             <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-10 rounded-[45px] border border-white/10 text-center shadow-2xl relative">
-              <p className="text-[#D4AF37]/70 text-[11px] font-black uppercase tracking-[0.2em] mb-2">
-                সর্বমোট জমার পরিমাণ
-              </p>
+              <p className="text-[#D4AF37]/70 text-[11px] font-black uppercase tracking-[0.2em] mb-2">সর্বমোট জমার পরিমাণ</p>
               <h3 className="text-5xl font-black">৳{lifetimeTotal.toLocaleString()}</h3>
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-[#2D2D4D] p-6 rounded-[35px] border border-white/5 text-center shadow-xl">
                 <span className="text-2xl">🕋</span>
@@ -252,7 +229,6 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
                 <p className="text-[14px] font-bold mt-1 text-white/90">১৮ ফেব্রু., ২০২৬</p>
               </div>
             </div>
-
             <div className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] p-5 rounded-full text-black flex items-center justify-center gap-4 font-black text-sm shadow-xl">
               <Calendar className="w-6 h-6" /> {bengaliDate}
             </div>
@@ -296,23 +272,19 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
             </h2>
             <div className="flex gap-2">
                <Select value={selectedSummaryMonth} onValueChange={setSelectedSummaryMonth}>
-                 <SelectTrigger className="w-32 h-12 bg-white/10 border-white/20 text-white font-black rounded-2xl text-[11px] uppercase tracking-widest focus:ring-2 focus:ring-[#D4AF37]">
+                 <SelectTrigger className="w-32 h-12 bg-white/10 border-white/20 text-white font-black rounded-2xl text-[11px] uppercase tracking-widest">
                    <SelectValue placeholder="Month" />
                  </SelectTrigger>
-                 <SelectContent className="bg-[#2D1B69] border-white/10 shadow-2xl rounded-2xl overflow-hidden z-[500]">
+                 <SelectContent className="bg-[#2D1B69] border-white/10 shadow-2xl rounded-2xl z-[500]">
                    {months.map(m => (
-                     <SelectItem key={m} value={m} className="text-white font-black py-4 text-xs hover:bg-white/10 focus:bg-white/10 focus:text-white border-b border-white/5 last:border-none">
+                     <SelectItem key={m} value={m} className="text-white font-black py-4 text-xs">
                        {m.toUpperCase()}
                      </SelectItem>
                    ))}
                  </SelectContent>
                </Select>
                {filteredTransactions.length > 0 && (
-                <Button 
-                  onClick={handleDownloadPDF} 
-                  variant="ghost" 
-                  className="bg-[#D4AF37] text-black hover:bg-[#D4AF37]/90 h-12 rounded-2xl gap-2 font-black px-5 shadow-lg active:scale-95 transition-all"
-                >
+                <Button onClick={handleDownloadPDF} variant="ghost" className="bg-[#D4AF37] text-black hover:bg-[#D4AF37]/90 h-12 rounded-2xl gap-2 font-black px-5 shadow-lg active:scale-95 transition-all">
                   <Download className="w-5 h-5" /> PDF
                 </Button>
               )}

@@ -1,14 +1,14 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth, useFirestore, useCollection } from "@/firebase";
+import { useAuth, useFirestore, useCollection, useDoc } from "@/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { collection, query, orderBy } from "firebase/firestore";
+import { collection, query, orderBy, doc } from "firebase/firestore";
 import { Mail, Lock, User, Loader2 } from "lucide-react";
 
 export default function UserAuthScreen() {
@@ -23,6 +23,10 @@ export default function UserAuthScreen() {
   const { toast } = useToast();
   const auth = useAuth();
   const db = useFirestore();
+
+  // Fetch foundation settings for logo and name sync
+  const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
+  const { data: settings } = useDoc(settingsRef);
 
   // Fetch official members from Admin's Firestore collection
   const { data: members, loading: membersLoading } = useCollection(
@@ -44,15 +48,11 @@ export default function UserAuthScreen() {
         }
 
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
-        
-        // Save the official name to the user's profile
         await updateProfile(userCredential.user, { 
           displayName: formData.fullName 
         });
         
         toast({ title: "সফল!", description: `প্রোফাইল তৈরি হয়েছে: ${formData.fullName}` });
-        
-        // Small delay to ensure profile is synced before dashboard loads
         setTimeout(() => {
           window.location.reload();
         }, 1000);
@@ -75,13 +75,19 @@ export default function UserAuthScreen() {
       
       <div className="w-full max-w-[400px] bg-white/95 backdrop-blur-3xl rounded-[45px] shadow-2xl overflow-hidden relative z-10 border border-white/20">
         <div className="py-10 flex flex-col items-center text-center px-6">
-          <div className="bg-white p-4 rounded-full shadow-lg border-2 border-blue-50 mb-5">
-            <div className="w-14 h-14 bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] rounded-full flex items-center justify-center shadow-inner">
-              <span className="text-white text-2xl font-black italic">MG</span>
-            </div>
+          <div className="bg-white p-4 rounded-full shadow-lg border-2 border-blue-50 mb-5 w-24 h-24 flex items-center justify-center overflow-hidden">
+            {settings?.logo ? (
+              <img src={settings.logo} alt="Foundation Logo" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-14 h-14 bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] rounded-full flex items-center justify-center shadow-inner">
+                <span className="text-white text-2xl font-black italic">MG</span>
+              </div>
+            )}
           </div>
-          <h1 className="text-[18px] font-black text-[#1E3A8A] uppercase tracking-widest leading-none">MEMBER PORTAL</h1>
-          <p className="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-[0.2em]">Minar Go Foundation Official Node</p>
+          <h1 className="text-[18px] font-black text-[#1E3A8A] uppercase tracking-widest leading-none">
+            {settings?.name || "MEMBER PORTAL"}
+          </h1>
+          <p className="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-[0.2em]">Official Secure Node</p>
         </div>
 
         <div className="px-8 pb-10">
