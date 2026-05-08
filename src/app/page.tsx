@@ -25,7 +25,7 @@ export default function Home() {
         const authorized = AUTHORIZED_ADMIN_NAMES.some(admin => name.includes(admin));
         setIsAdmin(authorized);
         
-        // If not an admin, redirect them to the User App
+        // If not an admin, redirect them to the Member App
         if (!authorized) {
           router.push("/user");
         }
@@ -48,7 +48,13 @@ export default function Home() {
   }
 
   if (!user || !isAdmin) {
-    return <AuthScreen />;
+    return (
+      <>
+        <title>Minar Go Admin</title>
+        <meta name="apple-mobile-web-app-title" content="MG Admin" />
+        <AuthScreen />
+      </>
+    );
   }
 
   return (
