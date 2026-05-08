@@ -6,7 +6,8 @@ import {
   useUser, 
   useAuth, 
   useFirestore, 
-  useCollection 
+  useCollection,
+  useDoc
 } from "@/firebase";
 import { 
   signOut, 
@@ -21,8 +22,7 @@ import {
   addDoc, 
   serverTimestamp, 
   doc, 
-  orderBy,
-  onSnapshot
+  orderBy
 } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,7 +46,8 @@ import {
   Mail,
   Lock,
   User,
-  UserCheck
+  UserCheck,
+  AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
@@ -73,18 +74,11 @@ export default function UserPage() {
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSummaryMonth, setSelectedSummaryMonth] = useState("All");
   
-  // Real-time Settings Sync (Logo and Name)
-  const [settings, setSettings] = useState<any>(null);
+  // Real-time Settings Sync (Logo and Name) from Admin
+  const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
+  const { data: settings } = useDoc(settingsRef);
 
-  useEffect(() => {
-    if (!db) return;
-    const unsub = onSnapshot(doc(db, "settings", "foundation"), (docSnap) => {
-      if (docSnap.exists()) setSettings(docSnap.data());
-    });
-    return () => unsub();
-  }, [db]);
-
-  // Fetch Members List for Registration
+  // Fetch Official Members List for Registration
   const membersQuery = useMemo(() => (db ? query(collection(db, "members"), orderBy("name")) : null), [db]);
   const { data: membersList, loading: membersLoading } = useCollection(membersQuery);
 
@@ -112,12 +106,12 @@ export default function UserPage() {
     return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
   }, [myTransactions]);
 
+  // FIX: Robust month filtering for April, May, etc.
   const filteredTransactions = useMemo(() => {
     if (selectedSummaryMonth === "All") return myTransactions;
     return myTransactions.filter(t => {
       try {
-        // Robust filtering by splitting the YYYY-MM-DD string
-        const parts = t.date.split('-');
+        const parts = t.date.split('-'); // Format: YYYY-MM-DD
         const monthIndex = parseInt(parts[1]) - 1;
         return months[monthIndex + 1] === selectedSummaryMonth;
       } catch (e) { return false; }
@@ -177,6 +171,18 @@ export default function UserPage() {
     }
   };
 
+  const handleDownloadPDF = () => {
+    if (filteredTransactions.length === 0) {
+      toast({ variant: "destructive", title: "দুঃখিত", description: "কোনো জমার রেকর্ড পাওয়া যায়নি।" });
+      return;
+    }
+    exportSummaryPDF(
+      filteredTransactions.map(t => ({ n: t.memberName, d: t.date, a: t.amount })),
+      `Report_${user?.displayName}_${selectedSummaryMonth}`,
+      monthlyTotal
+    );
+  };
+
   if (userLoading || txLoading) {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center gap-6">
@@ -190,7 +196,7 @@ export default function UserPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center p-4 font-body relative overflow-hidden">
-        <title>MG Member Portal</title>
+        <title>MG Member - Login</title>
         <div className="absolute top-[-5%] right-[-5%] w-[300px] h-[300px] bg-white/5 rounded-full blur-[80px]"></div>
         <div className="w-full max-w-[400px] bg-white/95 backdrop-blur-3xl rounded-[45px] shadow-2xl border border-white/20 relative z-10">
           <div className="py-10 flex flex-col items-center text-center px-6">
@@ -251,7 +257,7 @@ export default function UserPage() {
 
   return (
     <div className="flex flex-col min-h-screen bg-[#1A1140] font-bengali text-white overflow-hidden">
-      <title>MG Member Dashboard</title>
+      <title>MG Member - Dashboard</title>
       
       {activeTab === "home" && (
         <main className="flex-1 overflow-y-auto pb-32 animate-in fade-in duration-700">
@@ -323,15 +329,15 @@ export default function UserPage() {
                  <SelectTrigger className="w-32 h-12 bg-white/10 border-white/20 text-white font-black rounded-2xl text-[11px] uppercase tracking-widest">
                    <SelectValue placeholder="মাস" />
                  </SelectTrigger>
-                 <SelectContent className="bg-white border-none shadow-2xl rounded-2xl z-[500]">
+                 <SelectContent className="bg-[#2D1B69] border-white/10 shadow-2xl rounded-2xl z-[500]">
                    {months.map(m => (
-                     <SelectItem key={m} value={m} className="font-black py-4 text-[#1E3A8A] uppercase">
+                     <SelectItem key={m} value={m} className="font-black py-4 text-white uppercase text-xs">
                        {m}
                      </SelectItem>
                    ))}
                  </SelectContent>
                </Select>
-               <Button onClick={() => exportSummaryPDF(filteredTransactions.map(t=>({n:t.memberName, d:t.date, a:t.amount})), `Report_${user.displayName}`, monthlyTotal)} variant="ghost" className="bg-[#D4AF37] text-black h-12 rounded-2xl gap-2 font-black px-5 shadow-lg">
+               <Button onClick={handleDownloadPDF} variant="ghost" className="bg-[#D4AF37] text-black h-12 rounded-2xl gap-2 font-black px-5 shadow-lg active:scale-95 transition-all">
                   <Download className="w-5 h-5" /> PDF
                 </Button>
             </div>
@@ -351,7 +357,7 @@ export default function UserPage() {
                 <p className="font-black text-xs uppercase tracking-widest">No Records Found</p>
               </div>
             ) : filteredTransactions.map((t: any) => (
-              <div key={t.id} className="bg-white/5 p-8 rounded-[40px] flex items-center justify-between border border-white/5 shadow-2xl backdrop-blur-sm">
+              <div key={t.id} className="bg-white/5 p-8 rounded-[40px] flex items-center justify-between border border-white/5 shadow-2xl backdrop-blur-sm group hover:bg-white/10 transition-all">
                 <div className="space-y-1">
                   <p className="font-black text-2xl text-[#D4AF37]">৳{t.amount.toLocaleString()}</p>
                   <p className="text-[11px] text-white/40 font-black uppercase tracking-widest">{t.date}</p>
@@ -383,3 +389,4 @@ export default function UserPage() {
     </div>
   );
 }
+    
