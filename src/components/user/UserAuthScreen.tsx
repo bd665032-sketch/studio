@@ -22,13 +22,6 @@ export default function UserAuthScreen() {
   const auth = useAuth();
   const db = useFirestore();
 
-  const validatePassword = (password: string) => {
-    if (password.length < 8) return "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।";
-    if (!/[A-Z]/.test(password)) return "পাসওয়ার্ডে অন্তত একটি বড় হাতের অক্ষর থাকতে হবে।";
-    if (!/[0-9]/.test(password)) return "পাসওয়ার্ডে অন্তত একটি সংখ্যা থাকতে হবে।";
-    return null;
-  };
-
   const normalizeName = (name: string) => {
     return name.toString().toLowerCase().replace(/[^a-z0-9]/g, "").trim();
   };
@@ -41,9 +34,9 @@ export default function UserAuthScreen() {
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
-        toast({ title: "স্বাগতম!", description: "ইউজার প্যানেলে লগইন সফল হয়েছে।" });
+        toast({ title: "স্বাগতম!", description: "লগইন সফল হয়েছে।" });
       } else {
-        // 1. Verify if name exists in Admin's Member Directory
+        // 1. Verify if name exists in Admin Directory
         const membersRef = collection(db, "members");
         const querySnapshot = await getDocs(membersRef);
         
@@ -58,24 +51,25 @@ export default function UserAuthScreen() {
         });
 
         if (!officialNameFromDB) {
-          throw new Error(`"${formData.fullName}" নামটি অ্যাডমিন ডিরেক্টরিতে পাওয়া যায়নি। অ্যাডমিন আপনার নাম যেভাবে অ্যাড করেছেন হুবহু সেটি লিখুন।`);
+          throw new Error(`"${formData.fullName}" নামটি অ্যাডমিন ডিরেক্টরিতে পাওয়া যায়নি।`);
         }
 
-        const passErr = validatePassword(formData.password);
-        if (passErr) throw new Error(passErr);
-
+        // Create User
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         
-        // 2. Set the User's Display Name to the Official Name from DB
+        // 2. Set the Official Name from DB to the Profile
         await updateProfile(userCredential.user, { displayName: officialNameFromDB });
         
-        toast({ title: "অভিনন্দন!", description: `আপনার প্রোফাইল তৈরি হয়েছে। অফিসিয়াল নাম: ${officialNameFromDB}` });
+        // Force reload to ensure displayName is available
+        window.location.reload();
+        
+        toast({ title: "সফল!", description: `অফিসিয়াল নাম: ${officialNameFromDB}` });
       }
     } catch (error: any) {
       toast({ 
         variant: "destructive", 
         title: "অ্যাক্সেস ডিনাইড", 
-        description: error.message || "লগইন বা সাইন আপ ব্যর্থ হয়েছে।" 
+        description: error.message || "ত্রুটি হয়েছে।" 
       });
     } finally {
       setLoading(false);
@@ -83,77 +77,54 @@ export default function UserAuthScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-auth-premium flex flex-col items-center justify-center p-4 font-body relative overflow-hidden">
-      <div className="absolute top-[-5%] right-[-5%] w-[300px] h-[300px] bg-white/10 rounded-full blur-[80px]"></div>
-      <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-blue-500/10 rounded-full blur-[100px]"></div>
-
-      <div className="w-full max-w-[420px] bg-white/95 backdrop-blur-2xl rounded-[45px] shadow-[0_30px_100px_rgba(0,0,0,0.5)] overflow-hidden border border-white/40 relative z-10">
-        
-        <div className="relative py-12 flex flex-col items-center justify-center text-center px-6">
-          <div className="z-10 bg-white p-5 rounded-full shadow-2xl border-4 border-blue-50/50 mb-6">
-            <div className="w-16 h-16 bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] rounded-full flex items-center justify-center">
-              <span className="text-white text-3xl font-black italic">MG</span>
+    <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center p-4 font-body relative overflow-hidden">
+      <div className="absolute top-[-5%] right-[-5%] w-[300px] h-[300px] bg-white/5 rounded-full blur-[80px]"></div>
+      
+      <div className="w-full max-w-[400px] bg-white/95 backdrop-blur-3xl rounded-[40px] shadow-2xl overflow-hidden relative z-10 border border-white/20">
+        <div className="py-10 flex flex-col items-center text-center px-6">
+          <div className="bg-white p-4 rounded-full shadow-lg border-2 border-blue-50 mb-5">
+            <div className="w-14 h-14 bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] rounded-full flex items-center justify-center">
+              <span className="text-white text-2xl font-black italic">MG</span>
             </div>
           </div>
-          <h1 className="text-[20px] font-black text-[#1E3A8A] leading-tight uppercase tracking-[0.15em]">MINAR GO MEMBER HUB</h1>
-          <p className="text-[#D4AF37] font-black text-[10px] uppercase tracking-[0.4em] mt-3">SECURE ACCESS TERMINAL</p>
+          <h1 className="text-[18px] font-black text-[#1E3A8A] uppercase tracking-widest">MINAR GO MEMBER HUB</h1>
+          <p className="text-[#D4AF37] font-black text-[9px] uppercase tracking-[0.4em] mt-2">SECURE LOGIN GATEWAY</p>
         </div>
 
-        <div className="px-8 pb-12">
-          <div className="space-y-8">
-            <div className="flex bg-slate-100 p-1.5 rounded-[30px]">
-              <button 
-                type="button"
-                onClick={() => setIsLogin(true)} 
-                className={`flex-1 py-4 rounded-[26px] text-xs font-black transition-all ${isLogin ? 'bg-[#1E3A8A] text-white shadow-xl' : 'text-slate-400'}`}
-              >
-                লগইন
-              </button>
-              <button 
-                type="button"
-                onClick={() => setIsLogin(false)} 
-                className={`flex-1 py-4 rounded-[26px] text-xs font-black transition-all ${!isLogin ? 'bg-[#1E3A8A] text-white shadow-xl' : 'text-slate-400'}`}
-              >
-                রেজিস্ট্রেশন
-              </button>
+        <div className="px-8 pb-10">
+          <div className="flex bg-slate-100 p-1 rounded-[25px] mb-8">
+            <button onClick={() => setIsLogin(true)} className={`flex-1 py-3.5 rounded-[22px] text-xs font-black transition-all ${isLogin ? 'bg-[#1E3A8A] text-white shadow-lg' : 'text-slate-400'}`}>লগইন</button>
+            <button onClick={() => setIsLogin(false)} className={`flex-1 py-3.5 rounded-[22px] text-xs font-black transition-all ${!isLogin ? 'bg-[#1E3A8A] text-white shadow-lg' : 'text-slate-400'}`}>রেজিস্ট্রেশন</button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {!isLogin && (
+              <div className="space-y-4">
+                <div className="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
+                  <p className="text-[10px] text-blue-800 font-bold leading-relaxed text-center">
+                    অ্যাডমিন ডিরেক্টরিতে আপনার নাম যেভাবে আছে (Mr Shahid) হুবহু সেটি লিখুন।
+                  </p>
+                </div>
+                <div className="relative">
+                  <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Input placeholder="আপনার অফিসিয়াল নাম" required value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} className="h-14 pl-14 rounded-2xl bg-slate-50 border-none font-black" />
+                </div>
+              </div>
+            )}
+            
+            <div className="relative">
+              <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Input type="email" placeholder="ইমেইল অ্যাড্রেস" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="h-14 pl-14 rounded-2xl bg-slate-50 border-none font-black" />
+            </div>
+            <div className="relative">
+              <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Input type="password" placeholder="পাসওয়ার্ড" required value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="h-14 pl-14 rounded-2xl bg-slate-50 border-none font-black" />
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {!isLogin && (
-                <div className="space-y-4">
-                  <div className="bg-blue-50/70 p-5 rounded-[24px] border border-blue-100 flex items-start gap-4">
-                    <Info className="w-5 h-5 text-blue-500 shrink-0 mt-0.5" />
-                    <p className="text-[10px] text-blue-800 font-bold leading-relaxed">
-                      অ্যাডমিন আপনার নামটি যেভাবে ডিরেক্টরিতে অ্যাড করেছেন সেই নামটিই লিখুন। (যেমন: Mr Shahid বা Mr.Shahid)
-                    </p>
-                  </div>
-                  <div className="relative group">
-                    <User className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                    <Input 
-                      placeholder="আপনার নাম" 
-                      required 
-                      value={formData.fullName} 
-                      onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} 
-                      className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none text-base font-black shadow-inner" 
-                    />
-                  </div>
-                </div>
-              )}
-              
-              <div className="relative group">
-                <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <Input type="email" placeholder="ইমেইল অ্যাড্রেস" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none text-base font-black shadow-inner" />
-              </div>
-              <div className="relative group">
-                <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <Input type="password" placeholder="পাসওয়ার্ড" required value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none text-base font-black shadow-inner" />
-              </div>
-
-              <Button type="submit" className="w-full h-16 rounded-[24px] bg-[#1E3A8A] text-white font-black shadow-xl flex items-center justify-center gap-3" disabled={loading}>
-                {loading ? <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white"></div> : <><ShieldCheck className="w-5 h-5" /> {isLogin ? "LOG IN" : "REGISTER"}</>}
-              </Button>
-            </form>
-          </div>
+            <Button type="submit" className="w-full h-14 rounded-2xl bg-[#1E3A8A] text-white font-black shadow-xl" disabled={loading}>
+              {loading ? "প্রসেসিং..." : isLogin ? "LOG IN" : "REGISTER NOW"}
+            </Button>
+          </form>
         </div>
       </div>
     </div>
