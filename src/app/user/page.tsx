@@ -22,7 +22,8 @@ import {
   addDoc, 
   serverTimestamp, 
   doc, 
-  orderBy 
+  orderBy,
+  onSnapshot
 } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,10 +74,17 @@ export default function UserPage() {
   const [depositAmount, setDepositAmount] = useState(5000);
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSummaryMonth, setSelectedSummaryMonth] = useState("All");
+  
+  // Real-time Settings Sync (Logo and Name)
+  const [settings, setSettings] = useState<any>(null);
 
-  // Fetch Foundation Global Settings
-  const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
-  const { data: settings } = useDoc(settingsRef);
+  useEffect(() => {
+    if (!db) return;
+    const unsub = onSnapshot(doc(db, "settings", "foundation"), (docSnap) => {
+      if (docSnap.exists()) setSettings(docSnap.data());
+    });
+    return () => unsub();
+  }, [db]);
 
   // Fetch Members List for Registration
   const membersQuery = useMemo(() => (db ? query(collection(db, "members"), orderBy("name")) : null), [db]);
