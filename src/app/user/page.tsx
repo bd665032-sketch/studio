@@ -1,4 +1,3 @@
-
 "use client";
 
 import UserAuthScreen from "@/components/user/UserAuthScreen";
@@ -24,7 +23,7 @@ export default function UserPage() {
           </div>
         </div>
         <div className="text-center">
-          <p className="text-white font-black text-sm uppercase tracking-[0.3em] animate-pulse">Establishing Secure Node</p>
+          <p className="text-white font-black text-xs uppercase tracking-[0.3em] animate-pulse">Establishing Secure Node</p>
           <p className="text-white/40 text-[9px] font-bold mt-2 uppercase">Please wait while we sync with foundation</p>
         </div>
       </div>
@@ -36,8 +35,12 @@ export default function UserPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <UserDashboard onLogout={handleLogout} />
-    </div>
+    <>
+      <title>Minar Go Member</title>
+      <meta name="apple-mobile-web-app-title" content="MG Member" />
+      <div className="min-h-screen flex flex-col">
+        <UserDashboard onLogout={handleLogout} />
+      </div>
+    </>
   );
 }

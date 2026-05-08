@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,6 +7,7 @@ import DashboardContent from "@/components/dashboard/DashboardContent";
 import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import Head from "next/head";
 
 // Authorized Admin Names
 const AUTHORIZED_ADMIN_NAMES = ["dulal", "omar faruk", "shahid", "mr shahid"];
@@ -52,11 +52,15 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header onLogout={handleLogout} />
-      <main className="flex-1">
-        <DashboardContent />
-      </main>
-    </div>
+    <>
+      <title>Minar Go Admin</title>
+      <meta name="apple-mobile-web-app-title" content="MG Admin" />
+      <div className="min-h-screen flex flex-col">
+        <Header onLogout={handleLogout} />
+        <main className="flex-1">
+          <DashboardContent />
+        </main>
+      </div>
+    </>
   );
 }

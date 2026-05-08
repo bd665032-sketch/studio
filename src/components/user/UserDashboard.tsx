@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -71,8 +70,10 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const getMonthFromDateStr = (dateStr: string) => {
     if (!dateStr) return "";
     try {
-      const [year, month, day] = dateStr.split('-');
-      return months[parseInt(month)];
+      const parts = dateStr.split('-');
+      if (parts.length < 2) return "";
+      const monthIndex = parseInt(parts[1]);
+      return months[monthIndex];
     } catch (e) {
       return "";
     }
@@ -85,10 +86,8 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
 
   const filteredTransactions = useMemo(() => {
     if (!myTransactions) return [];
-    return myTransactions.filter(t => {
-      if (selectedSummaryMonth === "All") return true;
-      return getMonthFromDateStr(t.date) === selectedSummaryMonth;
-    });
+    if (selectedSummaryMonth === "All") return myTransactions;
+    return myTransactions.filter(t => getMonthFromDateStr(t.date) === selectedSummaryMonth);
   }, [myTransactions, selectedSummaryMonth]);
 
   const monthlyTotal = useMemo(() => {

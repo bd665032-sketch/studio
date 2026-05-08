@@ -5,7 +5,7 @@ import { FirebaseClientProvider } from '@/firebase';
 import { GlobalNotificationListener } from '@/components/GlobalNotificationListener';
 
 export const metadata: Metadata = {
-  title: 'Minar Go Connect - Development Foundation',
+  title: 'Minar Go - Foundation',
   description: 'Management app for Minar Go Expatriate Development Foundation',
 };
 
