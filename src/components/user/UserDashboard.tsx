@@ -31,11 +31,11 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [mutationLoading, setMutationLoading] = useState(false);
 
-  // ১. অ্যাডমিন সেটিংস সিঙ্ক
+  // 1. Sync Foundation Settings (Logo and Name) from Admin
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
-  const { data: settings } = useDoc(settingsRef);
+  const { data: settings, loading: settingsLoading } = useDoc(settingsRef);
 
-  // ২. নিজস্ব ট্রানজেকশন কুয়েরি
+  // 2. Fetch User's personal transactions
   const txQuery = useMemo(() => {
     if (!user?.displayName || !db) return null;
     return query(
@@ -45,9 +45,9 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     );
   }, [user?.displayName, db]);
   
-  const { data: myTransactions } = useCollection(txQuery);
+  const { data: myTransactions, loading: txLoading } = useCollection(txQuery);
 
-  // ৩. ব্যালেন্স সামারি
+  // 3. Calculation of total balance
   const totalBalance = useMemo(() => {
     if (!myTransactions) return 0;
     return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
@@ -58,10 +58,13 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     return () => clearInterval(timer);
   }, []);
 
-  // ৪. টাকা জমা দেওয়া (অ্যাডমিন প্যানেলে সিঙ্ক হবে)
+  // 4. Handle Deposit Submission
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user?.displayName || !db) return;
+    if (!user?.displayName || !db) {
+      toast({ variant: "destructive", title: "ত্রুটি", description: "ইউজার প্রোফাইল লোড হচ্ছে, কিছুক্ষণ অপেক্ষা করুন।" });
+      return;
+    }
     
     setMutationLoading(true);
     try {
@@ -75,8 +78,8 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
       toast({ title: "সফল!", description: "জমা নিশ্চিত হয়েছে এবং অ্যাডমিন প্যানেলে পাঠানো হয়েছে।" });
       setDepositAmount(5000);
       setActiveTab("home");
-    } catch (e) {
-      toast({ variant: "destructive", title: "ত্রুটি", description: "ডাটাবেস কানেকশন সমস্যা।" });
+    } catch (e: any) {
+      toast({ variant: "destructive", title: "ত্রুটি", description: e.message || "ডাটাবেস কানেকশন সমস্যা।" });
     } finally {
       setMutationLoading(false);
     }
@@ -86,7 +89,25 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   }).format(currentTime);
 
-  if (userLoading) return <div className="min-h-screen bg-[#1A1140] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-accent" /></div>;
+  // Determine global loading state
+  const isInitialLoading = userLoading || (user && !user.displayName && txLoading);
+
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center gap-6">
+        <div className="relative">
+          <div className="w-20 h-20 rounded-full border-4 border-white/5 border-t-[#D4AF37] animate-spin"></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-white font-black text-xs">MG</span>
+          </div>
+        </div>
+        <div className="text-center">
+          <p className="text-white font-black text-sm uppercase tracking-[0.3em] animate-pulse">Establishing Secure Node</p>
+          <p className="text-white/40 text-[9px] font-bold mt-2 uppercase">Please wait while we sync with foundation</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#1A1140] font-bengali text-white overflow-hidden">
@@ -94,7 +115,12 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
       {activeTab === "home" && (
         <main className="flex-1 overflow-y-auto pb-32 animate-in fade-in duration-700">
           <div className="relative bg-[#1A1140] pt-16 pb-28 px-8 text-center border-b-[12px] border-[#D4AF37]/10">
-            <button onClick={onLogout} className="absolute top-8 right-8 bg-red-600/90 px-5 py-2 rounded-2xl text-[10px] font-black uppercase shadow-xl active:scale-95 transition-all">LOG OUT</button>
+            <button 
+              onClick={onLogout} 
+              className="absolute top-8 right-8 bg-red-600/90 px-5 py-2 rounded-2xl text-[10px] font-black uppercase shadow-xl active:scale-95 transition-all"
+            >
+              LOG OUT
+            </button>
             <div className="flex justify-center mb-8">
               <div className="w-32 h-32 rounded-full border-[6px] border-[#D4AF37]/20 p-1.5 bg-white shadow-2xl overflow-hidden flex items-center justify-center">
                 {settings?.logo ? (
@@ -105,7 +131,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               </div>
             </div>
             <h1 className="text-[#D4AF37] text-[12px] font-black uppercase tracking-[0.4em] mb-3">{settings?.name || "MINAR GO FOUNDATION"}</h1>
-            <h2 className="text-4xl font-black tracking-tight">{user?.displayName || "Loading Name..."}</h2>
+            <h2 className="text-4xl font-black tracking-tight">{user?.displayName || "Member"}</h2>
           </div>
 
           <div className="px-6 space-y-6 -mt-12 relative z-20">
@@ -118,12 +144,12 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               <div className="bg-[#2D2D4D] p-6 rounded-[35px] border border-white/5 text-center shadow-xl">
                 <span className="text-2xl">🕋</span>
                 <p className="text-[#D4AF37] text-[10px] font-black mt-3 uppercase tracking-widest">পরবর্তী হজ</p>
-                <p className="text-[14px] font-bold mt-1">২৭ মে, ২০২৬</p>
+                <p className="text-[14px] font-bold mt-1 text-white/90">২৭ মে, ২০২৬</p>
               </div>
               <div className="bg-[#2D2D4D] p-6 rounded-[35px] border border-white/5 text-center shadow-xl">
                 <span className="text-2xl">🌙</span>
                 <p className="text-[#D4AF37] text-[10px] font-black mt-3 uppercase tracking-widest">রমজান</p>
-                <p className="text-[14px] font-bold mt-1">১৮ ফেব্রু., ২০২৬</p>
+                <p className="text-[14px] font-bold mt-1 text-white/90">১৮ ফেব্রু., ২০২৬</p>
               </div>
             </div>
 
@@ -147,20 +173,24 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
             <form onSubmit={handleDeposit} className="space-y-10">
               <div className="space-y-3">
                 <Label className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.3em] ml-3">জমার পরিমাণ (TK)</Label>
-                <Input type="number" value={depositAmount} onChange={(e)=>setDepositAmount(Number(e.target.value))} className="h-24 text-5xl font-black bg-white/5 border-none text-center rounded-[30px] text-white shadow-inner" />
+                <Input type="number" value={depositAmount} onChange={(e)=>setDepositAmount(Number(e.target.value))} className="h-24 text-5xl font-black bg-white/5 border-none text-center rounded-[30px] text-white shadow-inner focus:ring-2 focus:ring-[#D4AF37]/50" />
               </div>
               <div className="space-y-3">
                 <Label className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.3em] ml-3">জমার তারিখ</Label>
-                <Input type="date" value={depositDate} onChange={(e)=>setDepositDate(e.target.value)} className="h-18 font-black bg-white/5 border-none rounded-[25px] px-8 text-white text-lg shadow-inner" />
+                <Input type="date" value={depositDate} onChange={(e)=>setDepositDate(e.target.value)} className="h-18 font-black bg-white/5 border-none rounded-[25px] px-8 text-white text-lg shadow-inner focus:ring-2 focus:ring-[#D4AF37]/50" />
               </div>
               <div className="space-y-3">
                 <Label className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.3em] ml-3">অ্যাকাউন্ট হোল্ডার</Label>
                 <div className="h-18 bg-white/10 rounded-[25px] flex items-center justify-between px-8 border border-white/5 shadow-inner">
-                  <span className="font-black text-xl">{user?.displayName || "Loading..."}</span>
-                  <ShieldCheck className="w-8 h-8 text-[#D4AF37]" />
+                  <span className="font-black text-xl truncate pr-4">{user?.displayName || "Loading Name..."}</span>
+                  <ShieldCheck className="w-8 h-8 text-[#D4AF37] shrink-0" />
                 </div>
               </div>
-              <Button type="submit" disabled={mutationLoading} className="w-full h-20 bg-gradient-to-r from-[#D4AF37] to-[#B8960C] text-black font-black text-xl rounded-[30px] shadow-[0_15px_40px_rgba(212,175,55,0.3)] active:scale-95 transition-all mt-8 uppercase tracking-[0.1em]">
+              <Button 
+                type="submit" 
+                disabled={mutationLoading} 
+                className="w-full h-20 bg-gradient-to-r from-[#D4AF37] to-[#B8960C] text-black font-black text-xl rounded-[30px] shadow-[0_15px_40px_rgba(212,175,55,0.3)] active:scale-95 transition-all mt-8 uppercase tracking-[0.1em]"
+              >
                 {mutationLoading ? <Loader2 className="w-7 h-7 animate-spin" /> : "সাবমিট করুন"}
               </Button>
             </form>
@@ -170,12 +200,17 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
 
       {activeTab === "history" && (
         <main className="flex-1 overflow-y-auto pb-32 px-6 pt-16 animate-in slide-in-from-right-10 duration-500">
-          <h2 className="font-black text-3xl mb-10 flex items-center gap-4 px-2 uppercase tracking-tight"><History className="text-[#D4AF37] w-8 h-8" /> জমার রিপোর্ট</h2>
+          <h2 className="font-black text-3xl mb-10 flex items-center gap-4 px-2 uppercase tracking-tight">
+            <History className="text-[#D4AF37] w-8 h-8" /> জমার রিপোর্ট
+          </h2>
           <div className="space-y-5">
             {(!myTransactions || myTransactions.length === 0) ? (
-              <div className="text-center py-32 opacity-20"><History className="w-24 h-24 mx-auto mb-5" /><p className="font-black text-sm uppercase tracking-widest">No Records Found</p></div>
+              <div className="text-center py-32 opacity-20">
+                <History className="w-24 h-24 mx-auto mb-5" />
+                <p className="font-black text-sm uppercase tracking-widest">No Records Found</p>
+              </div>
             ) : (
-              myTransactions.map((t, i) => (
+              myTransactions.map((t: any, i: number) => (
                 <div key={i} className="bg-white/5 p-8 rounded-[40px] flex items-center justify-between border border-white/5 shadow-2xl backdrop-blur-sm group hover:bg-white/10 transition-all">
                   <div className="space-y-1">
                     <p className="font-black text-2xl tracking-tighter">৳{t.amount.toLocaleString()}</p>
@@ -196,7 +231,10 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
       )}
 
       <nav className="fixed bottom-0 left-0 right-0 bg-[#2D1B69]/90 backdrop-blur-3xl h-28 px-10 flex items-center justify-between z-[100] rounded-t-[50px] border-t border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
-        <button onClick={()=>setActiveTab("home")} className={cn("flex flex-col items-center gap-2 transition-all duration-300", activeTab==="home" ? "text-[#D4AF37] scale-110" : "text-white/30 hover:text-white/50")}>
+        <button 
+          onClick={()=>setActiveTab("home")} 
+          className={cn("flex flex-col items-center gap-2 transition-all duration-300", activeTab==="home" ? "text-[#D4AF37] scale-110" : "text-white/30 hover:text-white/50")}
+        >
           <Home className="w-8 h-8" />
           <span className="text-[10px] font-black uppercase tracking-tighter">HOME</span>
         </button>
@@ -206,7 +244,10 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
           </div>
           <span className={cn("absolute -bottom-6 left-1/2 -translate-x-1/2 text-[10px] font-black uppercase tracking-tighter transition-colors", activeTab==="add" ? "text-[#D4AF37]" : "text-white/30")}>DEPOSIT</span>
         </button>
-        <button onClick={()=>setActiveTab("history")} className={cn("flex flex-col items-center gap-2 transition-all duration-300", activeTab==="history" ? "text-[#D4AF37] scale-110" : "text-white/30 hover:text-white/50")}>
+        <button 
+          onClick={()=>setActiveTab("history")} 
+          className={cn("flex flex-col items-center gap-2 transition-all duration-300", activeTab==="history" ? "text-[#D4AF37] scale-110" : "text-white/30 hover:text-white/50")}
+        >
           <FileText className="w-8 h-8" />
           <span className="text-[10px] font-black uppercase tracking-tighter">REPORT</span>
         </button>

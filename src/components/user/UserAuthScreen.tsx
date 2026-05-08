@@ -1,21 +1,15 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/firebase";
+import { useAuth, useFirestore, useCollection } from "@/firebase";
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { Mail, Lock, User, ShieldCheck, Loader2 } from "lucide-react";
-
-// অফিসিয়াল মেম্বার লিস্ট (আপনার দেওয়া ১৫ জন)
-const OFFICIAL_MEMBERS = [
-  "Mr Dulal", "Mr Omar Faruk", "Mr Sulaiman Badshah", "Mr Abdul Qayum", 
-  "Mr Mohammed Jamshed", "Mr Milad", "Mr Ala Uddin", "Mr Shahid", 
-  "Mr Shohag", "Mr Abul Hussain", "Mr Sakib", "Mr Ronnie", 
-  "Mr Jonye", "Mr Aqib", "Mr Salauddin"
-];
+import { collection, query, orderBy } from "firebase/firestore";
+import { Mail, Lock, User, Loader2, ShieldCheck } from "lucide-react";
 
 export default function UserAuthScreen() {
   const [isLogin, setIsLogin] = useState(true);
@@ -25,10 +19,15 @@ export default function UserAuthScreen() {
     password: "", 
     fullName: "" 
   });
+  
   const { toast } = useToast();
   const auth = useAuth();
+  const db = useFirestore();
 
-  const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, "").trim();
+  // Fetch official members from Admin's Firestore collection
+  const { data: members, loading: membersLoading } = useCollection(
+    db ? query(collection(db, "members"), orderBy("name")) : null
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,24 +39,23 @@ export default function UserAuthScreen() {
         await signInWithEmailAndPassword(auth, formData.email, formData.password);
         toast({ title: "স্বাগতম!", description: "আপনার মেম্বার ড্যাশবোর্ড লোড হচ্ছে।" });
       } else {
-        // ১. নাম ভেরিফিকেশন (১৫ জন অফিসিয়াল মেম্বারের সাথে)
-        const inputNormalized = normalize(formData.fullName);
-        const officialName = OFFICIAL_MEMBERS.find(name => normalize(name) === inputNormalized);
-
-        if (!officialName) {
-          throw new Error("আপনার নাম অফিসিয়াল মেম্বার লিস্টে নেই। দয়া করে সঠিক অফিসিয়াল নামটি লিখুন।");
+        if (!formData.fullName) {
+          throw new Error("দয়া করে আপনার অফিসিয়াল নামটি সিলেক্ট করুন।");
         }
 
-        // ২. ইউজার তৈরি
         const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
         
-        // ৩. অফিসিয়াল নামটি প্রোফাইলে সেট করা
-        await updateProfile(userCredential.user, { displayName: officialName });
+        // Save the official name to the user's profile
+        await updateProfile(userCredential.user, { 
+          displayName: formData.fullName 
+        });
         
-        toast({ title: "সফল!", description: `অফিসিয়াল প্রোফাইল তৈরি হয়েছে: ${officialName}` });
+        toast({ title: "সফল!", description: `অফিসিয়াল প্রোফাইল তৈরি হয়েছে: ${formData.fullName}` });
         
-        // রিফ্রেশ যাতে প্রোফাইল আপডেট কার্যকর হয়
-        setTimeout(() => window.location.reload(), 1500);
+        // Force reload to ensure profile is synced
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
       }
     } catch (error: any) {
       toast({ 
@@ -82,34 +80,79 @@ export default function UserAuthScreen() {
               <span className="text-white text-2xl font-black italic">MG</span>
             </div>
           </div>
-          <h1 className="text-[18px] font-black text-[#1E3A8A] uppercase tracking-widest leading-none">MEMBER REGISTRATION</h1>
+          <h1 className="text-[18px] font-black text-[#1E3A8A] uppercase tracking-widest leading-none">MEMBER PORTAL</h1>
           <p className="text-[10px] text-slate-400 font-bold mt-2 uppercase tracking-[0.2em]">Minar Go Foundation Official Node</p>
         </div>
 
         <div className="px-8 pb-10">
           <div className="flex bg-slate-100 p-1.5 rounded-[28px] mb-8 shadow-inner">
-            <button type="button" onClick={() => setIsLogin(true)} className={`flex-1 py-4 rounded-[24px] text-[11px] font-black uppercase transition-all duration-500 ${isLogin ? 'bg-[#1E3A8A] text-white shadow-lg' : 'text-slate-400'}`}>লগইন</button>
-            <button type="button" onClick={() => setIsLogin(false)} className={`flex-1 py-4 rounded-[24px] text-[11px] font-black uppercase transition-all duration-500 ${!isLogin ? 'bg-[#1E3A8A] text-white shadow-lg' : 'text-slate-400'}`}>রেজিস্ট্রেশন</button>
+            <button 
+              type="button" 
+              onClick={() => setIsLogin(true)} 
+              className={`flex-1 py-4 rounded-[24px] text-[11px] font-black uppercase transition-all duration-500 ${isLogin ? 'bg-[#1E3A8A] text-white shadow-lg' : 'text-slate-400'}`}
+            >
+              লগইন
+            </button>
+            <button 
+              type="button" 
+              onClick={() => setIsLogin(false)} 
+              className={`flex-1 py-4 rounded-[24px] text-[11px] font-black uppercase transition-all duration-500 ${!isLogin ? 'bg-[#1E3A8A] text-white shadow-lg' : 'text-slate-400'}`}
+            >
+              রেজিস্ট্রেশন
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {!isLogin && (
               <div className="relative group">
-                <User className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1E3A8A] transition-colors" />
-                <Input placeholder="অফিসিয়াল নাম (যেমন: Mr Shahid)" required value={formData.fullName} onChange={(e) => setFormData({ ...formData, fullName: e.target.value })} className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none font-black text-sm" />
+                <User className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1E3A8A] z-10" />
+                <Select onValueChange={(v) => setFormData({ ...formData, fullName: v })}>
+                  <SelectTrigger className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none font-black text-sm text-[#1E3A8A]">
+                    <SelectValue placeholder="আপনার অফিসিয়াল নাম" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white rounded-[24px] border-none shadow-2xl z-[200]">
+                    {membersLoading ? (
+                      <div className="p-4 flex items-center justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
+                    ) : (
+                      members?.map((m: any) => (
+                        <SelectItem key={m.id} value={m.name} className="font-black py-4 text-[#1E3A8A]">
+                          {m.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
             )}
             
             <div className="relative group">
               <Mail className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1E3A8A] transition-colors" />
-              <Input type="email" placeholder="ইমেইল অ্যাড্রেস" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none font-black text-sm" />
+              <Input 
+                type="email" 
+                placeholder="ইমেইল অ্যাড্রেস" 
+                required 
+                value={formData.email} 
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+                className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none font-black text-sm" 
+              />
             </div>
             <div className="relative group">
               <Lock className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-[#1E3A8A] transition-colors" />
-              <Input type="password" placeholder="পাসওয়ার্ড" required value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none font-black text-sm" />
+              <Input 
+                type="password" 
+                placeholder="পাসওয়ার্ড" 
+                required 
+                value={formData.password} 
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })} 
+                className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none font-black text-sm" 
+              />
             </div>
 
-            <Button type="submit" className="w-full h-16 rounded-[24px] bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white font-black text-xs uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all mt-4" disabled={loading}>
+            <Button 
+              type="submit" 
+              className="w-full h-16 rounded-[24px] bg-[#1E3A8A] hover:bg-[#1E3A8A]/90 text-white font-black text-xs uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all mt-4" 
+              disabled={loading}
+            >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : isLogin ? "SECURE LOGIN" : "AUTHORIZE MEMBER"}
             </Button>
           </form>
