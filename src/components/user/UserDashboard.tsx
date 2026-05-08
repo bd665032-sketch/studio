@@ -1,9 +1,9 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
-import { useUser, useFirestore, useCollection } from "@/firebase";
-import { collection, query, where, orderBy, addDoc, serverTimestamp } from "firebase/firestore";
+import { useState, useEffect, useMemo } from "react";
+import { useUser, useFirestore, useCollection, useDoc } from "@/firebase";
+import { collection, query, where, orderBy, addDoc, serverTimestamp, doc } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,15 +28,24 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const [depositAmount, setDepositAmount] = useState(5000);
   const [loading, setLoading] = useState(false);
 
+  // Fetch Foundation Settings (Logo and Name)
+  const settingsRef = db ? doc(db, "settings", "foundation") : null;
+  const { data: settings } = useDoc(settingsRef);
+
   // Fetch transactions for the specific logged-in member
-  const txQuery = user?.displayName ? query(
-    collection(db!, "transactions"),
-    where("memberName", "==", user.displayName),
-    orderBy("date", "desc")
-  ) : null;
+  const txQuery = useMemo(() => {
+    if (!user?.displayName || !db) return null;
+    return query(
+      collection(db, "transactions"),
+      where("memberName", "==", user.displayName),
+      orderBy("date", "desc")
+    );
+  }, [user?.displayName, db]);
 
   const { data: myTransactions } = useCollection(txQuery);
-  const totalMyBalance = myTransactions?.reduce((acc, curr) => acc + (curr.amount || 0), 0) || 0;
+  const totalMyBalance = useMemo(() => {
+    return (myTransactions || []).reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+  }, [myTransactions]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -51,7 +60,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     try {
       await addDoc(collection(db, "transactions"), {
         memberName: user.displayName,
-        amount: depositAmount,
+        amount: Number(depositAmount),
         date: new Date().toISOString().split('T')[0],
         category: "মেম্বার জমা",
         timestamp: serverTimestamp()
@@ -96,32 +105,35 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               Log Out
             </button>
 
-            {/* Premium Logo Wrapper */}
+            {/* Premium Logo Wrapper - Automatically Synced with Admin */}
             <div className="flex justify-center mb-8 animate-in fade-in zoom-in duration-700">
               <div className="w-28 h-28 rounded-full border-[6px] border-[#D4AF37] p-1 bg-white flex items-center justify-center overflow-hidden shadow-[0_0_40px_rgba(212,175,55,0.3)]">
                  <div className="w-full h-full bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] rounded-full flex items-center justify-center">
-                    <span className="text-white text-4xl font-black italic">MG</span>
+                    {settings?.logo ? (
+                      <img src={settings.logo} className="w-full h-full object-cover" alt="Logo" />
+                    ) : (
+                      <span className="text-white text-4xl font-black italic">MG</span>
+                    )}
                  </div>
               </div>
             </div>
 
-            {/* Foundation Name - Golden Accent */}
+            {/* Foundation Name - Automatically Synced with Admin */}
             <h1 className="text-[#D4AF37] text-[10px] font-black uppercase tracking-[0.3em] mb-3 leading-tight opacity-90">
-              MINAR GO EXPATRIATE DEVELOPMENT FOUNDATION
+              {settings?.name || "MINAR GO EXPATRIATE DEVELOPMENT FOUNDATION"}
             </h1>
 
             {/* Active User Name */}
             <h2 className="text-white text-4xl font-black mt-2 drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] tracking-tight">
-              {user?.displayName || "Mr Shahid"}
+              {user?.displayName || "Member"}
             </h2>
 
-            {/* Golden Decorative Divider */}
             <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[80%] h-[3px] bg-gradient-to-r from-transparent via-[#D4AF37] to-transparent opacity-50"></div>
           </div>
 
           <div className="px-5 -mt-12 space-y-6 relative z-10">
             
-            {/* Summary Balance Card - Luxury Glassmorphism */}
+            {/* Summary Balance Card - Real-time Updated */}
             <div className="bg-white/10 backdrop-blur-2xl p-8 rounded-[45px] border border-white/20 text-center shadow-2xl">
                <p className="text-[#D4AF37] text-[9px] font-black uppercase tracking-[0.4em] mb-2">My Total Summary</p>
                <h3 className="text-white text-5xl font-black tracking-tighter">৳{totalMyBalance.toLocaleString()}</h3>
@@ -139,7 +151,6 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               </div>
             </div>
 
-            {/* Yellow Banner - Today's Date */}
             <div className="bg-gradient-to-r from-[#FFD700] via-[#FFC107] to-[#FFD700] p-5 rounded-full shadow-[0_10px_25px_rgba(255,193,7,0.3)] flex items-center justify-center gap-4 active:scale-95 transition-all">
               <span className="text-2xl">📅</span>
               <p className="text-black font-black text-[14px] tracking-tight">
@@ -147,7 +158,6 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               </p>
             </div>
 
-            {/* Emergency Notice / Announcement Box */}
             <div className="bg-[#2D2D4D]/80 border border-white/5 p-7 rounded-[40px] shadow-2xl relative overflow-hidden group">
               <div className="absolute top-0 left-0 w-2 h-full bg-[#D4AF37]"></div>
               <div className="flex items-center gap-3 mb-4">
@@ -159,20 +169,19 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               </p>
             </div>
 
-            {/* Personal Document / History Section */}
             <div className="space-y-4 pt-4">
               <div className="flex items-center justify-between px-4">
-                <h4 className="text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">My Deposits</h4>
+                <h4 className="text-white/40 text-[10px] font-black uppercase tracking-[0.4em]">My Document Logs</h4>
                 <button onClick={() => setActiveTab("history")} className="text-[#D4AF37] text-[9px] font-black uppercase tracking-widest">View All</button>
               </div>
               
               <div className="space-y-3">
-                {myTransactions?.slice(0, 3).map((t, idx) => (
+                {myTransactions?.slice(0, 5).map((t, idx) => (
                   <div key={idx} className="bg-white/5 p-5 flex items-center justify-between border border-white/5 rounded-[30px] shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-500">
                     <div className="flex items-center gap-5">
                       <div className="w-12 h-12 rounded-[22px] bg-gradient-to-br from-[#D4AF37] to-[#B8960C] flex items-center justify-center text-black font-black text-xl shadow-lg">৳</div>
                       <div>
-                        <p className="font-black text-white text-[17px]">৳{t.amount?.toLocaleString()}</p>
+                        <p className="font-black text-white text-[17px]">৳{(Number(t.amount) || 0).toLocaleString()}</p>
                         <p className="text-[9px] text-white/30 font-black uppercase mt-1 tracking-widest">{t.date}</p>
                       </div>
                     </div>
@@ -186,7 +195,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
                 {(!myTransactions || myTransactions.length === 0) && (
                   <div className="text-center py-16 opacity-10 bg-white/5 rounded-[40px] border border-dashed border-white/20">
                     <FileText className="w-16 h-16 mx-auto mb-4 text-white" />
-                    <p className="font-black text-white text-[10px] uppercase tracking-widest">No Records Yet</p>
+                    <p className="font-black text-white text-[10px] uppercase tracking-widest">No Records Found</p>
                   </div>
                 )}
               </div>
@@ -195,7 +204,6 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
         </main>
       )}
 
-      {/* Other Tabs (Deposit, History) handled below similarly for consistency */}
       {activeTab === "add" && (
         <main className="flex-1 overflow-y-auto pb-32 px-5 pt-12">
            <div className="bg-[#2D0B5A] p-10 rounded-[50px] shadow-[0_30px_70px_rgba(0,0,0,0.5)] border-t-[10px] border-[#D4AF37]">
@@ -242,7 +250,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
                   <div className="flex items-center gap-6">
                     <div className="w-14 h-14 rounded-[25px] bg-[#D4AF37] flex items-center justify-center text-black font-black text-2xl shadow-xl">৳</div>
                     <div>
-                      <p className="font-black text-white text-[20px]">৳{t.amount?.toLocaleString()}</p>
+                      <p className="font-black text-white text-[20px]">৳{(Number(t.amount) || 0).toLocaleString()}</p>
                       <p className="text-[10px] text-white/40 font-black uppercase mt-1 tracking-widest">{t.date}</p>
                     </div>
                   </div>

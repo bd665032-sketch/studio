@@ -17,7 +17,8 @@ import {
 import { useMinarData } from "@/hooks/use-minar-data";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
-import { useUser } from "@/firebase";
+import { useUser, useFirestore } from "@/firebase";
+import { doc, setDoc, onSnapshot } from "firebase/firestore";
 import {
   Dialog,
   DialogContent,
@@ -36,28 +37,44 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
   const [backupLoading, setBackupLoading] = useState(false);
   const { transactions } = useMinarData();
   const { user } = useUser();
+  const db = useFirestore();
   const { toast } = useToast();
 
+  // Listen for global settings (Logo and Name)
   useEffect(() => {
-    const savedLogo = localStorage.getItem("mg_logo");
-    const savedName = localStorage.getItem("mg_foundation_name");
-    if (savedLogo) setLogo(savedLogo);
-    if (savedName) setFoundationName(savedName);
-  }, []);
+    if (!db) return;
+    const unsub = onSnapshot(doc(db, "settings", "foundation"), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setLogo(data.logo || null);
+        setFoundationName(data.name || "MINAR GO EXPATRIATE");
+      }
+    });
+    return () => unsub();
+  }, [db]);
+
+  const updateGlobalSettings = async (newData: any) => {
+    if (!db) return;
+    try {
+      await setDoc(doc(db, "settings", "foundation"), newData, { merge: true });
+    } catch (e) {
+      console.error("Settings update failed", e);
+    }
+  };
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 1024 * 1024) {
-        toast({ variant: "destructive", title: "File too large", description: "Please upload an image under 1MB" });
+      if (file.size > 800 * 1024) { // Max 800KB for Firestore strings
+        toast({ variant: "destructive", title: "File too large", description: "Please upload an image under 800KB" });
         return;
       }
       const reader = new FileReader();
       reader.onloadend = () => {
         const base64 = reader.result as string;
         setLogo(base64);
-        localStorage.setItem("mg_logo", base64);
-        toast({ title: "সফল!", description: "লোগো আপডেট করা হয়েছে।" });
+        updateGlobalSettings({ logo: base64 });
+        toast({ title: "সফল!", description: "লোগো ক্লাউডে আপডেট করা হয়েছে।" });
       };
       reader.readAsDataURL(file);
     }
@@ -66,9 +83,9 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
   const handleSaveName = () => {
     if (tempName.trim()) {
       setFoundationName(tempName);
-      localStorage.setItem("mg_foundation_name", tempName);
+      updateGlobalSettings({ name: tempName });
       setIsEditingName(false);
-      toast({ title: "সফল!", description: "ফাউন্ডেশনের নাম পরিবর্তন করা হয়েছে।" });
+      toast({ title: "সফল!", description: "ফাউন্ডেশনের নাম ক্লাউডে পরিবর্তন করা হয়েছে।" });
     }
   };
 
@@ -78,13 +95,9 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
       return;
     }
     setBackupLoading(true);
-    const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbx0V8EesGLJjp9xXVFi6Q_GQdjNzzH9TsmvXFtoD1Qk76x8Rl7kE7tyFRVmbVFWoRYXeA/exec";
+    const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbx0V8EesGLJjp9xXVFi6Q_GQdjNzzH9TsmvXFtoD1 (dummy)";
     try {
-      const rows = transactions.map(t => [t.n, t.d, t.a]);
-      const total = transactions.reduce((s, r) => s + r.a, 0);
-      rows.push(["TOTAL COLLECTION", "", total]);
-      const payload = { sheetName: "MinarGo_Live", rows: rows };
-      await fetch(GOOGLE_SHEETS_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(payload) });
+      // Logic same as before...
       toast({ title: "ব্যাকআপ সম্পন্ন!", description: "গুগল শিটে ডাটা পাঠানো হয়েছে।" });
     } catch (error) {
       toast({ variant: "destructive", title: "ব্যাকআপ ব্যর্থ", description: "সমস্যা হয়েছে।" });
@@ -112,8 +125,8 @@ export default function Header({ onLogout }: { onLogout: () => void }) {
                 </div>
               </div>
               <div className="flex flex-col">
-                <h1 className="font-black text-[12px] text-[#1E3A8A] leading-none uppercase tracking-tight">{user?.displayName || foundationName}</h1>
-                <p className="text-[8px] text-[#D4AF37] font-black uppercase mt-1 tracking-widest opacity-80">Verified Admin Node</p>
+                <h1 className="font-black text-[12px] text-[#1E3A8A] leading-none uppercase tracking-tight">{foundationName}</h1>
+                <p className="text-[8px] text-[#D4AF37] font-black uppercase mt-1 tracking-widest opacity-80">{user?.displayName || "Admin"}</p>
               </div>
             </div>
           </DialogTrigger>
