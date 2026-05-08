@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useMinarData } from "@/hooks/use-minar-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,7 +23,6 @@ import {
   Settings,
   Share2
 } from "lucide-react";
-import { exportSummaryPDF } from "@/lib/pdf-utils";
 import DemandLetterGenerator from "./DemandLetterGenerator";
 import DocumentStorage from "./DocumentStorage";
 import { cn } from "@/lib/utils";
@@ -44,17 +43,22 @@ export default function DashboardContent() {
     return () => clearInterval(timer);
   }, []);
 
-  const filteredTransactions = transactions.filter(t => {
-    if (selectedMonth === "All") return true;
-    try {
-      const date = new Date(t.date);
-      return date.toLocaleString('en-US', { month: 'long' }) === selectedMonth;
-    } catch (e) {
-      return false;
-    }
-  });
+  // REAL-TIME FILTERED DATA
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter(t => {
+      if (selectedMonth === "All") return true;
+      try {
+        const date = new Date(t.date);
+        return date.toLocaleString('en-US', { month: 'long' }) === selectedMonth;
+      } catch (e) {
+        return false;
+      }
+    });
+  }, [transactions, selectedMonth]);
 
-  const totalCollection = filteredTransactions.reduce((acc, curr) => acc + curr.amount, 0);
+  const totalCollection = useMemo(() => {
+    return filteredTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+  }, [filteredTransactions]);
 
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,23 +69,6 @@ export default function DashboardContent() {
     toast({ title: "সফল!", description: "ডিপোজিট সেভ হয়েছে এবং সামারি আপডেট হয়েছে।" });
   };
 
-  const handleShareApp = async () => {
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: 'Minar Go Connect',
-          text: 'মিনার গো ফাউন্ডেশন এডমিন অ্যাপ। লিঙ্কটি ওপেন করে ফোনে এড করুন।',
-          url: window.location.href,
-        });
-      } else {
-        await navigator.clipboard.writeText(window.location.href);
-        toast({ title: "লিঙ্ক কপি হয়েছে!", description: "এখন হোয়াটসঅ্যাপে পেস্ট করে পাঠান।" });
-      }
-    } catch (error) {
-      console.log('Sharing failed', error);
-    }
-  };
-
   return (
     <div className="flex flex-col h-screen bg-[#F0F2F5] overflow-hidden font-body">
       <main className="flex-1 overflow-y-auto pb-32">
@@ -90,20 +77,13 @@ export default function DashboardContent() {
           {activeTab === "home" && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-6">
               
-              {/* Luxury Live Weather Card */}
               <div className="luxury-card p-6 gradient-banner relative overflow-hidden">
                 <div className="flex justify-between items-start relative z-10">
                   <div className="space-y-1">
-                    <div className="flex items-center gap-1.5 text-[#D4AF37] font-black text-[10px] uppercase tracking-[0.2em]">
-                      <MapPin className="w-3.5 h-3.5" />
-                      <span>Riyadh, SA</span>
-                    </div>
+                    <div className="flex items-center gap-1.5 text-[#D4AF37] font-black text-[10px] uppercase tracking-[0.2em]"><MapPin className="w-3.5 h-3.5" /><span>Riyadh, SA</span></div>
                     <div className="flex items-center gap-3">
                       <h1 className="text-4xl font-black tracking-tighter">32°C</h1>
-                      <div className="flex flex-col">
-                        <CloudSun className="w-7 h-7 text-white/90" />
-                        <span className="text-[9px] font-black text-white/60 uppercase">Sunny Clear</span>
-                      </div>
+                      <div className="flex flex-col"><CloudSun className="w-7 h-7 text-white/90" /><span className="text-[9px] font-black text-white/60 uppercase">Sunny Clear</span></div>
                     </div>
                   </div>
                   <div className="text-right">
@@ -113,29 +93,6 @@ export default function DashboardContent() {
                 </div>
               </div>
 
-              {/* Islamic Calendar Events */}
-              <div className="luxury-card p-5 border-l-[10px] border-[#D4AF37]">
-                <div className="flex items-center gap-2 mb-4 px-1">
-                  <Calendar className="w-5 h-5 text-[#1E40AF]" />
-                  <h3 className="text-[11px] font-black text-[#1E3A8A] uppercase tracking-widest">Upcoming Islamic Events</h3>
-                </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100 shadow-sm">
-                    <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Hajj 2026</p>
-                    <p className="text-[11px] font-black text-[#1E40AF]">May 24</p>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100 shadow-sm">
-                    <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Ramadan 27</p>
-                    <p className="text-[11px] font-black text-[#1E40AF]">Mar 09</p>
-                  </div>
-                  <div className="bg-slate-50 p-3 rounded-2xl text-center border border-slate-100 shadow-sm">
-                    <p className="text-[8px] font-black text-slate-400 uppercase mb-1">Ramadan 28</p>
-                    <p className="text-[11px] font-black text-[#1E40AF]">Feb 26</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Standardized Summary Overview */}
               <div className="luxury-card p-8 border-t-[12px] border-[#1E3A8A]">
                  <div className="flex justify-between items-end">
                     <div className="space-y-1">
@@ -149,14 +106,11 @@ export default function DashboardContent() {
                  </div>
               </div>
 
-              {/* Financial Archives List */}
               <div className="space-y-4 pt-6">
                 <div className="flex items-center justify-between px-2">
                   <h4 className="font-black text-[#1E3A8A] text-[11px] uppercase tracking-[0.4em]">Transaction Reports</h4>
                   <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                    <SelectTrigger className="w-40 bg-white border-none shadow-md rounded-2xl text-[10px] font-black h-11">
-                      <SelectValue placeholder="All Records" />
-                    </SelectTrigger>
+                    <SelectTrigger className="w-40 bg-white border-none shadow-md rounded-2xl text-[10px] font-black h-11"><SelectValue placeholder="All Records" /></SelectTrigger>
                     <SelectContent className="bg-white border-none shadow-2xl rounded-3xl overflow-hidden z-[200]">
                       <SelectItem value="All" className="text-[11px] font-black">All Records</SelectItem>
                       {months.map(m => <SelectItem key={m} value={m} className="text-[11px] font-black">{m}</SelectItem>)}
@@ -166,11 +120,9 @@ export default function DashboardContent() {
 
                 <div className="space-y-4">
                   {filteredTransactions.map(t => (
-                    <div key={t.id} className="luxury-card p-5 flex items-center justify-between border-slate-50 shadow-sm animate-in fade-in duration-300">
+                    <div key={t.id} className="luxury-card p-5 flex items-center justify-between border-slate-50 shadow-sm">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-[20px] bg-slate-50 flex items-center justify-center font-black text-[#1E3A8A] text-lg border border-slate-100 shadow-inner">
-                          {t.memberName.charAt(0)}
-                        </div>
+                        <div className="w-12 h-12 rounded-[20px] bg-slate-50 flex items-center justify-center font-black text-[#1E3A8A] text-lg border border-slate-100 shadow-inner">{t.memberName.charAt(0)}</div>
                         <div>
                           <p className="font-black text-slate-800 text-[15px]">{t.memberName}</p>
                           <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-0.5">{t.date}</p>
@@ -178,18 +130,10 @@ export default function DashboardContent() {
                       </div>
                       <div className="flex items-center gap-4">
                         <p className="font-black text-[#1E3A8A] text-[16px]">৳{t.amount.toLocaleString()}</p>
-                        <button onClick={() => { if(confirm('Delete record?')) deleteTransaction(t.id); }} className="p-2 text-slate-200 hover:text-red-500 transition-colors">
-                          <Trash2 className="w-5 h-5" />
-                        </button>
+                        <button onClick={() => { if(confirm('Delete record?')) deleteTransaction(t.id); }} className="p-2 text-slate-200 hover:text-red-500 transition-colors"><Trash2 className="w-5 h-5" /></button>
                       </div>
                     </div>
                   ))}
-                  {filteredTransactions.length === 0 && (
-                    <div className="text-center py-20 opacity-20">
-                      <ImageIcon className="w-16 h-16 mx-auto mb-4" />
-                      <p className="font-black text-xs uppercase tracking-widest">No Logs Found</p>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -237,11 +181,11 @@ export default function DashboardContent() {
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl h-22 px-8 flex items-center justify-between z-[100] nav-shadow rounded-t-[45px] border-t border-slate-100">
-        <button onClick={() => setActiveTab("home")} className={cn("flex flex-col items-center gap-1.5 transition-all duration-300", activeTab === "home" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Home className="w-7 h-7"/><span className="text-[9px] font-black uppercase tracking-tighter">Home</span></button>
-        <button onClick={() => setActiveTab("members")} className={cn("flex flex-col items-center gap-1.5 transition-all duration-300", activeTab === "members" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Users className="w-7 h-7"/><span className="text-[9px] font-black uppercase tracking-tighter">Directory</span></button>
-        <div className="relative -top-10"><button onClick={() => setActiveTab("add")} className="w-18 h-18 bg-gradient-to-br from-[#D4AF37] to-[#B8960C] rounded-full flex items-center justify-center text-white shadow-[0_15px_30px_rgba(212,175,55,0.3)] border-[8px] border-[#F0F2F5] active:scale-90 transition-all"><Plus className="w-10 h-10"/></button></div>
-        <button onClick={() => setActiveTab("gallery")} className={cn("flex flex-col items-center gap-1.5 transition-all duration-300", activeTab === "gallery" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><ImageIcon className="w-7 h-7"/><span className="text-[9px] font-black uppercase tracking-tighter">Gallery</span></button>
-        <button onClick={() => setActiveTab("settings")} className={cn("flex flex-col items-center gap-1.5 transition-all duration-300", activeTab === "settings" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Settings className="w-7 h-7"/><span className="text-[9px] font-black uppercase tracking-tighter">Tools</span></button>
+        <button onClick={() => setActiveTab("home")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "home" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Home className="w-7 h-7"/><span className="text-[9px] font-black uppercase tracking-tighter">Home</span></button>
+        <button onClick={() => setActiveTab("members")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "members" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Users className="w-7 h-7"/><span className="text-[9px] font-black uppercase tracking-tighter">Directory</span></button>
+        <div className="relative -top-10"><button onClick={() => setActiveTab("add")} className="w-18 h-18 bg-gradient-to-br from-[#D4AF37] to-[#B8960C] rounded-full flex items-center justify-center text-white shadow-xl border-[8px] border-[#F0F2F5] active:scale-90 transition-all"><Plus className="w-10 h-10"/></button></div>
+        <button onClick={() => setActiveTab("gallery")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "gallery" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><ImageIcon className="w-7 h-7"/><span className="text-[9px] font-black uppercase tracking-tighter">Gallery</span></button>
+        <button onClick={() => setActiveTab("settings")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "settings" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Settings className="w-7 h-7"/><span className="text-[9px] font-black uppercase tracking-tighter">Tools</span></button>
       </nav>
     </div>
   );
