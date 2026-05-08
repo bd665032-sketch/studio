@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useCollection, useFirestore } from "@/firebase";
@@ -6,16 +7,16 @@ import { useMemo } from "react";
 
 /**
  * useMinarData Hook
- * This file handles all the database (Firebase) logic.
- * It's written in TypeScript (.ts).
+ * This file handles all the database (Firebase) logic for the Admin Panel.
+ * Standardized field names: memberName, amount, date, category, timestamp
  */
 
 export interface Transaction {
   id: string;
-  n: string; // member name
-  a: number; // amount
-  d: string; // date
-  c?: string; // category
+  memberName: string;
+  amount: number;
+  date: string;
+  category: string;
 }
 
 export const useMinarData = () => {
@@ -29,39 +30,49 @@ export const useMinarData = () => {
   const { data: membersDocs } = useCollection(membersQuery);
   const members = useMemo(() => (membersDocs || []).map(d => d.name as string), [membersDocs]);
 
-  // Fetching Transactions List
+  // Fetching Transactions List (Synced across app)
   const transactionsQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, "transactions"), orderBy("date", "desc"));
   }, [db]);
   const { data: transactionsDocs } = useCollection(transactionsQuery);
+  
   const transactions: Transaction[] = useMemo(() => (transactionsDocs || []).map(d => ({
     id: d.id,
-    n: d.memberName || "Unknown",
-    a: d.amount || 0,
-    d: d.date || "",
-    c: d.category || "General",
+    memberName: d.memberName || "Unknown",
+    amount: Number(d.amount) || 0,
+    date: d.date || "",
+    category: d.category || "General",
   })), [transactionsDocs]);
 
   const addMember = async (name: string) => {
     if (!db || !name.trim()) return;
-    await addDoc(collection(db, "members"), { name: name.trim(), createdAt: serverTimestamp() });
+    addDoc(collection(db, "members"), { 
+      name: name.trim(), 
+      createdAt: serverTimestamp() 
+    });
   };
 
   const deleteMember = async (name: string) => {
-    if (!db) return;
-    const memberDoc = membersDocs?.find(d => d.name === name);
-    if (memberDoc) await deleteDoc(doc(db, "members", memberDoc.id));
+    if (!db || !membersDocs) return;
+    const memberDoc = membersDocs.find(d => d.name === name);
+    if (memberDoc) deleteDoc(doc(db, "members", memberDoc.id));
   };
 
   const addTransaction = async (member: string, amount: number, date: string, category: string) => {
     if (!db || !member) return;
-    await addDoc(collection(db, "transactions"), { memberName: member, amount, date, category, timestamp: serverTimestamp() });
+    addDoc(collection(db, "transactions"), { 
+      memberName: member, 
+      amount: Number(amount), 
+      date, 
+      category, 
+      timestamp: serverTimestamp() 
+    });
   };
 
   const deleteTransaction = async (id: string) => {
     if (!db || !id) return;
-    await deleteDoc(doc(db, "transactions", id));
+    deleteDoc(doc(db, "transactions", id));
   };
 
   return { members, transactions, addMember, deleteMember, addTransaction, deleteTransaction };

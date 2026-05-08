@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -45,11 +46,15 @@ export default function DashboardContent() {
 
   const filteredTransactions = transactions.filter(t => {
     if (selectedMonth === "All") return true;
-    const date = new Date(t.d);
-    return date.toLocaleString('en-US', { month: 'long' }) === selectedMonth;
+    try {
+      const date = new Date(t.date);
+      return date.toLocaleString('en-US', { month: 'long' }) === selectedMonth;
+    } catch (e) {
+      return false;
+    }
   });
 
-  const totalCollection = filteredTransactions.reduce((acc, curr) => acc + curr.a, 0);
+  const totalCollection = filteredTransactions.reduce((acc, curr) => acc + curr.amount, 0);
 
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +62,7 @@ export default function DashboardContent() {
     addTransaction(deposit.member, deposit.amount, deposit.date, deposit.category);
     setDeposit({...deposit, member: "", amount: 5000, category: "প্রতি মাসের জমা", date: new Date().toISOString().split('T')[0]});
     setActiveTab("home");
-    toast({ title: "সফল!", description: "ডিপোজিট সেভ হয়েছে।" });
+    toast({ title: "সফল!", description: "ডিপোজিট সেভ হয়েছে এবং সামারি আপডেট হয়েছে।" });
   };
 
   const handleShareApp = async () => {
@@ -130,11 +135,11 @@ export default function DashboardContent() {
                 </div>
               </div>
 
-              {/* Summary Overview */}
+              {/* Standardized Summary Overview */}
               <div className="luxury-card p-8 border-t-[12px] border-[#1E3A8A]">
                  <div className="flex justify-between items-end">
                     <div className="space-y-1">
-                      <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Total Collection</p>
+                      <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Total Foundation Collection</p>
                       <h2 className="text-3xl font-black text-[#1E3A8A]">৳{totalCollection.toLocaleString()}</h2>
                     </div>
                     <div className="text-right space-y-1">
@@ -144,47 +149,10 @@ export default function DashboardContent() {
                  </div>
               </div>
 
-              {/* High-End Tools Section */}
-              <div className="space-y-4">
-                <button 
-                  onClick={() => setActiveTab("settings")}
-                  className="w-full bg-white rounded-[32px] p-6 flex items-center justify-between shadow-lg border border-slate-50 active:scale-95 transition-all"
-                >
-                  <div className="flex items-center gap-4">
-                    <div className="bg-[#1E40AF]/10 p-4 rounded-2xl text-[#1E40AF]">
-                      <FileText className="w-6 h-6" />
-                    </div>
-                    <div className="text-left">
-                      <h3 className="text-[15px] font-black text-[#1E3A8A]">Demand Letter AI</h3>
-                      <p className="text-slate-400 text-[8px] font-black uppercase tracking-wider">Official Foundation Docs</p>
-                    </div>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-slate-300" />
-                </button>
-
-                {/* PDF Export Button */}
-                <button 
-                  className="w-full py-5 bg-white border-2 border-[#D4AF37] text-[#1E3A8A] font-black text-[13px] rounded-[32px] flex items-center justify-center gap-3 shadow-lg hover:bg-[#D4AF37] hover:text-white transition-all active:scale-95" 
-                  onClick={() => exportSummaryPDF(filteredTransactions, selectedMonth, totalCollection)}
-                >
-                  <Download className="w-5 h-5" /> 
-                  <span className="uppercase tracking-[0.2em]">Download Summary Report (PDF)</span>
-                </button>
-
-                {/* Share App Button */}
-                <button 
-                  className="w-full py-5 bg-gradient-to-r from-[#1E40AF] to-[#6366F1] text-white font-black text-[13px] rounded-[32px] flex items-center justify-center gap-3 shadow-xl active:scale-95 transition-all" 
-                  onClick={handleShareApp}
-                >
-                  <Share2 className="w-5 h-5" /> 
-                  <span className="uppercase tracking-[0.2em]">Share App with Foundation Members</span>
-                </button>
-              </div>
-
-              {/* Monthly Logs Section */}
+              {/* Financial Archives List */}
               <div className="space-y-4 pt-6">
                 <div className="flex items-center justify-between px-2">
-                  <h4 className="font-black text-[#1E3A8A] text-[11px] uppercase tracking-[0.4em]">Financial Archives</h4>
+                  <h4 className="font-black text-[#1E3A8A] text-[11px] uppercase tracking-[0.4em]">Transaction Reports</h4>
                   <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                     <SelectTrigger className="w-40 bg-white border-none shadow-md rounded-2xl text-[10px] font-black h-11">
                       <SelectValue placeholder="All Records" />
@@ -198,17 +166,21 @@ export default function DashboardContent() {
 
                 <div className="space-y-4">
                   {filteredTransactions.map(t => (
-                    <div key={t.id} className="luxury-card p-5 flex items-center justify-between border-slate-50 shadow-sm">
+                    <div key={t.id} className="luxury-card p-5 flex items-center justify-between border-slate-50 shadow-sm animate-in fade-in duration-300">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-[20px] bg-slate-50 flex items-center justify-center font-black text-[#1E3A8A] text-lg border border-slate-100 shadow-inner">{t.n.charAt(0)}</div>
+                        <div className="w-12 h-12 rounded-[20px] bg-slate-50 flex items-center justify-center font-black text-[#1E3A8A] text-lg border border-slate-100 shadow-inner">
+                          {t.memberName.charAt(0)}
+                        </div>
                         <div>
-                          <p className="font-black text-slate-800 text-[15px]">{t.n}</p>
-                          <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-0.5">{t.d}</p>
+                          <p className="font-black text-slate-800 text-[15px]">{t.memberName}</p>
+                          <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-0.5">{t.date}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-4">
-                        <p className="font-black text-[#1E3A8A] text-[16px]">৳{t.a.toLocaleString()}</p>
-                        <button onClick={() => { if(confirm('Delete record?')) deleteTransaction(t.id); }} className="p-2 text-slate-200 hover:text-red-500 transition-colors"><Trash2 className="w-5 h-5" /></button>
+                        <p className="font-black text-[#1E3A8A] text-[16px]">৳{t.amount.toLocaleString()}</p>
+                        <button onClick={() => { if(confirm('Delete record?')) deleteTransaction(t.id); }} className="p-2 text-slate-200 hover:text-red-500 transition-colors">
+                          <Trash2 className="w-5 h-5" />
+                        </button>
                       </div>
                     </div>
                   ))}
@@ -264,7 +236,6 @@ export default function DashboardContent() {
         </div>
       </main>
 
-      {/* Slim Native-Style Navigation Bar */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl h-22 px-8 flex items-center justify-between z-[100] nav-shadow rounded-t-[45px] border-t border-slate-100">
         <button onClick={() => setActiveTab("home")} className={cn("flex flex-col items-center gap-1.5 transition-all duration-300", activeTab === "home" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Home className="w-7 h-7"/><span className="text-[9px] font-black uppercase tracking-tighter">Home</span></button>
         <button onClick={() => setActiveTab("members")} className={cn("flex flex-col items-center gap-1.5 transition-all duration-300", activeTab === "members" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Users className="w-7 h-7"/><span className="text-[9px] font-black uppercase tracking-tighter">Directory</span></button>

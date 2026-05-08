@@ -12,9 +12,7 @@ import {
   History, 
   ShieldCheck,
   ChevronRight,
-  Bell,
-  LogOut,
-  ArrowRight
+  LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,23 +26,23 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [loading, setLoading] = useState(false);
 
-  // 1. Sync Foundation Settings (Logo & Name) from Firestore
+  // 1. Sync Foundation Settings (Logo & Name) from Admin Panel
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  // 2. Real-time User Transactions for Summary
+  // 2. Real-time User Transactions from Shared Collection
   const txQuery = useMemo(() => {
     if (!user?.displayName || !db) return null;
     return query(
       collection(db, "transactions"),
       where("memberName", "==", user.displayName),
-      orderBy("timestamp", "desc")
+      orderBy("date", "desc")
     );
   }, [user?.displayName, db]);
 
   const { data: myTransactions } = useCollection(txQuery);
 
-  // 3. Dynamic Balance Calculation
+  // 3. Dynamic Summary Balance (Updates automatically)
   const totalBalance = useMemo(() => {
     if (!myTransactions) return 0;
     return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
@@ -61,18 +59,18 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     setLoading(true);
 
     try {
-      // Direct write to Firestore
+      // Direct write to SHARED transactions collection
       await addDoc(collection(db, "transactions"), {
         memberName: user.displayName,
         amount: Number(depositAmount),
         date: depositDate,
-        category: "মেম্বার জমা",
+        category: "মেম্বার জমা (User Hub)",
         timestamp: serverTimestamp()
       });
       
       toast({ 
         title: "সফল!", 
-        description: "আপনার জমা সফলভাবে রেকর্ড করা হয়েছে।" 
+        description: "আপনার জমা সফলভাবে রেকর্ড করা হয়েছে এবং সামারি আপডেট হয়েছে।" 
       });
       
       setDepositAmount(5000);
@@ -81,7 +79,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
       toast({ 
         variant: "destructive", 
         title: "ত্রুটি", 
-        description: "জমা রেকর্ড করা যায়নি।" 
+        description: "জমা রেকর্ড করা যায়নি। নেটওয়ার্ক চেক করুন।" 
       });
     } finally {
       setLoading(false);
@@ -101,16 +99,15 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
       {activeTab === "home" && (
         <main className="flex-1 overflow-y-auto pb-32 animate-in fade-in duration-700">
           
-          {/* Header Section from Screenshot */}
           <div className="relative bg-[#1A1140] pt-12 pb-20 px-6 text-center">
             <button 
               onClick={onLogout}
-              className="absolute top-6 right-6 bg-red-700 text-white px-4 py-1.5 rounded-xl text-[11px] font-black shadow-lg"
+              className="absolute top-6 right-6 bg-red-700 text-white px-4 py-1.5 rounded-xl text-[11px] font-black shadow-lg active:scale-90 transition-all"
             >
               লগ আউট
             </button>
 
-            {/* Logo Center */}
+            {/* Sycned Logo from Admin */}
             <div className="flex justify-center mb-10">
               <div className="w-32 h-32 rounded-full border-[5px] border-accent/40 p-1 bg-white flex items-center justify-center overflow-hidden shadow-2xl">
                  <div className="w-full h-full bg-gradient-to-br from-[#1E3A8A] to-[#6366F1] rounded-full flex items-center justify-center overflow-hidden">
@@ -123,6 +120,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               </div>
             </div>
 
+            {/* Synced Name from Admin */}
             <h1 className="text-accent text-[12px] font-black uppercase tracking-[0.2em] mb-4 max-w-[80%] mx-auto leading-tight">
               {settings?.name || "MINAR GO EXPATRIATE DEVELOPMENT FOUNDATION"}
             </h1>
@@ -131,20 +129,18 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               {user?.displayName || "Member"}
             </h2>
             
-            {/* Bottom Curve Border */}
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent/20"></div>
             <div className="absolute -bottom-1 left-0 right-0 h-px bg-accent/30 shadow-[0_0_15px_rgba(212,175,55,0.4)]"></div>
           </div>
 
           <div className="px-5 space-y-6 pt-6">
             
-            {/* Summary Card */}
+            {/* Real-time Summary Card */}
             <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-6 rounded-[35px] border border-white/10 text-center shadow-2xl">
-               <p className="text-accent/60 text-[10px] font-black uppercase tracking-widest mb-1">মোট জমার পরিমাণ</p>
+               <p className="text-accent/60 text-[10px] font-black uppercase tracking-widest mb-1">মোট জমার পরিমাণ (Summary)</p>
                <h3 className="text-white text-4xl font-black">৳{totalBalance.toLocaleString()}</h3>
             </div>
 
-            {/* Hajj & Ramadan Cards Grid */}
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-[#2D2D4D] p-5 rounded-[30px] border border-white/5 flex flex-col items-center gap-2 shadow-xl">
                 <p className="text-accent text-[11px] font-black">🕋 পরবর্তী হজ</p>
@@ -156,13 +152,11 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               </div>
             </div>
 
-            {/* Yellow Date Banner */}
             <div className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] p-4 rounded-full shadow-lg flex items-center justify-center gap-3">
               <span className="text-xl">📅</span>
               <p className="text-black font-black text-[15px]">আজ: {bengaliDate}</p>
             </div>
 
-            {/* Notice Box from Screenshot */}
             <div className="bg-[#2D2D4D]/60 border border-white/5 p-6 rounded-[35px] shadow-2xl relative overflow-hidden">
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-xl">📢</span>
@@ -171,16 +165,16 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
               <p className="text-white/70 text-[15px] font-bold leading-relaxed">কি অবস্থা কেমন আছেন সবাই</p>
             </div>
 
-            {/* Recent Documents / History Preview */}
+            {/* Document Log Section */}
             <div className="space-y-4 pb-10">
               <div className="flex items-center justify-between px-2">
-                <h4 className="text-white/30 text-[10px] font-black uppercase tracking-widest">আমার জমার ইতিহাস</h4>
+                <h4 className="text-white/30 text-[10px] font-black uppercase tracking-widest">আমার জমার রিপোর্ট</h4>
                 <button onClick={() => setActiveTab("history")} className="text-accent text-[10px] font-black uppercase">সব দেখুন</button>
               </div>
               
               <div className="space-y-3">
                 {myTransactions?.slice(0, 3).map((t, idx) => (
-                  <div key={idx} className="bg-white/5 p-4 flex items-center justify-between rounded-[25px] border border-white/5">
+                  <div key={idx} className="bg-white/5 p-4 flex items-center justify-between rounded-[25px] border border-white/5 animate-in slide-in-from-right duration-300">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full bg-accent/20 flex items-center justify-center text-accent text-xl font-black">৳</div>
                       <div>
@@ -271,7 +265,6 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
         </main>
       )}
 
-      {/* Navigation Bar */}
       <nav className="fixed bottom-0 left-0 right-0 bg-[#2D1B69]/90 backdrop-blur-3xl h-24 px-10 flex items-center justify-between z-[100] rounded-t-[45px] border-t border-white/5 shadow-2xl">
         <button onClick={() => setActiveTab("home")} className={cn("flex flex-col items-center gap-1 transition-all", activeTab === "home" ? "text-accent scale-110" : "text-white/30")}>
           <div className="text-2xl">🏠</div><span className="text-[10px] font-black uppercase">হোম</span>
