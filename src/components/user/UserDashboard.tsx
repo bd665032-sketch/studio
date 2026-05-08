@@ -16,7 +16,7 @@ import {
   LogOut,
   Plus,
   Calendar,
-  Home,
+  Home as HomeIcon,
   FileText,
   Loader2,
   AlertCircle,
@@ -70,8 +70,12 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
 
   const getMonthFromDateStr = (dateStr: string) => {
     if (!dateStr) return "";
-    const date = new Date(dateStr);
-    return months[date.getMonth() + 1];
+    try {
+      const [year, month, day] = dateStr.split('-');
+      return months[parseInt(month)];
+    } catch (e) {
+      return "";
+    }
   };
 
   const lifetimeTotal = useMemo(() => {
@@ -155,7 +159,10 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center gap-6">
         <div className="w-20 h-20 rounded-full border-4 border-white/5 border-t-[#D4AF37] animate-spin"></div>
-        <p className="text-white font-black text-xs uppercase tracking-widest animate-pulse">Establishing Secure Node...</p>
+        <div className="text-center">
+          <p className="text-white font-black text-xs uppercase tracking-[0.3em] animate-pulse">Establishing Secure Node</p>
+          <p className="text-white/40 text-[9px] font-bold mt-2 uppercase">Please wait while we sync with foundation</p>
+        </div>
       </div>
     );
   }
@@ -324,7 +331,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
 
       <nav className="fixed bottom-0 left-0 right-0 bg-[#2D1B69]/90 backdrop-blur-3xl h-28 px-10 flex items-center justify-between z-[100] rounded-t-[50px] border-t border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
         <button onClick={()=>setActiveTab("home")} className={cn("flex flex-col items-center gap-2 transition-all", activeTab==="home" ? "text-[#D4AF37] scale-110" : "text-white/30")}>
-          <Home className="w-8 h-8" /><span className="text-[10px] font-black uppercase tracking-tighter">HOME</span>
+          <HomeIcon className="w-8 h-8" /><span className="text-[10px] font-black uppercase tracking-tighter">HOME</span>
         </button>
         <button onClick={()=>setActiveTab("add")} className="relative -top-12">
           <div className={cn("w-20 h-20 rounded-full flex items-center justify-center border-[8px] border-[#1A1140] shadow-2xl transition-all", activeTab==="add" ? "bg-[#D4AF37] text-black" : "bg-[#2D1B69] text-white/40")}>

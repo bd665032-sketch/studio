@@ -9,7 +9,7 @@ import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 
-// Authorized Admin Names (Match with AuthScreen)
+// Authorized Admin Names
 const AUTHORIZED_ADMIN_NAMES = ["dulal", "omar faruk", "shahid", "mr shahid"];
 
 export default function Home() {
@@ -25,7 +25,7 @@ export default function Home() {
         const authorized = AUTHORIZED_ADMIN_NAMES.some(admin => name.includes(admin));
         setIsAdmin(authorized);
         
-        // If logged in as a regular member on admin link, redirect them to /user
+        // If not an admin, redirect them to the User App
         if (!authorized) {
           router.push("/user");
         }
@@ -42,7 +42,7 @@ export default function Home() {
   if (loading || isAdmin === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-4 border-primary"></div>
       </div>
     );
   }
