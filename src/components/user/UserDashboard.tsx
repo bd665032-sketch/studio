@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useUser, useFirestore, useCollection, useDoc } from "@/firebase";
-import { collection, query, where, orderBy, addDoc, serverTimestamp, doc, updateDoc } from "firebase/firestore";
+import { collection, query, where, orderBy, addDoc, serverTimestamp, doc } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,10 +21,13 @@ import {
   Loader2,
   AlertCircle,
   UserCheck,
-  Download
+  Download,
+  Filter
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
+
+const months = ["All", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const { user } = useUser();
@@ -34,6 +37,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [depositAmount, setDepositAmount] = useState(5000);
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedSummaryMonth, setSelectedSummaryMonth] = useState("All");
   const [mutationLoading, setMutationLoading] = useState(false);
   const [selectedOfficialName, setSelectedOfficialName] = useState("");
 
@@ -58,10 +62,23 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   
   const { data: myTransactions, loading: txLoading } = useCollection(txQuery);
 
+  // REAL-TIME FILTERED DATA FOR SUMMARY
+  const filteredTransactions = useMemo(() => {
+    if (!myTransactions) return [];
+    return myTransactions.filter(t => {
+      if (selectedSummaryMonth === "All") return true;
+      try {
+        const date = new Date(t.date);
+        return date.toLocaleString('en-US', { month: 'long' }) === selectedSummaryMonth;
+      } catch (e) {
+        return false;
+      }
+    });
+  }, [myTransactions, selectedSummaryMonth]);
+
   const totalBalance = useMemo(() => {
-    if (!myTransactions) return 0;
-    return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
-  }, [myTransactions]);
+    return filteredTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
+  }, [filteredTransactions]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -73,7 +90,7 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
     setMutationLoading(true);
     try {
       await updateProfile(user, { displayName: selectedOfficialName });
-      toast({ title: "সফল!", description: "আপনার প্রোফাইল আপডেট করা হয়েছে। এখন ড্যাশবোর্ড লোড হচ্ছে..." });
+      toast({ title: "সফল!", description: "আপনার প্রোফাইল আপডেট করা হয়েছে।" });
       window.location.reload();
     } catch (e: any) {
       toast({ variant: "destructive", title: "ত্রুটি", description: "প্রোফাইল আপডেট করতে সমস্যা হয়েছে।" });
@@ -106,18 +123,19 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
   };
 
   const handleDownloadPDF = () => {
-    if (!myTransactions || myTransactions.length === 0) {
+    if (filteredTransactions.length === 0) {
       toast({ variant: "destructive", title: "ত্রুটি", description: "ডাউনলোড করার মতো কোনো রিপোর্ট পাওয়া যায়নি।" });
       return;
     }
     
-    const pdfData = myTransactions.map((t: any) => ({
+    const pdfData = filteredTransactions.map((t: any) => ({
       n: t.memberName,
       d: t.date,
       a: t.amount
     }));
     
-    exportSummaryPDF(pdfData, `Report_${user?.displayName}`, totalBalance);
+    const titleSuffix = selectedSummaryMonth === "All" ? "" : `_${selectedSummaryMonth}`;
+    exportSummaryPDF(pdfData, `Report_${user?.displayName}${titleSuffix}`, totalBalance);
     toast({ title: "সফল!", description: "আপনার জমার রিপোর্ট ডাউনলোড করা হচ্ছে।" });
   };
 
@@ -192,8 +210,18 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
           </div>
 
           <div className="px-6 space-y-6 -mt-12 relative z-20">
-            <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-10 rounded-[45px] border border-white/10 text-center shadow-2xl">
-              <p className="text-[#D4AF37]/70 text-[11px] font-black uppercase tracking-[0.2em] mb-2">আপনার মোট জমার পরিমাণ</p>
+            <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-10 rounded-[45px] border border-white/10 text-center shadow-2xl relative">
+              <div className="absolute top-6 right-6">
+                <Select value={selectedSummaryMonth} onValueChange={setSelectedSummaryMonth}>
+                   <SelectTrigger className="w-32 h-9 bg-white/10 border-none text-[10px] font-black rounded-full text-[#D4AF37]"><SelectValue placeholder="মাস নির্বাচন" /></SelectTrigger>
+                   <SelectContent className="bg-[#2D1B69] border-white/10 text-white rounded-2xl">
+                     {months.map(m => <SelectItem key={m} value={m} className="text-xs font-black">{m}</SelectItem>)}
+                   </SelectContent>
+                </Select>
+              </div>
+              <p className="text-[#D4AF37]/70 text-[11px] font-black uppercase tracking-[0.2em] mb-2">
+                {selectedSummaryMonth === "All" ? "আপনার মোট জমার পরিমাণ" : `${selectedSummaryMonth} মাসের মোট জমা`}
+              </p>
               <h3 className="text-5xl font-black">৳{totalBalance.toLocaleString()}</h3>
             </div>
 
@@ -251,25 +279,33 @@ export default function UserDashboard({ onLogout }: { onLogout: () => void }) {
             <h2 className="font-black text-2xl flex items-center gap-4 uppercase tracking-tight">
               <History className="text-[#D4AF37] w-8 h-8" /> জমার রিপোর্ট
             </h2>
-            {myTransactions && myTransactions.length > 0 && (
-              <Button 
-                onClick={handleDownloadPDF} 
-                variant="ghost" 
-                className="bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 h-12 rounded-2xl gap-2 font-black px-4"
-              >
-                <Download className="w-5 h-5" /> PDF
-              </Button>
-            )}
+            <div className="flex gap-2">
+               <Select value={selectedSummaryMonth} onValueChange={setSelectedSummaryMonth}>
+                 <SelectTrigger className="w-24 h-10 bg-white/5 border-white/10 text-[10px] font-black rounded-xl text-[#D4AF37]"><SelectValue placeholder="Filter" /></SelectTrigger>
+                 <SelectContent className="bg-[#2D1B69] border-white/10 text-white">
+                   {months.map(m => <SelectItem key={m} value={m} className="text-xs font-black">{m}</SelectItem>)}
+                 </SelectContent>
+               </Select>
+               {filteredTransactions.length > 0 && (
+                <Button 
+                  onClick={handleDownloadPDF} 
+                  variant="ghost" 
+                  className="bg-[#D4AF37]/10 text-[#D4AF37] hover:bg-[#D4AF37]/20 h-10 rounded-xl gap-2 font-black px-4"
+                >
+                  <Download className="w-5 h-5" /> PDF
+                </Button>
+              )}
+            </div>
           </div>
           
           <div className="space-y-5">
-            {(!myTransactions || myTransactions.length === 0) ? (
+            {filteredTransactions.length === 0 ? (
               <div className="text-center py-32 opacity-20">
                 <History className="w-24 h-24 mx-auto mb-5" />
                 <p className="font-black text-sm uppercase tracking-widest">No Records Found</p>
               </div>
             ) : (
-              myTransactions.map((t: any) => (
+              filteredTransactions.map((t: any) => (
                 <div key={t.id} className="bg-white/5 p-8 rounded-[40px] flex items-center justify-between border border-white/5 shadow-2xl backdrop-blur-sm">
                   <div className="space-y-1">
                     <p className="font-black text-2xl tracking-tighter">৳{t.amount.toLocaleString()}</p>
