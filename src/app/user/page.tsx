@@ -19,10 +19,7 @@ import {
   Loader2,
   AlertCircle,
   UserCheck,
-  Download,
-  Mail,
-  Lock,
-  User
+  Download
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
@@ -139,7 +136,7 @@ export default function UserPage() {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center gap-6">
         <div className="w-20 h-20 rounded-full border-4 border-white/5 border-t-[#D4AF37] animate-spin"></div>
-        <p className="text-white font-black text-xs uppercase tracking-widest animate-pulse">Syncing Cloud Node...</p>
+        <p className="text-white font-black text-xs uppercase tracking-widest animate-pulse">Establishing Secure Node...</p>
       </div>
     );
   }
@@ -148,6 +145,7 @@ export default function UserPage() {
     return (
       <>
         <title>Minar Go Member</title>
+        <meta name="apple-mobile-web-app-title" content="MG Member" />
         <UserAuthScreen />
       </>
     );
@@ -159,15 +157,15 @@ export default function UserPage() {
         <div className="w-24 h-24 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-10 shadow-2xl">
           <AlertCircle className="w-12 h-12 text-[#D4AF37]" />
         </div>
-        <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tight">Active Your Profile</h2>
+        <h2 className="text-2xl font-black text-white mb-4 uppercase tracking-tight">Activate Your Profile</h2>
         <div className="w-full max-w-sm space-y-6">
           <Select onValueChange={setSelectedOfficialName}>
             <SelectTrigger className="h-18 rounded-[24px] bg-white/5 border-white/10 text-white font-black text-base">
               <SelectValue placeholder="সিলেক্ট অফিসিয়াল নাম" />
             </SelectTrigger>
-            <SelectContent className="bg-[#2D1B69] border-white/10 text-white rounded-[24px] z-[500]">
+            <SelectContent className="bg-white border-none shadow-2xl rounded-[24px] z-[500]">
               {membersList?.map((m: any) => (
-                <SelectItem key={m.id} value={m.name} className="py-4 font-black text-white focus:text-white">
+                <SelectItem key={m.id} value={m.name} className="py-4 font-black text-[#1E3A8A]">
                   {m.name}
                 </SelectItem>
               ))}
@@ -189,6 +187,7 @@ export default function UserPage() {
   return (
     <div className="flex flex-col min-h-screen bg-[#1A1140] font-bengali text-white overflow-hidden">
       <title>Minar Go Member</title>
+      <meta name="apple-mobile-web-app-title" content="MG Member" />
       
       {activeTab === "home" && (
         <main className="flex-1 overflow-y-auto pb-32 animate-in fade-in duration-700">
@@ -267,9 +266,9 @@ export default function UserPage() {
                  <SelectTrigger className="w-32 h-12 bg-white/10 border-white/20 text-white font-black rounded-2xl text-[11px] uppercase">
                    <SelectValue placeholder="Month" />
                  </SelectTrigger>
-                 <SelectContent className="bg-[#2D1B69] border-white/10 text-white rounded-2xl z-[500]">
+                 <SelectContent className="bg-white border-none shadow-2xl rounded-2xl z-[500]">
                    {months.map(m => (
-                     <SelectItem key={m} value={m} className="font-black py-4 text-xs text-white">
+                     <SelectItem key={m} value={m} className="font-black py-4 text-xs text-[#1E3A8A]">
                        {m.toUpperCase()}
                      </SelectItem>
                    ))}
@@ -321,4 +320,3 @@ export default function UserPage() {
     </div>
   );
 }
-
