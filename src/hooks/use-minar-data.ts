@@ -8,7 +8,7 @@ import { useMemo } from "react";
 /**
  * useMinarData Hook
  * This file handles all the shared database (Firebase) logic.
- * Unified collection: "transactions"
+ * Unified collection: "transactions" for both Admin and User panels.
  */
 
 export interface Transaction {
@@ -17,12 +17,13 @@ export interface Transaction {
   amount: number;
   date: string;
   category: string;
+  timestamp?: any;
 }
 
 export const useMinarData = () => {
   const db = useFirestore();
 
-  // Fetching Members List
+  // Fetching Members List (Shared)
   const membersQuery = useMemo(() => {
     if (!db) return null;
     return query(collection(db, "members"), orderBy("name"));
@@ -30,10 +31,10 @@ export const useMinarData = () => {
   const { data: membersDocs } = useCollection(membersQuery);
   const members = useMemo(() => (membersDocs || []).map(d => d.name as string), [membersDocs]);
 
-  // Fetching ALL Transactions (Shared across Admin and Member views)
+  // Fetching ALL Transactions (For Admin View)
   const transactionsQuery = useMemo(() => {
     if (!db) return null;
-    return query(collection(db, "transactions"), orderBy("date", "desc"));
+    return query(collection(db, "transactions"), orderBy("timestamp", "desc"));
   }, [db]);
   const { data: transactionsDocs } = useCollection(transactionsQuery);
   
@@ -43,6 +44,7 @@ export const useMinarData = () => {
     amount: Number(d.amount) || 0,
     date: d.date || "",
     category: d.category || "General",
+    timestamp: d.timestamp
   })), [transactionsDocs]);
 
   const addMember = async (name: string) => {
