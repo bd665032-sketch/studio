@@ -81,8 +81,8 @@ export default function MemberPortal() {
     if (selectedSummaryMonth === "All") return myTransactions;
     return myTransactions.filter(t => {
       try {
-        const dateObj = new Date(t.date);
-        const monthIndex = dateObj.getMonth() + 1;
+        const parts = t.date.split('-');
+        const monthIndex = parseInt(parts[1], 10);
         return months[monthIndex] === selectedSummaryMonth;
       } catch (e) { return false; }
     });
@@ -312,6 +312,18 @@ export default function MemberPortal() {
             <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-12 rounded-[45px] border border-white/10 text-center shadow-2xl">
               <p className="text-[#D4AF37]/70 text-[11px] font-black uppercase tracking-[0.3em] mb-3">সর্বমোট জমার পরিমাণ</p>
               <h3 className="text-5xl font-black">৳{lifetimeTotal.toLocaleString()}</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-[#2D2D4D] p-6 rounded-[35px] border border-white/5 text-center shadow-xl">
+                <span className="text-2xl">🕋</span>
+                <p className="text-[#D4AF37] text-[10px] font-black mt-3 uppercase tracking-widest">পরবর্তী হজ</p>
+                <p className="text-[14px] font-bold mt-1 text-white/90">২৭ মে, ২০২৬</p>
+              </div>
+              <div className="bg-[#2D2D4D] p-6 rounded-[35px] border border-white/5 text-center shadow-xl">
+                <span className="text-2xl">🌙</span>
+                <p className="text-[#D4AF37] text-[10px] font-black mt-3 uppercase tracking-widest">রমজান</p>
+                <p className="text-[14px] font-bold mt-1 text-white/90">১৮ ফেব্রু., ২০২৬</p>
+              </div>
             </div>
             <div className="bg-gradient-to-r from-[#FFD700] to-[#FFA500] p-5 rounded-full text-black flex items-center justify-center gap-4 font-black text-sm shadow-xl">
               <HomeIcon className="w-6 h-6" /> {bengaliDate}
