@@ -63,7 +63,7 @@ const months = [
 // Web3Forms Access Key provided by user for OTP
 const WEB3FORMS_ACCESS_KEY = "d3f7fc2b-eb65-4ff6-9679-d6282a18ee37";
 
-export default function Home() {
+export default function UserPortal() {
   const { user, loading: userLoading } = useUser();
   const auth = useAuth();
   const db = useFirestore();
@@ -138,8 +138,8 @@ export default function Home() {
     e.preventDefault();
     if (!auth) return;
 
-    // Device Binding Check: Locks the phone to the first email used
-    const boundUser = localStorage.getItem("mg_device_bound_user");
+    // Device Binding Check
+    const boundUser = typeof window !== 'undefined' ? localStorage.getItem("mg_device_bound_user") : null;
     if (boundUser && boundUser !== authData.email.toLowerCase()) {
       toast({ 
         variant: "destructive", 
@@ -171,7 +171,6 @@ export default function Home() {
       setGeneratedOtp(code);
       
       try {
-        // Sending OTP via Web3Forms
         const response = await fetch("https://api.web3forms.com/submit", {
           method: "POST",
           headers: {
