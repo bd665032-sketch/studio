@@ -13,7 +13,8 @@ import {
   signOut, 
   updateProfile, 
   signInWithEmailAndPassword, 
-  createUserWithEmailAndPassword 
+  createUserWithEmailAndPassword,
+  sendEmailVerification
 } from "firebase/auth";
 import { 
   collection, 
@@ -48,7 +49,8 @@ import {
   Lock,
   User,
   Trash2,
-  ShieldCheck
+  ShieldCheck,
+  AlertTriangle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
@@ -118,7 +120,9 @@ export default function UserPage() {
   }, [filteredTransactions]);
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
     return () => clearInterval(timer);
   }, []);
 
@@ -129,7 +133,7 @@ export default function UserPage() {
 
     // Device Binding Logic: Lock this phone to this user
     const boundUser = localStorage.getItem("mg_device_bound_user");
-    if (boundUser && boundUser !== authData.email) {
+    if (boundUser && boundUser !== authData.email.toLowerCase()) {
       toast({ 
         variant: "destructive", 
         title: "এক্সেস ডিনাইড", 
@@ -142,15 +146,21 @@ export default function UserPage() {
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, authData.email, authData.password);
-        localStorage.setItem("mg_device_bound_user", authData.email);
+        localStorage.setItem("mg_device_bound_user", authData.email.toLowerCase());
         toast({ title: "স্বাগতম!", description: "সিকিউর লগইন সফল হয়েছে।" });
       } else {
         if (!authData.fullName) throw new Error("অফিসিয়াল নাম সিলেক্ট করুন।");
         const userCred = await createUserWithEmailAndPassword(auth, authData.email, authData.password);
         await updateProfile(userCred.user, { displayName: authData.fullName });
-        localStorage.setItem("mg_device_bound_user", authData.email);
-        toast({ title: "সফল!", description: "রেজিস্ট্রেশন সম্পন্ন হয়েছে।" });
-        window.location.reload();
+        
+        // Send Verification Email (OTP alternative)
+        await sendEmailVerification(userCred.user);
+        
+        localStorage.setItem("mg_device_bound_user", authData.email.toLowerCase());
+        toast({ 
+          title: "রেজিস্ট্রেশন সফল!", 
+          description: "আপনার ইমেইল (Yahoo/Gmail) চেক করুন এবং ভেরিফাই লিঙ্কে ক্লিক করুন।" 
+        });
       }
     } catch (error: any) {
       toast({ variant: "destructive", title: "ত্রুটি", description: error.message });
@@ -211,6 +221,29 @@ export default function UserPage() {
         <title>MG Member</title>
         <div className="w-20 h-20 rounded-full border-4 border-white/5 border-t-[#D4AF37] animate-spin"></div>
         <p className="text-white font-black text-xs uppercase tracking-[0.3em] animate-pulse">Establishing Secure Node...</p>
+      </div>
+    );
+  }
+
+  // Handle Unverified Email
+  if (user && !user.emailVerified) {
+    return (
+      <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center p-8 text-center font-body">
+        <title>Email Verification</title>
+        <div className="w-24 h-24 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mb-8">
+          <Mail className="w-12 h-12 text-[#D4AF37]" />
+        </div>
+        <h1 className="text-2xl font-black text-white mb-4 uppercase">Verify Your Email</h1>
+        <p className="text-white/60 text-sm mb-8 leading-relaxed">
+          আমরা আপনার ইমেইল ঠিকানায় একটি ভেরিফিকেশন লিঙ্ক পাঠিয়েছি। <br/>
+          দয়া করে আপনার জিমেইল বা ইয়াহু ইনবক্স চেক করুন এবং লিঙ্কে ক্লিক করুন।
+        </p>
+        <div className="space-y-4 w-full max-w-sm">
+          <Button onClick={() => window.location.reload()} className="w-full h-16 bg-[#D4AF37] text-black font-black rounded-[24px]">আমি ভেরিফাই করেছি</Button>
+          <button onClick={() => { if(auth) signOut(auth); }} className="text-white/40 text-xs font-bold uppercase tracking-widest mt-6 flex items-center justify-center gap-2 mx-auto">
+            <LogOut className="w-4 h-4" /> লগআউট করুন
+          </button>
+        </div>
       </div>
     );
   }
