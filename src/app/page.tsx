@@ -60,6 +60,7 @@ const months = [
   "July", "August", "September", "October", "November", "December"
 ];
 
+// Web3Forms Access Key provided by user for OTP
 const WEB3FORMS_ACCESS_KEY = "d3f7fc2b-eb65-4ff6-9679-d6282a18ee37";
 
 export default function Home() {
@@ -137,12 +138,12 @@ export default function Home() {
     e.preventDefault();
     if (!auth) return;
 
-    // Device Binding Check
+    // Device Binding Check: Locks the phone to the first email used
     const boundUser = localStorage.getItem("mg_device_bound_user");
     if (boundUser && boundUser !== authData.email.toLowerCase()) {
       toast({ 
         variant: "destructive", 
-        title: "এক্সেস ডিনাইড", 
+        title: "অ্যাক্সেস ডিনাইড", 
         description: "এই ফোনটি অন্য একজন ইউজারের জন্য লক করা।" 
       });
       return;
@@ -170,6 +171,7 @@ export default function Home() {
       setGeneratedOtp(code);
       
       try {
+        // Sending OTP via Web3Forms
         const response = await fetch("https://api.web3forms.com/submit", {
           method: "POST",
           headers: {
