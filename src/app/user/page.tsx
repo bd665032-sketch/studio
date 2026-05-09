@@ -22,7 +22,8 @@ import {
   addDoc, 
   serverTimestamp, 
   doc, 
-  orderBy
+  orderBy,
+  deleteDoc
 } from "firebase/firestore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,12 +47,12 @@ import {
   Mail,
   Lock,
   User,
-  AlertCircle
+  Trash2,
+  ShieldCheck
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
 
-// Months for filtering - ensuring zero-based indexing fix
 const months = [
   "All", "January", "February", "March", "April", "May", "June", 
   "July", "August", "September", "October", "November", "December"
@@ -73,15 +74,12 @@ export default function UserPage() {
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSummaryMonth, setSelectedSummaryMonth] = useState("All");
   
-  // Real-time Settings Sync (Logo and Name) from Admin Firestore
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
   const { data: settings } = useDoc(settingsRef);
 
-  // Fetch Official Members List for Registration dropdown
   const membersQuery = useMemo(() => (db ? query(collection(db, "members"), orderBy("name")) : null), [db]);
   const { data: membersList, loading: membersLoading } = useCollection(membersQuery);
 
-  // Fetch Transactions for Logged-in Member
   const txQuery = useMemo(() => {
     if (!user?.displayName || !db) return null;
     return query(
@@ -91,7 +89,6 @@ export default function UserPage() {
   }, [user?.displayName, db]);
   const { data: rawTransactions, loading: txLoading } = useCollection(txQuery);
 
-  // Sorting Transactions
   const myTransactions = useMemo(() => {
     if (!rawTransactions) return [];
     return [...rawTransactions].sort((a, b) => {
@@ -105,12 +102,11 @@ export default function UserPage() {
     return myTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
   }, [myTransactions]);
 
-  // Robust Filtering for April, May and others by splitting string YYYY-MM-DD
   const filteredTransactions = useMemo(() => {
     if (selectedSummaryMonth === "All") return myTransactions;
     return myTransactions.filter(t => {
       try {
-        const parts = t.date.split('-'); // Format: YYYY-MM-DD
+        const parts = t.date.split('-');
         const monthNum = parseInt(parts[1], 10);
         return months[monthNum] === selectedSummaryMonth;
       } catch (e) { return false; }
@@ -130,14 +126,29 @@ export default function UserPage() {
     e.preventDefault();
     if (!auth) return;
     setAuthLoading(true);
+
+    // Device Binding Logic: Lock this phone to this user
+    const boundUser = localStorage.getItem("mg_device_bound_user");
+    if (boundUser && boundUser !== authData.email) {
+      toast({ 
+        variant: "destructive", 
+        title: "এক্সেস ডিনাইড", 
+        description: "এই ফোনটি অন্য একজন ইউজারের জন্য বরাদ্দ। আপনার নিজের ফোনে লগইন করুন।" 
+      });
+      setAuthLoading(false);
+      return;
+    }
+
     try {
       if (isLogin) {
         await signInWithEmailAndPassword(auth, authData.email, authData.password);
+        localStorage.setItem("mg_device_bound_user", authData.email);
         toast({ title: "স্বাগতম!", description: "সিকিউর লগইন সফল হয়েছে।" });
       } else {
         if (!authData.fullName) throw new Error("অফিসিয়াল নাম সিলেক্ট করুন।");
         const userCred = await createUserWithEmailAndPassword(auth, authData.email, authData.password);
         await updateProfile(userCred.user, { displayName: authData.fullName });
+        localStorage.setItem("mg_device_bound_user", authData.email);
         toast({ title: "সফল!", description: "রেজিস্ট্রেশন সম্পন্ন হয়েছে।" });
         window.location.reload();
       }
@@ -170,6 +181,18 @@ export default function UserPage() {
     }
   };
 
+  const handleDeleteTransaction = async (id: string) => {
+    if (!db || !id) return;
+    if (confirm("আপনি কি এই জমার রেকর্ডটি ডিলিট করতে চান?")) {
+      try {
+        await deleteDoc(doc(db, "transactions", id));
+        toast({ title: "সফল!", description: "রেকর্ডটি মুছে ফেলা হয়েছে।" });
+      } catch (e) {
+        toast({ variant: "destructive", title: "ত্রুটি", description: "ডিলিট করা সম্ভব হয়নি।" });
+      }
+    }
+  };
+
   const handleDownloadPDF = () => {
     if (filteredTransactions.length === 0) {
       toast({ variant: "destructive", title: "দুঃখিত", description: "কোনো রেকর্ড পাওয়া যায়নি।" });
@@ -187,12 +210,11 @@ export default function UserPage() {
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center gap-6">
         <title>MG Member</title>
         <div className="w-20 h-20 rounded-full border-4 border-white/5 border-t-[#D4AF37] animate-spin"></div>
-        <p className="text-white font-black text-xs uppercase tracking-[0.3em] animate-pulse">Syncing Secure Data...</p>
+        <p className="text-white font-black text-xs uppercase tracking-[0.3em] animate-pulse">Establishing Secure Node...</p>
       </div>
     );
   }
 
-  // Auth Screen if not logged in
   if (!user) {
     return (
       <div className="min-h-screen bg-[#1A1140] flex flex-col items-center justify-center p-4 font-body relative overflow-hidden">
@@ -272,6 +294,9 @@ export default function UserPage() {
             </div>
             <h1 className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.4em] mb-3">{settings?.name || "MINAR GO FOUNDATION"}</h1>
             <h2 className="text-4xl font-black tracking-tight">{user.displayName}</h2>
+            <div className="flex items-center justify-center gap-2 mt-4 text-[#D4AF37]/50 text-[10px] font-bold uppercase tracking-[0.2em]">
+              <ShieldCheck className="w-4 h-4" /> Device Verified & Locked
+            </div>
           </div>
           <div className="px-6 space-y-6 -mt-12 relative z-20">
             <div className="bg-gradient-to-b from-[#2D1B69] to-[#1A1140] p-12 rounded-[45px] border border-white/10 text-center shadow-2xl">
@@ -362,9 +387,18 @@ export default function UserPage() {
                   <p className="font-black text-2xl text-[#D4AF37]">৳{t.amount.toLocaleString()}</p>
                   <p className="text-[11px] text-white/40 font-black uppercase tracking-widest">{t.date}</p>
                 </div>
-                <div className="bg-[#D4AF37]/10 px-5 py-2.5 rounded-full border border-[#D4AF37]/20 flex items-center gap-2">
-                  <div className="w-2 h-2 bg-[#D4AF37] rounded-full animate-pulse"></div>
-                  <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">VERIFIED</span>
+                <div className="flex flex-col items-end gap-3">
+                  <div className="bg-[#D4AF37]/10 px-5 py-2.5 rounded-full border border-[#D4AF37]/20 flex items-center gap-2">
+                    <div className="w-2 h-2 bg-[#D4AF37] rounded-full animate-pulse"></div>
+                    <span className="text-[10px] font-black text-[#D4AF37] uppercase tracking-widest">VERIFIED</span>
+                  </div>
+                  <button 
+                    onClick={() => handleDeleteTransaction(t.id)} 
+                    className="p-3 bg-red-500/10 text-red-500 rounded-full hover:bg-red-500 hover:text-white transition-all shadow-lg active:scale-90"
+                    title="Delete Entry"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
             ))}
