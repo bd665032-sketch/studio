@@ -60,6 +60,8 @@ const months = [
   "July", "August", "September", "October", "November", "December"
 ];
 
+const WEB3FORMS_ACCESS_KEY = "d3f7fc2b-eb65-4ff6-9679-d6282a18ee37";
+
 export default function UserPage() {
   const { user, loading: userLoading } = useUser();
   const auth = useAuth();
@@ -141,7 +143,7 @@ export default function UserPage() {
       toast({ 
         variant: "destructive", 
         title: "এক্সেস ডিনাইড", 
-        description: "এই ফোনটি অন্য একজন ইউজারের জন্য লক করা। আপনার নিজের ফোনে লগইন করুন।" 
+        description: "এই ফোনটি অন্য একজন ইউজারের জন্য লক করা।" 
       });
       return;
     }
@@ -158,23 +160,44 @@ export default function UserPage() {
         setAuthLoading(false);
       }
     } else {
-      // Register Path: Generate and Send OTP
       if (!authData.fullName) {
-        toast({ variant: "destructive", title: "ত্রুটি", description: "ড্রপডাউন থেকে আপনার অফিসিয়াল নাম সিলেক্ট করুন।" });
+        toast({ variant: "destructive", title: "ত্রুটি", description: "অফিসিয়াল নাম সিলেক্ট করুন।" });
         return;
       }
       
+      setAuthLoading(true);
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       setGeneratedOtp(code);
-      setAuthStep("otp-verify");
       
-      // In a real app, this would be handled by a mailing service.
-      // For this prototype, we show the code in a high-visibility toast to simulate the arrival.
-      toast({ 
-        title: "OTP পাঠানো হয়েছে", 
-        description: `আপনার ইমেইলে ৬ ডিজিটের কোড পাঠানো হয়েছে। (কোডটি হলো: ${code})`,
-        duration: 10000
-      });
+      try {
+        // Send OTP via Web3Forms using provided Access Key
+        const response = await fetch("https://api.web3forms.com/submit", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            access_key: WEB3FORMS_ACCESS_KEY,
+            subject: "Minar Go Registration OTP",
+            name: "Minar Go Foundation",
+            email: authData.email,
+            message: `আপনার রেজিস্ট্রেশন ওটিপি কোডটি হলো: ${code}. এটি গোপনীয় রাখুন।`,
+            from_name: "Minar Go Foundation"
+          })
+        });
+
+        if (response.ok) {
+          setAuthStep("otp-verify");
+          toast({ title: "ওটিপি পাঠানো হয়েছে", description: "আপনার ইমেইল চেক করুন।" });
+        } else {
+          throw new Error("ওটিপি পাঠানো সম্ভব হয়নি।");
+        }
+      } catch (err: any) {
+        toast({ variant: "destructive", title: "ত্রুটি", description: err.message });
+      } finally {
+        setAuthLoading(false);
+      }
     }
   };
 
@@ -183,7 +206,7 @@ export default function UserPage() {
     if (!auth) return;
     
     if (otpInput !== generatedOtp) {
-      toast({ variant: "destructive", title: "ভুল ওটিপি", description: "সঠিক ওটিপি কোডটি প্রদান করুন।" });
+      toast({ variant: "destructive", title: "ভুল ওটিপি", description: "সঠিক কোডটি প্রদান করুন।" });
       return;
     }
 
@@ -192,7 +215,7 @@ export default function UserPage() {
       const userCred = await createUserWithEmailAndPassword(auth, authData.email, authData.password);
       await updateProfile(userCred.user, { displayName: authData.fullName });
       localStorage.setItem("mg_device_bound_user", authData.email.toLowerCase());
-      toast({ title: "রেজিস্ট্রেশন সফল!", description: "আপনি এখন মেম্বার হিসেবে যুক্ত হয়েছেন।" });
+      toast({ title: "রেজিস্ট্রেশন সফল!", description: "স্বাগতম, মেম্বার হিসেবে যুক্ত হয়েছেন।" });
     } catch (error: any) {
       toast({ variant: "destructive", title: "ত্রুটি", description: error.message });
       setAuthStep("login-register");
@@ -312,7 +335,7 @@ export default function UserPage() {
                     <Input type="password" placeholder="পাসওয়ার্ড" required value={authData.password} onChange={(e) => setAuthData({ ...authData, password: e.target.value })} className="h-16 pl-16 rounded-[24px] bg-slate-50 border-none font-black text-sm" />
                   </div>
                   <Button type="submit" disabled={authLoading} className="w-full h-16 rounded-[24px] bg-[#1E3A8A] text-white font-black text-xs uppercase tracking-widest shadow-xl mt-4">
-                    {authLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLogin ? "SECURE LOGIN" : "CONTINUE TO OTP")}
+                    {authLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : (isLogin ? "SECURE LOGIN" : "SEND OTP CODE")}
                   </Button>
                 </form>
               </>
@@ -323,14 +346,14 @@ export default function UserPage() {
                 </button>
                 <div className="text-center space-y-2 mb-6">
                   <h2 className="text-lg font-black text-[#1E3A8A] uppercase">ইমেইল ওটিপি কোড</h2>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">আমরা আপনার ইমেইলে ৬ ডিজিটের কোড পাঠিয়েছি</p>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">আমরা আপনার ইমেইলে একটি কোড পাঠিয়েছি</p>
                 </div>
                 <div className="relative">
                   <KeyRound className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <Input 
                     type="text" 
                     maxLength={6} 
-                    placeholder="৬ ডিজিটের কোড" 
+                    placeholder="কোড দিন" 
                     required 
                     value={otpInput} 
                     onChange={(e) => setOtpInput(e.target.value)} 
@@ -340,7 +363,7 @@ export default function UserPage() {
                 <Button type="submit" disabled={authLoading} className="w-full h-16 rounded-[24px] bg-[#D4AF37] text-black font-black text-xs uppercase tracking-widest shadow-xl">
                   {authLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "ভেরিফাই এবং রেজিস্ট্রেশন"}
                 </Button>
-                <p className="text-center text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-4">কোডটি না পেলে আপনার স্প্যাম ফোল্ডার চেক করুন</p>
+                <p className="text-center text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-4">স্প্যাম ফোল্ডার চেক করতে ভুলবেন না</p>
               </form>
             )}
           </div>
@@ -369,7 +392,7 @@ export default function UserPage() {
             <h1 className="text-[#D4AF37] text-[11px] font-black uppercase tracking-[0.4em] mb-3">{settings?.name || "MINAR GO FOUNDATION"}</h1>
             <h2 className="text-4xl font-black tracking-tight">{user.displayName}</h2>
             <div className="flex items-center justify-center gap-2 mt-4 text-[#D4AF37]/50 text-[10px] font-bold uppercase tracking-[0.2em]">
-              <ShieldCheck className="w-4 h-4" /> Device Secured & Linked
+              <ShieldCheck className="w-4 h-4" /> Device Linked & Secured
             </div>
           </div>
           <div className="px-6 space-y-6 -mt-12 relative z-20">
