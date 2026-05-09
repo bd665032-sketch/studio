@@ -168,12 +168,12 @@ export default function UserPage() {
       setGeneratedOtp(code);
       setAuthStep("otp-verify");
       
-      // In a real app, you'd call a server function here to send the email.
-      // For this prototype, we show it in a toast for the user to "simulate" the arrival.
+      // In a real app, this would be handled by a mailing service.
+      // For this prototype, we show the code in a high-visibility toast to simulate the arrival.
       toast({ 
         title: "OTP পাঠানো হয়েছে", 
-        description: `আপনার ইমেইলে ৬ ডিজিটের কোড পাঠানো হয়েছে। (ডিপোজিট কোড: ${code})`,
-        duration: 8000
+        description: `আপনার ইমেইলে ৬ ডিজিটের কোড পাঠানো হয়েছে। (কোডটি হলো: ${code})`,
+        duration: 10000
       });
     }
   };
@@ -497,4 +497,3 @@ export default function UserPage() {
     </div>
   );
 }
-
