@@ -86,6 +86,7 @@ export default function UserPortal() {
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSummaryMonth, setSelectedSummaryMonth] = useState("All");
   
+  // Global Settings Listeners
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
   const { data: settings } = useDoc(settingsRef);
 
