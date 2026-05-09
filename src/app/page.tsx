@@ -60,10 +60,9 @@ const months = [
   "July", "August", "September", "October", "November", "December"
 ];
 
-// Web3Forms Access Key provided by user for OTP
 const WEB3FORMS_ACCESS_KEY = "d3f7fc2b-eb65-4ff6-9679-d6282a18ee37";
 
-export default function UserPortal() {
+export default function MemberPortal() {
   const { user, loading: userLoading } = useUser();
   const auth = useAuth();
   const db = useFirestore();
@@ -76,17 +75,14 @@ export default function UserPortal() {
   const [mutationLoading, setMutationLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   
-  // Form States
   const [authData, setAuthData] = useState({ email: "", password: "", fullName: "" });
   const [otpInput, setOtpInput] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState("");
   
-  // Deposit States
   const [depositAmount, setDepositAmount] = useState(5000);
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSummaryMonth, setSelectedSummaryMonth] = useState("All");
   
-  // Global Settings Listeners
   const settingsRef = useMemo(() => (db ? doc(db, "settings", "foundation") : null), [db]);
   const { data: settings } = useDoc(settingsRef);
 
@@ -119,9 +115,9 @@ export default function UserPortal() {
     if (selectedSummaryMonth === "All") return myTransactions;
     return myTransactions.filter(t => {
       try {
-        const parts = t.date.split('-');
-        const monthNum = parseInt(parts[1], 10);
-        return months[monthNum] === selectedSummaryMonth;
+        const dateObj = new Date(t.date);
+        const monthName = months[dateObj.getMonth() + 1];
+        return monthName === selectedSummaryMonth;
       } catch (e) { return false; }
     });
   }, [myTransactions, selectedSummaryMonth]);
@@ -139,8 +135,7 @@ export default function UserPortal() {
     e.preventDefault();
     if (!auth) return;
 
-    // Device Binding Check
-    const boundUser = typeof window !== 'undefined' ? localStorage.getItem("mg_device_bound_user") : null;
+    const boundUser = localStorage.getItem("mg_device_bound_user");
     if (boundUser && boundUser !== authData.email.toLowerCase()) {
       toast({ 
         variant: "destructive", 
@@ -174,10 +169,7 @@ export default function UserPortal() {
       try {
         const response = await fetch("https://api.web3forms.com/submit", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-          },
+          headers: { "Content-Type": "application/json", "Accept": "application/json" },
           body: JSON.stringify({
             access_key: WEB3FORMS_ACCESS_KEY,
             subject: "Minar Go Registration OTP",
@@ -364,7 +356,6 @@ export default function UserPortal() {
                 <Button type="submit" disabled={authLoading} className="w-full h-16 rounded-[24px] bg-[#D4AF37] text-black font-black text-xs uppercase tracking-widest shadow-xl">
                   {authLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "ভেরিফাই এবং রেজিস্ট্রেশন"}
                 </Button>
-                <p className="text-center text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-4">স্প্যাম ফোল্ডার চেক করতে ভুলবেন না</p>
               </form>
             )}
           </div>
