@@ -23,13 +23,15 @@ import {
   Trash2, 
   ShieldCheck, 
   KeyRound, 
-  ChevronLeft 
+  ChevronLeft,
+  Video
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { exportSummaryPDF } from "@/lib/pdf-utils";
 
 const months = ["All", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const WEB3FORMS_ACCESS_KEY = "d3f7fc2b-eb65-4ff6-9679-d6282a18ee37";
+const ZEGO_APP_ID = "1192208819"; // From your screenshot
 
 export default function MemberPortal() {
   const { user, loading: userLoading } = useUser();
@@ -58,7 +60,7 @@ export default function MemberPortal() {
   const { data: settings } = useDoc(settingsRef);
 
   const membersQuery = useMemo(() => (db ? query(collection(db, "members"), orderBy("name")) : null), [db]);
-  const { data: membersList, loading: membersLoading } = useCollection(membersQuery);
+  const { data: membersList } = useCollection(membersQuery);
 
   const txQuery = useMemo(() => {
     if (!user?.displayName || !db) return null;
@@ -99,7 +101,6 @@ export default function MemberPortal() {
     e.preventDefault();
     if (!auth) return;
 
-    // Device Binding Check
     const boundUser = localStorage.getItem("mg_device_bound_user");
     if (boundUser && boundUser !== authData.email.toLowerCase()) {
       toast({ variant: "destructive", title: "এক্সেস ডিনাইড", description: "এই ফোনটি অন্য একজন ইউজারের জন্য লক করা।" });
@@ -126,7 +127,7 @@ export default function MemberPortal() {
       const code = Math.floor(100000 + Math.random() * 900000).toString();
       setGeneratedOtp(code);
       try {
-        const response = await fetch("https://api.web3forms.com/submit", {
+        await fetch("https://api.web3forms.com/submit", {
           method: "POST",
           headers: { "Content-Type": "application/json", "Accept": "application/json" },
           body: JSON.stringify({
@@ -138,14 +139,10 @@ export default function MemberPortal() {
             from_name: "Minar Go Foundation"
           })
         });
-        if (response.ok) {
-          setAuthStep("otp-verify");
-          toast({ title: "ওটিপি পাঠানো হয়েছে", description: "আপনার ইমেইল চেক করুন।" });
-        } else {
-          throw new Error("ওটিপি পাঠানো সম্ভব হয়নি।");
-        }
+        setAuthStep("otp-verify");
+        toast({ title: "ওটিপি পাঠানো হয়েছে", description: "আপনার ইমেইল চেক করুন।" });
       } catch (err: any) {
-        toast({ variant: "destructive", title: "ত্রুটি", description: err.message });
+        toast({ variant: "destructive", title: "ত্রুটি", description: "ওটিপি পাঠানো সম্ভব হয়নি।" });
       } finally {
         setAuthLoading(false);
       }
@@ -214,6 +211,13 @@ export default function MemberPortal() {
       `Report_${user?.displayName}_${selectedSummaryMonth}`,
       monthlyTotal
     );
+  };
+
+  const handleJoinMeeting = () => {
+    // This launches a group call window or room
+    const roomID = "MinarGoFoundationMainRoom";
+    const url = `https://zegocloud.com/meeting/${roomID}?appID=${ZEGO_APP_ID}&userID=${user?.uid}&userName=${user?.displayName}`;
+    window.open(url, "_blank");
   };
 
   if (userLoading || txLoading) {
@@ -332,6 +336,22 @@ export default function MemberPortal() {
         </main>
       )}
 
+      {activeTab === "call" && (
+        <main className="flex-1 overflow-y-auto pb-32 px-6 pt-16 animate-in slide-in-from-bottom-10">
+          <div className="bg-[#2D1B69] p-12 rounded-[50px] shadow-2xl text-center border-t-[10px] border-[#D4AF37]">
+            <div className="w-24 h-24 bg-[#D4AF37]/10 rounded-full flex items-center justify-center mx-auto mb-8 border-2 border-[#D4AF37]/30">
+              <Video className="w-12 h-12 text-[#D4AF37]" />
+            </div>
+            <h3 className="font-black text-2xl mb-4 uppercase tracking-[0.2em]">Group Meeting</h3>
+            <p className="text-white/60 text-xs font-bold mb-10 uppercase tracking-widest">ফাউন্ডেশনের সবার সাথে ভিডিও কলে যুক্ত হোন</p>
+            <Button onClick={handleJoinMeeting} className="w-full h-20 bg-gradient-to-r from-[#D4AF37] to-[#B8960C] text-black font-black text-xl rounded-[30px] shadow-xl active:scale-95 transition-all">
+              Join Group Call
+            </Button>
+            <p className="mt-8 text-[9px] text-[#D4AF37]/40 font-black uppercase tracking-[0.3em]">Powered by ZegoCloud Security</p>
+          </div>
+        </main>
+      )}
+
       {activeTab === "add" && (
         <main className="flex-1 overflow-y-auto pb-32 px-6 pt-16">
           <div className="bg-[#2D1B69] p-12 rounded-[50px] shadow-2xl border-t-[10px] border-[#D4AF37]">
@@ -387,10 +407,12 @@ export default function MemberPortal() {
         </main>
       )}
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-[#2D1B69]/90 backdrop-blur-3xl h-28 px-10 flex items-center justify-between z-[100] rounded-t-[50px] border-t border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
-        <button onClick={()=>setActiveTab("home")} className={cn("flex flex-col items-center gap-2", activeTab==="home" ? "text-[#D4AF37] scale-110" : "text-white/30")}><HomeIcon className="w-8 h-8" /><span className="text-[10px] font-black uppercase tracking-tighter">HOME</span></button>
-        <button onClick={()=>setActiveTab("add")} className="relative -top-12"><div className={cn("w-20 h-20 rounded-full flex items-center justify-center border-[8px] border-[#1A1140] shadow-2xl transition-all", activeTab==="add" ? "bg-[#D4AF37] text-black" : "bg-[#2D1B69] text-white/40")}><Plus className="w-10 h-10" /></div></button>
-        <button onClick={()=>setActiveTab("history")} className={cn("flex flex-col items-center gap-2", activeTab==="history" ? "text-[#D4AF37] scale-110" : "text-white/30")}><FileText className="w-8 h-8" /><span className="text-[10px] font-black uppercase tracking-tighter">REPORT</span></button>
+      <nav className="fixed bottom-0 left-0 right-0 bg-[#2D1B69]/90 backdrop-blur-3xl h-28 px-6 flex items-center justify-between z-[100] rounded-t-[50px] border-t border-white/10 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
+        <button onClick={()=>setActiveTab("home")} className={cn("flex flex-col items-center gap-2", activeTab==="home" ? "text-[#D4AF37] scale-110" : "text-white/30")}><HomeIcon className="w-7 h-7" /><span className="text-[9px] font-black uppercase tracking-tighter">HOME</span></button>
+        <button onClick={()=>setActiveTab("call")} className={cn("flex flex-col items-center gap-2", activeTab==="call" ? "text-[#D4AF37] scale-110" : "text-white/30")}><Video className="w-7 h-7" /><span className="text-[9px] font-black uppercase tracking-tighter">CALL</span></button>
+        <button onClick={()=>setActiveTab("add")} className="relative -top-12"><div className={cn("w-18 h-18 rounded-full flex items-center justify-center border-[8px] border-[#1A1140] shadow-2xl transition-all", activeTab==="add" ? "bg-[#D4AF37] text-black" : "bg-[#2D1B69] text-white/40")}><Plus className="w-10 h-10" /></div></button>
+        <button onClick={()=>setActiveTab("history")} className={cn("flex flex-col items-center gap-2", activeTab==="history" ? "text-[#D4AF37] scale-110" : "text-white/30")}><FileText className="w-7 h-7" /><span className="text-[9px] font-black uppercase tracking-tighter">REPORT</span></button>
+        <button onClick={() => { if(auth) signOut(auth); }} className="flex flex-col items-center gap-2 text-white/30"><LogOut className="w-7 h-7" /><span className="text-[9px] font-black uppercase tracking-tighter">EXIT</span></button>
       </nav>
     </div>
   );

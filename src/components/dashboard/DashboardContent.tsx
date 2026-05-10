@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -11,23 +10,22 @@ import { useToast } from "@/hooks/use-toast";
 import { 
   Users, 
   Trash2, 
-  Download,
   Plus,
   Home,
   Image as ImageIcon,
   ChevronRight,
-  FileText,
   CloudSun,
   MapPin,
-  Calendar,
   Settings,
-  Share2
+  Video
 } from "lucide-react";
 import DemandLetterGenerator from "./DemandLetterGenerator";
 import DocumentStorage from "./DocumentStorage";
 import { cn } from "@/lib/utils";
+import { useUser } from "@/firebase";
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+const ZEGO_APP_ID = "1192208819";
 
 export default function DashboardContent() {
   const { members, transactions, addMember, deleteMember, addTransaction, deleteTransaction } = useMinarData();
@@ -37,28 +35,24 @@ export default function DashboardContent() {
   const [deposit, setDeposit] = useState({ member: "", amount: 5000, category: "প্রতি মাসের জমা", date: new Date().toISOString().split('T')[0] });
   const [currentTime, setCurrentTime] = useState(new Date());
   const { toast } = useToast();
+  const { user } = useUser();
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // REAL-TIME FILTERED DATA
   const filteredTransactions = useMemo(() => {
     return transactions.filter(t => {
       if (selectedMonth === "All") return true;
       try {
         const date = new Date(t.date);
         return date.toLocaleString('en-US', { month: 'long' }) === selectedMonth;
-      } catch (e) {
-        return false;
-      }
+      } catch (e) { return false; }
     });
   }, [transactions, selectedMonth]);
 
-  const totalCollection = useMemo(() => {
-    return filteredTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0);
-  }, [filteredTransactions]);
+  const totalCollection = useMemo(() => filteredTransactions.reduce((acc, curr) => acc + (Number(curr.amount) || 0), 0), [filteredTransactions]);
 
   const handleDeposit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +60,13 @@ export default function DashboardContent() {
     addTransaction(deposit.member, deposit.amount, deposit.date, deposit.category);
     setDeposit({...deposit, member: "", amount: 5000, category: "প্রতি মাসের জমা", date: new Date().toISOString().split('T')[0]});
     setActiveTab("home");
-    toast({ title: "সফল!", description: "ডিপোজিট সেভ হয়েছে এবং সামারি আপডেট হয়েছে।" });
+    toast({ title: "সফল!", description: "ডিপোজিট সেভ হয়েছে।" });
+  };
+
+  const handleJoinMeeting = () => {
+    const roomID = "MinarGoFoundationMainRoom";
+    const url = `https://zegocloud.com/meeting/${roomID}?appID=${ZEGO_APP_ID}&userID=${user?.uid}&userName=${user?.displayName || "Admin"}`;
+    window.open(url, "_blank");
   };
 
   return (
@@ -76,7 +76,6 @@ export default function DashboardContent() {
           
           {activeTab === "home" && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 space-y-6">
-              
               <div className="luxury-card p-6 gradient-banner relative overflow-hidden">
                 <div className="flex justify-between items-start relative z-10">
                   <div className="space-y-1">
@@ -96,11 +95,11 @@ export default function DashboardContent() {
               <div className="luxury-card p-8 border-t-[12px] border-[#1E3A8A]">
                  <div className="flex justify-between items-end">
                     <div className="space-y-1">
-                      <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Total Foundation Collection</p>
+                      <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Total Collection</p>
                       <h2 className="text-3xl font-black text-[#1E3A8A]">৳{totalCollection.toLocaleString()}</h2>
                     </div>
                     <div className="text-right space-y-1">
-                      <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Active Members</p>
+                      <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest">Members</p>
                       <h2 className="text-3xl font-black text-[#D4AF37]">{members.length}</h2>
                     </div>
                  </div>
@@ -108,19 +107,18 @@ export default function DashboardContent() {
 
               <div className="space-y-4 pt-6">
                 <div className="flex items-center justify-between px-2">
-                  <h4 className="font-black text-[#1E3A8A] text-[11px] uppercase tracking-[0.4em]">Transaction Reports</h4>
+                  <h4 className="font-black text-[#1E3A8A] text-[11px] uppercase tracking-[0.4em]">Transactions</h4>
                   <Select value={selectedMonth} onValueChange={setSelectedMonth}>
                     <SelectTrigger className="w-40 bg-white border-none shadow-md rounded-2xl text-[10px] font-black h-11"><SelectValue placeholder="All Records" /></SelectTrigger>
-                    <SelectContent className="bg-white border-none shadow-2xl rounded-3xl overflow-hidden z-[200]">
+                    <SelectContent className="bg-white border-none shadow-2xl rounded-3xl z-[200]">
                       <SelectItem value="All" className="text-[11px] font-black">All Records</SelectItem>
                       {months.map(m => <SelectItem key={m} value={m} className="text-[11px] font-black">{m}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-
                 <div className="space-y-4">
                   {filteredTransactions.map(t => (
-                    <div key={t.id} className="luxury-card p-5 flex items-center justify-between border-slate-50 shadow-sm">
+                    <div key={t.id} className="luxury-card p-5 flex items-center justify-between">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-[20px] bg-slate-50 flex items-center justify-center font-black text-[#1E3A8A] text-lg border border-slate-100 shadow-inner">{t.memberName.charAt(0)}</div>
                         <div>
@@ -130,10 +128,29 @@ export default function DashboardContent() {
                       </div>
                       <div className="flex items-center gap-4">
                         <p className="font-black text-[#1E3A8A] text-[16px]">৳{t.amount.toLocaleString()}</p>
-                        <button onClick={() => { if(confirm('Delete record?')) deleteTransaction(t.id); }} className="p-2 text-slate-200 hover:text-red-500 transition-colors"><Trash2 className="w-5 h-5" /></button>
+                        <button onClick={() => { if(confirm('Delete?')) deleteTransaction(t.id); }} className="p-2 text-slate-200 hover:text-red-500 transition-colors"><Trash2 className="w-5 h-5" /></button>
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === "call" && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="luxury-card p-12 text-center space-y-8 border-t-[12px] border-[#D4AF37]">
+                <div className="w-24 h-24 bg-[#1E3A8A]/5 rounded-full flex items-center justify-center mx-auto border-2 border-[#D4AF37]/20 shadow-inner">
+                  <Video className="w-12 h-12 text-[#1E3A8A]" />
+                </div>
+                <h3 className="font-black text-[#1E3A8A] text-xl uppercase tracking-[0.2em]">Foundation Meeting</h3>
+                <p className="text-slate-400 text-xs font-bold uppercase tracking-widest">অ্যাডমিন হিসেবে গ্রুপ মিটিং শুরু করুন</p>
+                <Button onClick={handleJoinMeeting} className="w-full h-18 bg-[#1E3A8A] text-white font-black text-lg rounded-[24px] shadow-2xl active:scale-95 transition-all">
+                  Launch Group Call
+                </Button>
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-center gap-2">
+                  <ShieldCheck className="w-4 h-4 text-green-500" />
+                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">ZEGOCLOUD SECURED ENCRYPTION</span>
                 </div>
               </div>
             </div>
@@ -169,7 +186,7 @@ export default function DashboardContent() {
                       <Label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Value Date</Label>
                       <Input type="date" value={deposit.date} onChange={e=>setDeposit({...deposit, date:e.target.value})} className="h-16 font-black bg-slate-50 border-none shadow-inner text-base" />
                     </div>
-                    <Button type="submit" className="w-full h-18 bg-[#1E3A8A] text-white text-[15px] font-black shadow-2xl rounded-[24px] uppercase tracking-[0.4em] active:scale-95 transition-all mt-6">APPROVE TRANSACTION</Button>
+                    <Button type="submit" className="w-full h-18 bg-[#1E3A8A] text-white text-[15px] font-black shadow-2xl rounded-[24px] uppercase tracking-[0.4em] mt-6">APPROVE TRANSACTION</Button>
                   </form>
                </div>
             </div>
@@ -180,13 +197,15 @@ export default function DashboardContent() {
         </div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl h-22 px-8 flex items-center justify-between z-[100] nav-shadow rounded-t-[45px] border-t border-slate-100">
-        <button onClick={() => setActiveTab("home")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "home" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Home className="w-7 h-7"/><span className="text-[9px] font-black uppercase tracking-tighter">Home</span></button>
-        <button onClick={() => setActiveTab("members")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "members" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Users className="w-7 h-7"/><span className="text-[9px] font-black uppercase tracking-tighter">Directory</span></button>
-        <div className="relative -top-10"><button onClick={() => setActiveTab("add")} className="w-18 h-18 bg-gradient-to-br from-[#D4AF37] to-[#B8960C] rounded-full flex items-center justify-center text-white shadow-xl border-[8px] border-[#F0F2F5] active:scale-90 transition-all"><Plus className="w-10 h-10"/></button></div>
-        <button onClick={() => setActiveTab("gallery")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "gallery" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><ImageIcon className="w-7 h-7"/><span className="text-[9px] font-black uppercase tracking-tighter">Gallery</span></button>
-        <button onClick={() => setActiveTab("settings")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "settings" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Settings className="w-7 h-7"/><span className="text-[9px] font-black uppercase tracking-tighter">Tools</span></button>
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-2xl h-22 px-4 flex items-center justify-between z-[100] nav-shadow rounded-t-[45px] border-t border-slate-100">
+        <button onClick={() => setActiveTab("home")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "home" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Home className="w-6 h-6"/><span className="text-[8px] font-black uppercase tracking-tighter">Home</span></button>
+        <button onClick={() => setActiveTab("members")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "members" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Users className="w-6 h-6"/><span className="text-[8px] font-black uppercase tracking-tighter">Members</span></button>
+        <div className="relative -top-10"><button onClick={() => setActiveTab("add")} className="w-16 h-16 bg-gradient-to-br from-[#D4AF37] to-[#B8960C] rounded-full flex items-center justify-center text-white shadow-xl border-[8px] border-[#F0F2F5] transition-all"><Plus className="w-8 h-8"/></button></div>
+        <button onClick={() => setActiveTab("call")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "call" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Video className="w-6 h-6"/><span className="text-[8px] font-black uppercase tracking-tighter">Call</span></button>
+        <button onClick={() => setActiveTab("settings")} className={cn("flex flex-col items-center gap-1.5 transition-all", activeTab === "settings" ? "text-[#1E3A8A] scale-110" : "text-slate-300")}><Settings className="w-6 h-6"/><span className="text-[8px] font-black uppercase tracking-tighter">Tools</span></button>
       </nav>
     </div>
   );
 }
+
+import { ShieldCheck } from "lucide-react";
