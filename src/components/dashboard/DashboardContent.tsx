@@ -12,12 +12,12 @@ import {
   Trash2, 
   Plus,
   Home,
-  Image as ImageIcon,
   ChevronRight,
   CloudSun,
   MapPin,
   Settings,
-  Video
+  Video,
+  ShieldCheck
 } from "lucide-react";
 import DemandLetterGenerator from "./DemandLetterGenerator";
 import DocumentStorage from "./DocumentStorage";
@@ -46,8 +46,9 @@ export default function DashboardContent() {
     return transactions.filter(t => {
       if (selectedMonth === "All") return true;
       try {
-        const date = new Date(t.date);
-        return date.toLocaleString('en-US', { month: 'long' }) === selectedMonth;
+        const parts = t.date.split('-');
+        const monthIndex = parseInt(parts[1], 10);
+        return months[monthIndex - 1] === selectedMonth;
       } catch (e) { return false; }
     });
   }, [transactions, selectedMonth]);
@@ -207,5 +208,3 @@ export default function DashboardContent() {
     </div>
   );
 }
-
-import { ShieldCheck } from "lucide-react";

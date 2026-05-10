@@ -7,6 +7,8 @@ import DashboardContent from "@/components/dashboard/DashboardContent";
 import { useUser, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const AUTHORIZED_ADMIN_NAMES = ["dulal", "omar faruk", "shahid", "mr shahid"];
 
@@ -36,7 +38,7 @@ export default function AdminPage() {
   if (!user || !isAdmin) return <AuthScreen />;
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#F0F2F5]">
       <Header onLogout={handleLogout} />
       <main className="flex-1">
         <DashboardContent />
@@ -44,9 +46,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-function Loader2({ className }: { className?: string }) {
-  return <div className={cn("animate-spin rounded-full border-b-2 border-primary", className)}></div>;
-}
-
-import { cn } from "@/lib/utils";
