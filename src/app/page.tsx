@@ -31,7 +31,7 @@ import { exportSummaryPDF } from "@/lib/pdf-utils";
 
 const months = ["All", "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 const WEB3FORMS_ACCESS_KEY = "d3f7fc2b-eb65-4ff6-9679-d6282a18ee37";
-const ZEGO_APP_ID = "1192208819"; // From your screenshot
+const ZEGO_APP_ID = "1192208819";
 
 export default function MemberPortal() {
   const { user, loading: userLoading } = useUser();
@@ -46,12 +46,10 @@ export default function MemberPortal() {
   const [mutationLoading, setMutationLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   
-  // Auth States
   const [authData, setAuthData] = useState({ email: "", password: "", fullName: "" });
   const [otpInput, setOtpInput] = useState("");
   const [generatedOtp, setGeneratedOtp] = useState("");
   
-  // Deposit States
   const [depositAmount, setDepositAmount] = useState(5000);
   const [depositDate, setDepositDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedSummaryMonth, setSelectedSummaryMonth] = useState("All");
@@ -214,7 +212,6 @@ export default function MemberPortal() {
   };
 
   const handleJoinMeeting = () => {
-    // This launches a group call window or room
     const roomID = "MinarGoFoundationMainRoom";
     const url = `https://zegocloud.com/meeting/${roomID}?appID=${ZEGO_APP_ID}&userID=${user?.uid}&userName=${user?.displayName}`;
     window.open(url, "_blank");
