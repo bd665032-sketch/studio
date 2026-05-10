@@ -1,0 +1,41 @@
+
+{
+  "entities": {
+    "Member": {
+      "title": "Foundation Member",
+      "description": "A member of the Minar Go Foundation",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Full name of the member" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name"]
+    },
+    "Transaction": {
+      "title": "Deposit Transaction",
+      "description": "A financial deposit made by a member",
+      "type": "object",
+      "properties": {
+        "memberName": { "type": "string" },
+        "amount": { "type": "number" },
+        "date": { "type": "string", "format": "date" },
+        "category": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["memberName", "amount", "date", "category"]
+    }
+  },
+  "auth": {
+    "providers": ["password"]
+  },
+  "firestore": {
+    "/members/{memberId}": {
+      "schema": "Member",
+      "description": "Collection of foundation members"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Collection of financial transactions"
+    }
+  }
+}
